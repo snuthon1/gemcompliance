@@ -456,18 +456,36 @@ STATUS:            ${doc.flagged ? 'FLAGGED: ' + doc.flag_reason : 'VERIFIED COM
   const isMediumRisk = compliance?.risk === 'Medium';
   const isHighRisk = compliance?.risk === 'High';
 
-  // Compute profile completion percentage
+  // Mandatory Statutory Documents Requirement
+  const MANDATORY_DOCS = [
+    { type: 'GST_CERT', label: 'GST Registration Certificate', sublabel: 'Form GST REG-06', hint: 'Mandatory for GSTN tax compliance' },
+    { type: 'PAN_CARD', label: 'Permanent Account Number Card', sublabel: 'Income Tax PAN', hint: 'Mandatory for direct tax & legal entity proof' },
+    { type: 'UDYAM_CERT', label: 'MSME Udyam Registration Certificate', sublabel: 'Ministry of MSME', hint: 'Required for purchase preference & EMD waiver' }
+  ];
+
+  const uploadedDocMap = (documents || []).reduce((acc, d) => {
+    acc[d.doc_type] = d;
+    return acc;
+  }, {});
+
+  const mandatoryUploadedCount = MANDATORY_DOCS.filter((m) => uploadedDocMap[m.type]).length;
+  const missingMandatoryDocs = MANDATORY_DOCS.filter((m) => !uploadedDocMap[m.type]);
+  const hasAllMandatoryDocs = missingMandatoryDocs.length === 0;
+  const hasFlaggedDocs = (documents || []).some((d) => d.flagged === 1 || d.flagged === '1' || d.flagged === true);
+
+  // Compute realistic profile & onboarding completion percentage (50% profile fields + 50% mandatory documents)
   const calculateProfileCompletion = () => {
     let score = 0;
-    if (currentBidder?.company_name) score += 15;
-    if (currentBidder?.gstin) score += 15;
-    if (currentBidder?.pan_number) score += 15;
-    if (currentBidder?.udyam_number) score += 10;
-    if (profileForm.email) score += 10;
-    if (profileForm.phone) score += 10;
-    if (profileForm.registered_address) score += 10;
-    if (profileForm.signatory_name) score += 5;
+    if (currentBidder?.company_name) score += 10;
+    if (currentBidder?.gstin) score += 10;
+    if (currentBidder?.pan_number) score += 10;
+    if (profileForm.email && profileForm.phone) score += 10;
     if (profileForm.bank_account && profileForm.bank_ifsc) score += 10;
+
+    // 50% tied directly to mandatory statutory document submission
+    const docScore = Math.round((mandatoryUploadedCount / MANDATORY_DOCS.length) * 50);
+    score += docScore;
+
     return Math.min(score, 100);
   };
 
@@ -628,19 +646,21 @@ STATUS:            ${doc.flagged ? 'FLAGGED: ' + doc.flag_reason : 'VERIFIED COM
         </div>
       ) : (
         <>
-          {/* TAB 1: OVERVIEW & PORTAL FEATURE GUIDE */}
+          {/* TAB 1: OVERVIEW & ACTIONABLE WORKSPACE */}
           {activeTab === 'overview' && (
-            <div className="space-y-6">
-              {/* Top 4 Scorecard Metrics */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="space-y-5">
+              {/* Top 4 Compact Scorecard Metrics */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
                 {/* 1. Health Score */}
                 <div
-                  className={`p-5 rounded-2xl border shadow-xs flex flex-col justify-between ${
-                    isLowRisk
-                      ? 'bg-emerald-50/70 border-emerald-200 text-emerald-950'
+                  className={`p-4 rounded-xl border shadow-2xs flex flex-col justify-between transition ${
+                    !hasAllMandatoryDocs
+                      ? 'bg-amber-50/50 border-amber-200 text-amber-950'
+                      : isLowRisk
+                      ? 'bg-emerald-50/50 border-emerald-200 text-emerald-950'
                       : isMediumRisk
-                      ? 'bg-amber-50/70 border-amber-200 text-amber-950'
-                      : 'bg-rose-50/70 border-rose-200 text-rose-950'
+                      ? 'bg-amber-50/50 border-amber-200 text-amber-950'
+                      : 'bg-rose-50/50 border-rose-200 text-rose-950'
                   }`}
                 >
                   <div>
@@ -649,246 +669,387 @@ STATUS:            ${doc.flagged ? 'FLAGGED: ' + doc.flag_reason : 'VERIFIED COM
                         Statutory Health Score
                       </span>
                       <ShieldCheck
-                        className={`w-5 h-5 ${
-                          isLowRisk ? 'text-emerald-600' : isMediumRisk ? 'text-amber-600' : 'text-rose-600'
+                        className={`w-4 h-4 ${
+                          !hasAllMandatoryDocs
+                            ? 'text-amber-600'
+                            : isLowRisk
+                            ? 'text-emerald-600'
+                            : isMediumRisk
+                            ? 'text-amber-600'
+                            : 'text-rose-600'
                         }`}
                       />
                     </div>
-                    <div className="mt-3 flex items-baseline space-x-2">
-                      <span className="text-4xl font-extrabold font-mono tracking-tight">
-                        {compliance?.score ?? '—'}
-                      </span>
-                      <span className="text-xs text-slate-500 font-bold">/ 100</span>
+                    <div className="mt-2 flex items-baseline space-x-1.5">
+                      {!hasAllMandatoryDocs ? (
+                        <div className="flex items-baseline space-x-1.5">
+                          <span className="text-2xl font-black font-mono tracking-tight text-amber-800">
+                            Pending
+                          </span>
+                          <span className="text-xs text-amber-700 font-bold">
+                            ({mandatoryUploadedCount}/3 Docs)
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="flex items-baseline space-x-1">
+                          <span className="text-2xl font-black font-mono tracking-tight">
+                            {compliance?.score ?? 100}
+                          </span>
+                          <span className="text-xs text-slate-500 font-bold">/ 100</span>
+                        </div>
+                      )}
                     </div>
                   </div>
-                  <div className="mt-4 pt-3 border-t border-slate-200/60 flex items-center justify-between text-xs">
-                    <span className="font-semibold text-slate-600">Risk Assessment:</span>
+                  <div className="mt-3 pt-2.5 border-t border-slate-200/70 flex items-center justify-between text-xs">
+                    <span className="font-semibold text-slate-600">Status:</span>
                     <span
-                      className={`font-bold px-2 py-0.5 rounded text-[11px] ${
-                        isLowRisk
-                          ? 'bg-emerald-200/60 text-emerald-900'
+                      className={`font-bold px-2 py-0.5 rounded text-[10px] ${
+                        !hasAllMandatoryDocs
+                          ? 'bg-amber-200/80 text-amber-900'
+                          : isLowRisk
+                          ? 'bg-emerald-200/80 text-emerald-900'
                           : isMediumRisk
-                          ? 'bg-amber-200/60 text-amber-900'
-                          : 'bg-rose-200/60 text-rose-900'
+                          ? 'bg-amber-200/80 text-amber-900'
+                          : 'bg-rose-200/80 text-rose-900'
                       }`}
                     >
-                      {compliance?.risk || 'Calculating'}
+                      {!hasAllMandatoryDocs
+                        ? 'Missing Documents'
+                        : isLowRisk
+                        ? 'Low Risk (Verified)'
+                        : compliance?.risk || 'Discrepancy'}
                     </span>
                   </div>
                 </div>
 
-                {/* 2. Active CPCL Bids */}
-                <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between">
+                {/* 2. Mandatory Documents in Vault */}
+                <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs flex flex-col justify-between">
                   <div>
                     <div className="flex items-center justify-between">
                       <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
-                        My Submitted Quotations
+                        Mandatory Certificates
                       </span>
-                      <Layers className="w-5 h-5 text-blue-600" />
+                      <FileCheck2 className="w-4 h-4 text-indigo-600" />
                     </div>
-                    <div className="mt-3 text-4xl font-extrabold font-mono text-slate-900">
-                      {bids.length}
+                    <div className="mt-2 flex items-baseline space-x-1.5">
+                      <span className="text-2xl font-black font-mono text-slate-900">
+                        {mandatoryUploadedCount} / {MANDATORY_DOCS.length}
+                      </span>
+                      <span className="text-xs text-slate-500 font-medium">Uploaded</span>
                     </div>
                   </div>
-                  <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+                  <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs">
+                    <span className="font-semibold text-slate-500">Vault Health:</span>
+                    <span
+                      className={`font-bold px-2 py-0.5 rounded text-[10px] ${
+                        hasAllMandatoryDocs
+                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+                          : 'bg-amber-50 text-amber-800 border border-amber-200'
+                      }`}
+                    >
+                      {hasAllMandatoryDocs ? 'Complete (3/3)' : `${missingMandatoryDocs.length} Missing`}
+                    </span>
+                  </div>
+                </div>
+
+                {/* 3. Submitted Quotations */}
+                <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                        Submitted Bids
+                      </span>
+                      <Layers className="w-4 h-4 text-blue-600" />
+                    </div>
+                    <div className="mt-2 flex items-baseline space-x-1.5">
+                      <span className="text-2xl font-black font-mono text-slate-900">
+                        {bids.length}
+                      </span>
+                      <span className="text-xs text-slate-500 font-medium">Active Quotations</span>
+                    </div>
+                  </div>
+                  <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs">
                     <span className="font-semibold text-slate-500">Awarded Contracts:</span>
-                    <span className="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">
+                    <span className="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 text-[10px]">
                       {bids.filter((b) => b.status === 'Awarded').length} Won
                     </span>
                   </div>
                 </div>
 
-                {/* 3. Documents in Vault */}
-                <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between">
+                {/* 4. Profile & Bidding Clearance */}
+                <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs flex flex-col justify-between">
                   <div>
                     <div className="flex items-center justify-between">
                       <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
-                        Statutory Documents
+                        Bidding Clearance
                       </span>
-                      <FileCheck2 className="w-5 h-5 text-indigo-600" />
+                      <UserCheck className="w-4 h-4 text-sky-600" />
                     </div>
-                    <div className="mt-3 text-4xl font-extrabold font-mono text-slate-900">
-                      {documents.length}
-                    </div>
-                  </div>
-                  <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-                    <span className="font-semibold text-slate-500">Discrepancy Flags:</span>
-                    <span className={`font-bold px-2 py-0.5 rounded ${
-                      documents.some(d => d.flagged) ? 'bg-rose-50 text-rose-700' : 'bg-emerald-50 text-emerald-700'
-                    }`}>
-                      {documents.filter(d => d.flagged).length} Flagged
-                    </span>
-                  </div>
-                </div>
-
-                {/* 4. Profile Completion */}
-                <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between">
-                  <div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
-                        Profile Readiness
-                      </span>
-                      <UserCheck className="w-5 h-5 text-sky-600" />
-                    </div>
-                    <div className="mt-3 flex items-baseline space-x-1.5">
-                      <span className="text-4xl font-extrabold font-mono text-[#0B2546]">
+                    <div className="mt-2 flex items-baseline space-x-1.5">
+                      <span className="text-2xl font-black font-mono text-[#0B2546]">
                         {completionPct}%
                       </span>
-                      <span className="text-xs text-slate-500 font-bold">Complete</span>
+                      <span className="text-xs text-slate-500 font-medium">Readiness</span>
                     </div>
                   </div>
-                  <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+                  <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs">
                     <span className="font-semibold text-slate-500">Mandate Status:</span>
-                    <span className="font-bold text-slate-800 font-mono">
-                      {completionPct >= 80 ? '✅ Ready to Bid' : '⚠️ Action Needed'}
+                    <span
+                      className={`font-bold px-2 py-0.5 rounded text-[10px] font-mono ${
+                        hasAllMandatoryDocs && !hasFlaggedDocs
+                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                          : 'bg-amber-50 text-amber-800 border border-amber-200'
+                      }`}
+                    >
+                      {hasAllMandatoryDocs && !hasFlaggedDocs ? '✅ Cleared to Bid' : '⚠️ Action Needed'}
                     </span>
                   </div>
                 </div>
               </div>
 
-              {/* Portal Architecture & Where Features Exist Guide (User Explicit Request) */}
-              <div className="bg-gradient-to-br from-[#0B2546] to-[#143D6D] rounded-2xl p-6 text-white shadow-md space-y-5">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/15 pb-4">
+              {/* ACTIONABLE SECTION 1: MANDATORY STATUTORY DOCUMENT CHECKLIST */}
+              <div className="bg-white rounded-xl border border-slate-200 shadow-2xs p-5 space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
                   <div>
-                    <span className="text-[10px] font-mono uppercase tracking-widest text-sky-300 font-bold bg-white/10 px-2 py-0.5 rounded">
-                      Vendor Navigation Guide & Portal Architecture
-                    </span>
-                    <h2 className="text-xl font-extrabold text-white mt-1">
-                      Explore the National Procurement Compliance Portal (BidShield)
-                    </h2>
-                    <p className="text-xs text-slate-200 mt-0.5 max-w-3xl">
-                      This overview summarizes where all vendor tools, statutory registries, and bidding workspaces reside. Use the fast-launch cards below to navigate directly.
+                    <h3 className="text-sm font-bold text-[#0B2546] flex items-center space-x-2">
+                      <FileCheck2 className="w-4 h-4 text-sky-600" />
+                      <span>Mandatory Statutory Document Checklist (GFR 2017 Requirement)</span>
+                    </h3>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      All 3 baseline certificates must be uploaded and verified before official tender awarding clearance is granted.
                     </p>
                   </div>
                   <div className="shrink-0">
-                    <span className="text-xs font-mono bg-white/15 text-white px-3 py-1.5 rounded-lg border border-white/20 font-bold">
-                      GFR 2017 &bull; Rule 144(xi) Ready
+                    <span
+                      className={`text-xs font-bold px-2.5 py-1 rounded-md border ${
+                        hasAllMandatoryDocs
+                          ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                          : 'bg-amber-50 text-amber-800 border-amber-200'
+                      }`}
+                    >
+                      {mandatoryUploadedCount} of {MANDATORY_DOCS.length} Mandatory Certificates Uploaded
                     </span>
                   </div>
                 </div>
 
-                {/* 4 Feature Guide Quadrant Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  {/* Card 1: Overview */}
-                  <div className="bg-white/10 hover:bg-white/15 border border-white/20 rounded-xl p-4 transition flex flex-col justify-between space-y-3">
-                    <div className="space-y-1.5">
-                      <div className="w-8 h-8 rounded-lg bg-sky-500/30 border border-sky-400/40 flex items-center justify-center text-sky-200">
-                        <LayoutDashboard className="w-4 h-4" />
-                      </div>
-                      <h3 className="text-sm font-bold text-white">1. Overview & Health</h3>
-                      <p className="text-[11px] text-slate-200 leading-relaxed">
-                        Live dashboard summarizing your GFR 2017 risk score, Central Debarment vigilance clearance, and active discrepancy notices.
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => handleTabChange('overview')}
-                      className="w-full text-left text-xs font-bold text-sky-300 hover:text-white flex items-center justify-between pt-2 border-t border-white/10 cursor-pointer"
-                    >
-                      <span>Active Screen</span>
-                      <Check className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+                  {MANDATORY_DOCS.map((reqDoc) => {
+                    const uploaded = uploadedDocMap[reqDoc.type];
+                    const isFlagged = uploaded && (uploaded.flagged === 1 || uploaded.flagged === '1' || uploaded.flagged === true);
 
-                  {/* Card 2: Profile Status */}
-                  <div className="bg-white/10 hover:bg-white/15 border border-white/20 rounded-xl p-4 transition flex flex-col justify-between space-y-3">
-                    <div className="space-y-1.5">
-                      <div className="w-8 h-8 rounded-lg bg-emerald-500/30 border border-emerald-400/40 flex items-center justify-center text-emerald-200">
-                        <UserCheck className="w-4 h-4" />
-                      </div>
-                      <h3 className="text-sm font-bold text-white">2. Profile Status</h3>
-                      <p className="text-[11px] text-slate-200 leading-relaxed">
-                        Complete your corporate identity, authorized signatory KYC, banking EMD refund mandate, and annual turnover records.
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => handleTabChange('profile')}
-                      className="w-full text-left text-xs font-bold text-sky-300 hover:text-white flex items-center justify-between pt-2 border-t border-white/10 cursor-pointer"
-                    >
-                      <span>Open Profile Desk</span>
-                      <ArrowUpRight className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
+                    return (
+                      <div
+                        key={reqDoc.type}
+                        className={`rounded-xl border p-3.5 flex flex-col justify-between transition ${
+                          !uploaded
+                            ? 'bg-slate-50/70 border-dashed border-slate-300'
+                            : isFlagged
+                            ? 'bg-rose-50/30 border-rose-200'
+                            : 'bg-white border-slate-200 shadow-2xs'
+                        }`}
+                      >
+                        <div className="space-y-1.5">
+                          <div className="flex items-start justify-between gap-1.5">
+                            <span className="text-[10px] font-mono font-bold uppercase bg-slate-100 text-slate-700 px-2 py-0.5 rounded border border-slate-200">
+                              {reqDoc.type}
+                            </span>
+                            {uploaded ? (
+                              <span
+                                className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                  isFlagged
+                                    ? 'bg-rose-100 text-rose-800'
+                                    : 'bg-emerald-100 text-emerald-800'
+                                }`}
+                              >
+                                {isFlagged ? 'Discrepancy' : 'Verified'}
+                              </span>
+                            ) : (
+                              <span className="text-[10px] font-bold bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full">
+                                Missing
+                              </span>
+                            )}
+                          </div>
 
-                  {/* Card 3: Uploaded Documents */}
-                  <div className="bg-white/10 hover:bg-white/15 border border-white/20 rounded-xl p-4 transition flex flex-col justify-between space-y-3">
-                    <div className="space-y-1.5">
-                      <div className="w-8 h-8 rounded-lg bg-indigo-500/30 border border-indigo-400/40 flex items-center justify-center text-indigo-200">
-                        <FileCheck2 className="w-4 h-4" />
-                      </div>
-                      <h3 className="text-sm font-bold text-white">3. Uploaded Documents</h3>
-                      <p className="text-[11px] text-slate-200 leading-relaxed">
-                        Statutory vault to showcase certificates (GST REG-06, PAN, Udyam), preview files, check OCR extractions, and delete records.
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => handleTabChange('documents')}
-                      className="w-full text-left text-xs font-bold text-sky-300 hover:text-white flex items-center justify-between pt-2 border-t border-white/10 cursor-pointer"
-                    >
-                      <span>Manage Vault</span>
-                      <ArrowUpRight className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
+                          <div className="pt-1">
+                            <h4 className="text-xs font-bold text-slate-800 leading-snug">
+                              {reqDoc.label}
+                            </h4>
+                            <p className="text-[11px] text-slate-400 mt-0.5">
+                              {reqDoc.hint}
+                            </p>
+                          </div>
+                        </div>
 
-                  {/* Card 4: Apply for Tenders */}
-                  <div className="bg-white/10 hover:bg-white/15 border border-white/20 rounded-xl p-4 transition flex flex-col justify-between space-y-3">
-                    <div className="space-y-1.5">
-                      <div className="w-8 h-8 rounded-lg bg-amber-500/30 border border-amber-400/40 flex items-center justify-center text-amber-200">
-                        <Layers className="w-4 h-4" />
+                        <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between">
+                          {uploaded ? (
+                            <div className="flex items-center justify-between w-full">
+                              <span className="text-[11px] font-mono text-slate-500 truncate max-w-[130px]">
+                                {uploaded.file_url ? uploaded.file_url.split('/').pop() : 'Uploaded'}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => setPreviewDoc(uploaded)}
+                                className="inline-flex items-center space-x-1 text-xs font-bold text-[#0B2546] hover:underline cursor-pointer"
+                              >
+                                <Eye className="w-3 h-3" />
+                                <span>Inspect</span>
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setUploadDocType(reqDoc.type);
+                                handleTabChange('documents');
+                              }}
+                              className="w-full inline-flex items-center justify-center space-x-1.5 py-1.5 px-3 rounded-lg bg-[#0B2546] hover:bg-[#07182D] text-white text-xs font-bold transition shadow-2xs cursor-pointer"
+                            >
+                              <Upload className="w-3 h-3" />
+                              <span>Upload {reqDoc.type.replace('_CERT', '').replace('_CARD', '')}</span>
+                            </button>
+                          )}
+                        </div>
                       </div>
-                      <h3 className="text-sm font-bold text-white">4. Apply for Tender/BIDs</h3>
-                      <p className="text-[11px] text-slate-200 leading-relaxed">
-                        Browse active CPCL & PSU tenders, check eligibility, apply quotation amount, and track real-time contract award decisions.
+                    );
+                  })}
+                </div>
+
+                {!hasAllMandatoryDocs && (
+                  <div className="p-3 bg-amber-50 rounded-lg border border-amber-200 text-amber-900 text-xs flex items-start space-x-2">
+                    <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                    <div>
+                      <strong>Action Required:</strong> Please upload the remaining <strong>{missingMandatoryDocs.length} mandatory certificate(s)</strong> above. Your statutory health score will be certified and tender participation unlocked once these certificates are in your vault.
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* ACTIONABLE SECTION 2: TWO-COLUMN WORKSPACE (LIVE TENDERS & RECENT ACTIVITY) */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+                {/* Left (7 Cols): Live CPCL Procurement Tenders */}
+                <div className="lg:col-span-7 bg-white rounded-xl border border-slate-200 shadow-2xs p-5 space-y-3.5">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <div>
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-[#0B2546] flex items-center space-x-1.5">
+                        <Layers className="w-4 h-4 text-blue-600" />
+                        <span>Active Procurement Tenders Ready for Bidding</span>
+                      </h3>
+                      <p className="text-[11px] text-slate-500 mt-0.5">
+                        Participate in live tenders published by Chennai Petroleum Corporation Limited.
                       </p>
                     </div>
                     <button
                       type="button"
                       onClick={() => handleTabChange('apply')}
-                      className="w-full text-left text-xs font-bold text-sky-300 hover:text-white flex items-center justify-between pt-2 border-t border-white/10 cursor-pointer"
+                      className="text-xs font-bold text-sky-700 hover:text-sky-900 flex items-center space-x-0.5 cursor-pointer"
                     >
-                      <span>Apply for Tenders</span>
-                      <ArrowUpRight className="w-3.5 h-3.5" />
+                      <span>View All ({openTenders.length})</span>
+                      <ChevronRight className="w-3.5 h-3.5" />
                     </button>
                   </div>
+
+                  <div className="space-y-2.5">
+                    {openTenders.slice(0, 3).map((tender) => (
+                      <div
+                        key={tender.tender_id}
+                        className="rounded-lg border border-slate-200 p-3 hover:border-slate-300 transition flex flex-col sm:flex-row sm:items-center justify-between gap-2.5"
+                      >
+                        <div className="min-w-0">
+                          <div className="flex items-center space-x-2">
+                            <span className="text-[10px] font-mono font-bold bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded border border-slate-200">
+                              {tender.tender_ref_number || 'CPCL-2026'}
+                            </span>
+                            <span className="text-xs font-bold text-slate-800 truncate">
+                              {tender.title}
+                            </span>
+                          </div>
+                          <div className="flex items-center space-x-3 text-[11px] text-slate-500 mt-1">
+                            <span>Est: <strong>{formatINR(tender.estimated_value_inr)}</strong></span>
+                            <span>&bull;</span>
+                            <span>Due: {formatDate(tender.submission_deadline)}</span>
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedTenderForBid(tender.tender_id);
+                            handleTabChange('apply');
+                          }}
+                          className="inline-flex items-center space-x-1 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-[#0B2546] hover:text-white text-slate-800 text-xs font-bold transition shrink-0 cursor-pointer"
+                        >
+                          <span>Apply Bid</span>
+                          <ArrowUpRight className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Right (5 Cols): Recent Statutory & Audit Ledger Activity */}
+                <div className="lg:col-span-5 bg-white rounded-xl border border-slate-200 shadow-2xs p-5 space-y-3.5">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-[#0B2546] flex items-center space-x-1.5">
+                      <Clock className="w-4 h-4 text-indigo-600" />
+                      <span>Recent Compliance Activity</span>
+                    </h3>
+                    <span className="text-[11px] text-slate-400 font-mono">Audit Trail</span>
+                  </div>
+
+                  {auditLogs.length === 0 ? (
+                    <div className="py-8 text-center text-slate-400 text-xs">
+                      No compliance transactions recorded yet.
+                    </div>
+                  ) : (
+                    <div className="space-y-2.5">
+                      {auditLogs.slice(0, 4).map((log) => (
+                        <div key={log.log_id} className="text-xs p-2.5 rounded-lg bg-slate-50 border border-slate-100 space-y-0.5">
+                          <div className="flex items-center justify-between">
+                            <span className="font-bold text-slate-800 font-mono text-[11px]">
+                              {log.action}
+                            </span>
+                            <span className="text-[10px] text-slate-400">
+                              {formatDate(log.timestamp)}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-slate-600 line-clamp-2">
+                            {log.details}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
 
-              {/* Statutory Health Check Advisory */}
-              {compliance?.flags && compliance.flags.length > 0 ? (
-                <div className={`p-4 rounded-xl border flex items-start space-x-3 ${
-                  isHighRisk ? 'bg-rose-50 border-rose-200' : 'bg-amber-50 border-amber-200'
-                }`}>
-                  <AlertTriangle className={`w-5 h-5 shrink-0 mt-0.5 ${isHighRisk ? 'text-rose-600' : 'text-amber-600'}`} />
-                  <div className="space-y-1">
-                    <h4 className={`text-xs font-bold uppercase tracking-wide ${isHighRisk ? 'text-rose-900' : 'text-amber-900'}`}>
-                      Statutory Discrepancy & Fraud Advisory Flags ({compliance.flags.length})
-                    </h4>
-                    <ul className="text-xs space-y-1">
-                      {compliance.flags.map((flag, idx) => (
-                        <li key={idx} className={isHighRisk ? 'text-rose-800' : 'text-amber-800'}>
-                          &bull; {flag}
-                        </li>
-                      ))}
-                    </ul>
-                    <p className="text-[11px] text-slate-600 pt-1">
-                      Go to the <strong>Uploaded Documents</strong> tab to re-upload clear certificates or update mismatched legal names.
-                    </p>
+              {/* Statutory Advisory Message */}
+              {hasAllMandatoryDocs && (
+                compliance?.flags && compliance.flags.length > 0 ? (
+                  <div className={`p-4 rounded-xl border flex items-start space-x-3 ${
+                    isHighRisk ? 'bg-rose-50 border-rose-200' : 'bg-amber-50 border-amber-200'
+                  }`}>
+                    <AlertTriangle className={`w-4 h-4 shrink-0 mt-0.5 ${isHighRisk ? 'text-rose-600' : 'text-amber-600'}`} />
+                    <div className="space-y-1 text-xs">
+                      <h4 className={`font-bold uppercase tracking-wide ${isHighRisk ? 'text-rose-900' : 'text-amber-900'}`}>
+                        Statutory Discrepancy Notice ({compliance.flags.length})
+                      </h4>
+                      <ul className="space-y-0.5">
+                        {compliance.flags.map((flag, idx) => (
+                          <li key={idx} className={isHighRisk ? 'text-rose-800' : 'text-amber-800'}>
+                            &bull; {flag}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   </div>
-                </div>
-              ) : (
-                <div className="p-4 rounded-xl border bg-emerald-50 border-emerald-200 flex items-center space-x-3">
-                  <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
-                  <div>
-                    <h4 className="text-xs font-bold uppercase tracking-wide text-emerald-900">
-                      All 6 Statutory Cross-Checks Verified
-                    </h4>
-                    <p className="text-xs text-emerald-800">
-                      No registry mismatches or MoPNG vigilance debarments found. Enterprise credentials align 100% across Udyam, GSTN, and Income Tax databases.
-                    </p>
+                ) : (
+                  <div className="p-3.5 rounded-xl border bg-emerald-50 border-emerald-200 flex items-center space-x-3 text-xs text-emerald-900">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <div>
+                      <strong>GFR 2017 Pre-Qualification Certified:</strong> All mandatory statutory certificates and central registry checks are verified clean.
+                    </div>
                   </div>
-                </div>
+                )
               )}
             </div>
           )}
