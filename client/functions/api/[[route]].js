@@ -496,13 +496,72 @@ export async function onRequest(context) {
       }
     }
 
-    // 8. Single Bidder
+    // 7b. Single Document Deletion or Fetch
+    const singleDocMatch = path.match(/^\/api\/bidders\/([^\/]+)\/documents\/([^\/]+)$/);
+    if (singleDocMatch) {
+      const bidderId = singleDocMatch[1];
+      const docId = singleDocMatch[2];
+
+      if (method === 'DELETE') {
+        const dRes = await executeSql('SELECT * FROM Document WHERE doc_id = ? AND bidder_id = ?', [docId, bidderId]);
+        if (dRes.rows.length === 0) {
+          return jsonResponse({ success: false, message: 'Document not found or does not belong to this bidder' }, 404);
+        }
+        const doc = dRes.rows[0];
+        await executeSql('DELETE FROM Document WHERE doc_id = ? AND bidder_id = ?', [docId, bidderId]);
+
+        const logId = crypto.randomUUID();
+        const now = new Date().toISOString();
+        await executeSql(
+          'INSERT INTO AuditLog (log_id, bidder_id, action, performed_by, details, timestamp) VALUES (?, ?, ?, ?, ?, ?)',
+          [logId, bidderId, 'DOCUMENT_DELETED', 'Vendor / Officer', `Deleted statutory certificate "${doc.doc_type}" (${doc.file_url || docId}) from vault`, now]
+        );
+
+        return jsonResponse({ success: true, message: 'Document deleted successfully', doc_id: docId });
+      }
+
+      if (method === 'GET') {
+        const dRes = await executeSql('SELECT * FROM Document WHERE doc_id = ? AND bidder_id = ?', [docId, bidderId]);
+        if (dRes.rows.length === 0) return jsonResponse({ success: false, message: 'Document not found' }, 404);
+        const r = dRes.rows[0];
+        let ext = r.extracted_data;
+        try { ext = JSON.parse(r.extracted_data); } catch (e) {}
+        return jsonResponse({ success: true, document: { ...r, extracted_data: ext, flagged: Boolean(r.flagged) } });
+      }
+    }
+
+    // 8. Single Bidder (GET & PUT)
     const singleBidderMatch = path.match(/^\/api\/bidders\/([^\/]+)$/);
-    if (singleBidderMatch && method === 'GET') {
+    if (singleBidderMatch) {
       const bidderId = singleBidderMatch[1];
-      const { rows } = await executeSql('SELECT * FROM Bidder WHERE bidder_id = ?', [bidderId]);
-      if (rows.length === 0) return jsonResponse({ success: false, message: 'Bidder not found' }, 404);
-      return jsonResponse({ success: true, bidder: rows[0] });
+      if (method === 'GET') {
+        const { rows } = await executeSql('SELECT * FROM Bidder WHERE bidder_id = ?', [bidderId]);
+        if (rows.length === 0) return jsonResponse({ success: false, message: 'Bidder not found' }, 404);
+        return jsonResponse({ success: true, bidder: rows[0] });
+      }
+      if (method === 'PUT' || method === 'PATCH') {
+        const body = await request.json();
+        const { phone, email, registered_address } = body;
+        const updates = [];
+        const args = [];
+        if (phone !== undefined) { updates.push('phone = ?'); args.push(phone); }
+        if (email !== undefined) { updates.push('email = ?'); args.push(email); }
+        if (registered_address !== undefined) { updates.push('registered_address = ?'); args.push(registered_address); }
+
+        if (updates.length > 0) {
+          args.push(bidderId);
+          await executeSql(`UPDATE Bidder SET ${updates.join(', ')} WHERE bidder_id = ?`, args);
+
+          const logId = crypto.randomUUID();
+          const now = new Date().toISOString();
+          await executeSql(
+            'INSERT INTO AuditLog (log_id, bidder_id, action, performed_by, details, timestamp) VALUES (?, ?, ?, ?, ?, ?)',
+            [logId, bidderId, 'PROFILE_UPDATED', 'Vendor', `Updated corporate profile contact and registered details`, now]
+          );
+        }
+        const { rows } = await executeSql('SELECT * FROM Bidder WHERE bidder_id = ?', [bidderId]);
+        return jsonResponse({ success: true, message: 'Profile updated successfully', bidder: rows[0] });
+      }
     }
 
     // 9. All Tenders
