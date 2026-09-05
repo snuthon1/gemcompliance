@@ -27,6 +27,43 @@ app.use('/api/bidders', biddersRouter);
 app.use('/api/tenders', tendersRouter);
 app.use('/api', mockPortalsRouter);
 
+// Blacklist Registry Endpoints
+app.get('/api/blacklist', async (req, res) => {
+  try {
+    const list = await prisma.blacklistRegistry.findMany({
+      orderBy: { id: 'asc' }
+    });
+    res.json({ success: true, count: list.length, blacklist: list });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.post('/api/blacklist/check', async (req, res) => {
+  try {
+    const { identifier } = req.body;
+    const cleanId = (identifier || '').trim();
+    if (!cleanId) {
+      return res.status(400).json({ success: false, message: 'Identifier required' });
+    }
+    const entry = await prisma.blacklistRegistry.findFirst({
+      where: {
+        OR: [
+          { pan_or_gstin: cleanId },
+          { entity_name: { contains: cleanId } }
+        ],
+        blacklisted: true
+      }
+    });
+    if (entry) {
+      return res.json({ success: true, blacklisted: true, entry });
+    }
+    return res.json({ success: true, blacklisted: false, message: 'Entity is clean and not listed on central debarment registers.' });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // Health check endpoint
 app.get('/api/health', async (req, res) => {
   try {
