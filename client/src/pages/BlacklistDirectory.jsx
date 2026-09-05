@@ -164,85 +164,91 @@ export default function BlacklistDirectory() {
         </div>
       </div>
 
-      {/* 2. Executive Stat Cards with Vibrant Colored Numbers */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Card 1: Total Debarred */}
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-              Total Debarred Entities
+      {/* 2. Compact Interactive Metric KPI Ribbon */}
+      <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+        <div className="grid grid-cols-2 lg:grid-cols-4 divide-y lg:divide-y-0 lg:divide-x divide-slate-100">
+          {/* Segment 1: Total Debarred */}
+          <div className="p-3 sm:px-5 sm:py-3 text-left flex items-center justify-between">
+            <div className="space-y-0.5">
+              <div className="flex items-center space-x-1.5">
+                <span className="w-2 h-2 rounded-full bg-[#0B2546]"></span>
+                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                  Total Debarred
+                </span>
+              </div>
+              <div className="flex items-baseline space-x-2">
+                <span className="text-2xl font-black font-mono text-[#0B2546]">
+                  {blacklist.length}
+                </span>
+                <span className="text-[11px] text-slate-400 font-medium">Banned Firms</span>
+              </div>
+            </div>
+            <span className="text-[10px] font-mono font-semibold text-slate-700 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-md hidden sm:inline-block">
+              All India PSUs
             </span>
-            <ShieldX className="w-5 h-5 text-rose-600" />
           </div>
-          <div className="mt-3 flex items-baseline space-x-2">
-            <span className="text-4xl font-extrabold font-mono text-[#0B2546]">
-              {blacklist.length}
-            </span>
-            <span className="text-xs text-slate-400 font-semibold">Banned Firms</span>
-          </div>
-          <div className="mt-3 pt-2.5 border-t border-slate-100 text-[11px] text-slate-500 flex items-center justify-between">
-            <span>Jurisdiction:</span>
-            <span className="font-bold text-slate-700">All India PSUs</span>
-          </div>
-        </div>
 
-        {/* Card 2: Active Vigilance Orders */}
-        <div className="bg-white p-5 rounded-2xl border border-rose-200/80 shadow-xs flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-rose-800 uppercase tracking-wider">
-              Active Vigilance Bans
+          {/* Segment 2: Active Vigilance Orders */}
+          <div className="p-3 sm:px-5 sm:py-3 text-left flex items-center justify-between">
+            <div className="space-y-0.5">
+              <div className="flex items-center space-x-1.5">
+                <span className="w-2 h-2 rounded-full bg-rose-600 animate-pulse"></span>
+                <span className="text-[11px] font-bold uppercase tracking-wider text-rose-800">
+                  Active Bans
+                </span>
+              </div>
+              <div className="flex items-baseline space-x-2">
+                <span className="text-2xl font-black font-mono text-rose-600">
+                  {blacklist.length}
+                </span>
+                <span className="text-[11px] text-rose-700 font-medium">Disqualified</span>
+              </div>
+            </div>
+            <span className="text-[10px] font-mono font-semibold text-rose-800 bg-rose-100/60 border border-rose-200 px-2 py-0.5 rounded-md hidden sm:inline-block">
+              Score: 0/100
             </span>
-            <span className="w-2 h-2 rounded-full bg-rose-600 animate-pulse"></span>
           </div>
-          <div className="mt-3 flex items-baseline space-x-2">
-            <span className="text-4xl font-extrabold font-mono text-rose-600">
-              {blacklist.length}
-            </span>
-            <span className="text-xs text-rose-700 font-semibold">Strict Disqualification</span>
-          </div>
-          <div className="mt-3 pt-2.5 border-t border-rose-100 text-[11px] text-rose-800 flex items-center justify-between">
-            <span>Score Assigned:</span>
-            <span className="font-mono font-bold text-rose-700">0 / 100</span>
-          </div>
-        </div>
 
-        {/* Card 3: Integrity Pact Violations */}
-        <div className="bg-white p-5 rounded-2xl border border-amber-200/80 shadow-xs flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-amber-800 uppercase tracking-wider">
-              Fraud & Cartelization
+          {/* Segment 3: Integrity Pact Violations */}
+          <div className="p-3 sm:px-5 sm:py-3 text-left flex items-center justify-between">
+            <div className="space-y-0.5">
+              <div className="flex items-center space-x-1.5">
+                <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+                <span className="text-[11px] font-bold uppercase tracking-wider text-amber-800">
+                  Fraud / Collusion
+                </span>
+              </div>
+              <div className="flex items-baseline space-x-2">
+                <span className="text-2xl font-black font-mono text-amber-600">
+                  {blacklist.filter((b) => (b.reason || '').toLowerCase().includes('fraud') || (b.reason || '').toLowerCase().includes('collusive')).length || 2}
+                </span>
+                <span className="text-[11px] text-amber-700 font-medium">Severe Offenses</span>
+              </div>
+            </div>
+            <span className="text-[10px] font-mono font-semibold text-amber-800 bg-amber-100/60 border border-amber-200 px-2 py-0.5 rounded-md hidden sm:inline-block">
+              FIR Action
             </span>
-            <Scale className="w-5 h-5 text-amber-600" />
           </div>
-          <div className="mt-3 flex items-baseline space-x-2">
-            <span className="text-4xl font-extrabold font-mono text-amber-600">
-              {blacklist.filter((b) => (b.reason || '').toLowerCase().includes('fraud') || (b.reason || '').toLowerCase().includes('collusive')).length || 2}
-            </span>
-            <span className="text-xs text-amber-700 font-semibold">Severe Offences</span>
-          </div>
-          <div className="mt-3 pt-2.5 border-t border-amber-100 text-[11px] text-amber-800 flex items-center justify-between">
-            <span>Action:</span>
-            <span className="font-bold text-amber-700">FIR / Debarment</span>
-          </div>
-        </div>
 
-        {/* Card 4: Average Debarment Duration */}
-        <div className="bg-white p-5 rounded-2xl border border-blue-200/80 shadow-xs flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-blue-800 uppercase tracking-wider">
-              Average Ban Period
+          {/* Segment 4: Average Debarment Duration */}
+          <div className="p-3 sm:px-5 sm:py-3 text-left flex items-center justify-between">
+            <div className="space-y-0.5">
+              <div className="flex items-center space-x-1.5">
+                <span className="w-2 h-2 rounded-full bg-blue-600"></span>
+                <span className="text-[11px] font-bold uppercase tracking-wider text-blue-800">
+                  Average Ban
+                </span>
+              </div>
+              <div className="flex items-baseline space-x-2">
+                <span className="text-2xl font-black font-mono text-blue-600">
+                  2.5
+                </span>
+                <span className="text-[11px] text-blue-700 font-medium">Years Statutory</span>
+              </div>
+            </div>
+            <span className="text-[10px] font-mono font-semibold text-blue-800 bg-blue-100/60 border border-blue-200 px-2 py-0.5 rounded-md hidden sm:inline-block">
+              GFR R-151
             </span>
-            <Calendar className="w-5 h-5 text-blue-600" />
-          </div>
-          <div className="mt-3 flex items-baseline space-x-2">
-            <span className="text-4xl font-extrabold font-mono text-blue-600">
-              2.5
-            </span>
-            <span className="text-xs text-blue-700 font-semibold">Years Statutory Ban</span>
-          </div>
-          <div className="mt-3 pt-2.5 border-t border-blue-100 text-[11px] text-blue-800 flex items-center justify-between">
-            <span>Legal Basis:</span>
-            <span className="font-bold text-blue-700">GFR 2017 &bull; R-151</span>
           </div>
         </div>
       </div>
