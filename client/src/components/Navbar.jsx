@@ -1,12 +1,13 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ShieldCheck, UserCheck, RefreshCw, Layers, Users } from 'lucide-react';
+import { ShieldCheck, UserCheck, RefreshCw, Layers, Users, Building2 } from 'lucide-react';
 
 export default function Navbar({ onRefresh }) {
   const location = useLocation();
 
   const isBiddersActive = location.pathname === '/' || location.pathname.startsWith('/bidder');
   const isTendersActive = location.pathname.startsWith('/tenders');
+  const isVendorActive = location.pathname.startsWith('/vendor') || location.pathname.startsWith('/portal') || location.pathname.startsWith('/user-dashboard');
 
   return (
     <header className="bg-cpcl-navy text-white border-b-4 border-cpcl-orange shadow-md sticky top-0 z-30">
@@ -57,6 +58,18 @@ export default function Navbar({ onRefresh }) {
           >
             <Layers className="w-3.5 h-3.5" />
             <span>Tenders & Bids</span>
+          </Link>
+
+          <Link
+            to="/vendor"
+            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded text-xs font-semibold transition ${
+              isVendorActive
+                ? 'bg-cpcl-orange text-white shadow'
+                : 'text-slate-300 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            <Building2 className="w-3.5 h-3.5" />
+            <span>Vendor Portal</span>
           </Link>
         </div>
 
