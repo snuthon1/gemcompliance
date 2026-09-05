@@ -179,22 +179,22 @@ export default function Login() {
 
       {/* 5. MAIN CONTENT AREA: WITH CPCL REFINERY BACKGROUND */}
       <div
-        className="relative flex-1 min-h-[calc(100vh-200px)] flex items-center justify-center py-16 sm:py-24 bg-slate-900 bg-cover bg-center bg-no-repeat"
+        className="relative flex-1 min-h-[calc(100vh-240px)] flex items-center justify-center py-8 sm:py-12 bg-slate-900 bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: "url('/cpcl_refinery_bg.png')" }}
       >
         {/* Crisp subtle overlay - NO BLUR */}
         <div className="absolute inset-0 bg-slate-950/35 pointer-events-none" />
 
-        <main className="relative z-10 max-w-[420px] mx-auto w-full px-4 my-auto">
+        <main className="relative z-10 max-w-lg mx-auto w-full px-4 sm:px-6 my-auto">
           {/* Official Government Sign-In Form - Centered */}
           <div className="bg-white rounded-xl border border-slate-300 shadow-2xl overflow-hidden">
-              <div className="p-6 space-y-5">
+              <div className="p-5 sm:p-6 space-y-3.5">
                 {/* Role Tabs */}
                 <div className="grid grid-cols-2 p-1 bg-slate-100 rounded-lg border border-slate-200">
                   <button
                     type="button"
                     onClick={() => handleTabChange('OFFICER')}
-                    className={`py-2 px-3 rounded text-xs font-bold transition-all cursor-pointer ${
+                    className={`py-1.5 px-3 rounded text-xs font-bold transition-all cursor-pointer ${
                       activeTab === 'OFFICER'
                         ? 'bg-[#0B2546] text-white shadow-xs'
                         : 'text-slate-600 hover:text-slate-900'
@@ -206,7 +206,7 @@ export default function Login() {
                   <button
                     type="button"
                     onClick={() => handleTabChange('VENDOR')}
-                    className={`py-2 px-3 rounded text-xs font-bold transition-all cursor-pointer ${
+                    className={`py-1.5 px-3 rounded text-xs font-bold transition-all cursor-pointer ${
                       activeTab === 'VENDOR'
                         ? 'bg-[#0B2546] text-white shadow-xs'
                         : 'text-slate-600 hover:text-slate-900'
@@ -217,8 +217,8 @@ export default function Login() {
                 </div>
 
                 {/* Subtitle / Department Guidance */}
-                <div className="border-b border-slate-100 pb-3">
-                  <h4 className="text-sm font-bold text-slate-900">
+                <div className="border-b border-slate-100 pb-2">
+                  <h4 className="text-xs sm:text-sm font-bold text-slate-900">
                     {activeTab === 'OFFICER' ? 'Procurement Committee Credentials' : 'Registered Vendor Credentials'}
                   </h4>
                   <p className="text-[11px] text-slate-500 mt-0.5">
@@ -229,7 +229,7 @@ export default function Login() {
                 </div>
 
                 {/* Demo Credentials Quick-Fill Pill */}
-                <div className="bg-amber-50 border border-amber-200 rounded p-2.5 text-[11px] flex items-center justify-between">
+                <div className="bg-amber-50 border border-amber-200 rounded py-1.5 px-3 text-[11px] flex items-center justify-between">
                   <div className="text-amber-900">
                     <span className="font-bold">Evaluation Demo Login:</span>{' '}
                     <span className="font-mono text-slate-700">
@@ -247,7 +247,7 @@ export default function Login() {
 
                 {/* Error Banner */}
                 {error && (
-                  <div className="p-3 rounded bg-rose-50 border border-rose-200 flex items-center space-x-2 text-xs text-rose-800 font-semibold">
+                  <div className="p-2.5 rounded bg-rose-50 border border-rose-200 flex items-center space-x-2 text-xs text-rose-800 font-semibold">
                     <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
                     <span>{error}</span>
                   </div>
@@ -256,7 +256,7 @@ export default function Login() {
                 {/* Form Fields */}
                 <form
                   onSubmit={handleSubmit}
-                  className="space-y-4"
+                  className="space-y-3"
                 >
                   {activeTab === 'OFFICER' ? (
                     <>
@@ -388,7 +388,7 @@ export default function Login() {
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="w-full py-2.5 px-4 bg-[#0B2546] hover:bg-[#07182D] text-white font-bold text-xs rounded transition-colors shadow-xs flex items-center justify-center space-x-2 cursor-pointer disabled:opacity-50"
+                    className="w-full py-2 px-4 bg-[#0B2546] hover:bg-[#07182D] text-white font-bold text-xs rounded transition-colors shadow-xs flex items-center justify-center space-x-2 cursor-pointer disabled:opacity-50"
                   >
                     <span>{submitting ? 'Authenticating Credentials...' : 'Login to Secure Session'}</span>
                   </button>
