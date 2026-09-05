@@ -206,7 +206,7 @@ export default function TenderDetail() {
         <div className="px-6 py-4 border-b border-slate-200 bg-slate-50/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wide flex items-center space-x-2">
-              <Award className="w-4 h-4 text-cpcl-orange" />
+              <Award className="w-4 h-4 text-brand-600" />
               <span>Bidder Comparison & Integrated Compliance Matrix</span>
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
@@ -354,7 +354,7 @@ export default function TenderDetail() {
                           type="button"
                           disabled={awardingId === bid.bidder_id}
                           onClick={() => handleAward(bid.bidder_id, bid.company_name)}
-                          className="px-3 py-1.5 rounded-lg text-xs font-bold bg-cpcl-navy hover:bg-slate-800 text-white shadow transition disabled:opacity-50"
+                          className="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-brand-600 hover:bg-brand-700 text-white shadow-sm transition disabled:opacity-50"
                         >
                           {awardingId === bid.bidder_id ? 'Awarding...' : 'Award to this bidder'}
                         </button>
