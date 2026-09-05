@@ -22,7 +22,8 @@ import {
   Network,
   Scale,
   Zap,
-  Fingerprint
+  Fingerprint,
+  FileSearch
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import NationalEmblem from './NationalEmblem';
@@ -75,21 +76,24 @@ export default function Sidebar() {
           name: 'Cartel & Collusion Watch',
           path: '/cartel-watch',
           icon: Network,
-          badge: 'AI Vigilance',
           active: location.pathname === '/cartel-watch'
+        },
+        {
+          name: 'Document Tamper Inspector',
+          path: '/document-forensics',
+          icon: FileSearch,
+          active: location.pathname === '/document-forensics'
         },
         {
           name: 'National Debarment',
           path: '/blacklist',
           icon: ShieldAlert,
-          badge: 'CVC / MoPNG',
           active: location.pathname === '/blacklist'
         },
         {
           name: 'Forensic Audit Ledger',
           path: '/audit-trail',
           icon: Fingerprint,
-          badge: 'SHA-256',
           active: location.pathname === '/audit-trail'
         }
       ]
