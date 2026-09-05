@@ -46,31 +46,27 @@ export default function Sidebar() {
   // Strictly segregated navigation links based on user role
   const officerNavLinks = [
     {
-      name: 'Tenders & Bids Desk',
+      name: 'Tenders & Bids',
       path: '/tenders',
       icon: Layers,
-      badge: 'Live',
       active: location.pathname.startsWith('/tenders') || location.pathname === '/'
     },
     {
-      name: 'Participating Bidders',
+      name: 'Bidders Directory',
       path: '/bidders',
       icon: Users,
-      badge: 'Dossiers',
       active: location.pathname === '/bidders' || location.pathname.startsWith('/bidder/')
     },
     {
-      name: 'Blacklisted Entities',
+      name: 'Blacklist Search',
       path: '/blacklist',
       icon: ShieldAlert,
-      badge: 'Vigilance',
       active: location.pathname === '/blacklist'
     },
     {
-      name: 'Compliance & Analytics',
+      name: 'Reports & Analytics',
       path: '/analytics',
       icon: BarChart3,
-      badge: 'Controls',
       active: location.pathname === '/analytics'
     }
   ];
@@ -213,95 +209,27 @@ export default function Sidebar() {
                         <Icon className={`w-4 h-4 ${item.active ? 'text-white' : 'text-slate-500'}`} />
                         <span>{item.name}</span>
                       </div>
-                      <span
-                        className={`text-[9px] font-mono px-1.5 py-0.5 rounded font-bold ${
-                          item.active
-                            ? 'bg-white/20 text-white'
-                            : 'bg-slate-100 text-slate-500 border border-slate-200'
-                        }`}
-                      >
-                        {item.badge}
-                      </span>
+                      {item.badge && (
+                        <span
+                          className={`text-[9px] font-mono px-1.5 py-0.5 rounded font-bold ${
+                            item.active
+                              ? 'bg-white/20 text-white'
+                              : 'bg-slate-100 text-slate-500 border border-slate-200'
+                          }`}
+                        >
+                          {item.badge}
+                        </span>
+                      )}
                     </Link>
                   );
                 })}
               </nav>
             </div>
-
-            {/* Officer Statutory Integration Status OR Vendor Guidance */}
-            {isOfficer ? (
-              <div className="px-3 py-2.5 rounded-lg bg-slate-50 border border-slate-200 space-y-2">
-                <div className="flex items-center justify-between text-[10px] font-bold text-slate-800">
-                  <span className="uppercase tracking-wider">Statutory Verification Desk</span>
-                  <span className="text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.2 rounded text-[8px] font-semibold">
-                    Simulated
-                  </span>
-                </div>
-                <p className="text-[9px] text-slate-500 leading-tight">
-                  Simulated registries for demonstration — not connected to live government systems.
-                </p>
-                <div className="space-y-1 text-[9px] text-slate-600 font-mono pt-1">
-                  <div className="flex items-center justify-between">
-                    <span>GSTN Verification (GSTR-3B)</span>
-                    <span className="text-emerald-600 font-semibold bg-emerald-50 px-1 rounded">&bull; Synced</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span>MSME Udyam Aadhaar</span>
-                    <span className="text-emerald-600 font-semibold bg-emerald-50 px-1 rounded">&bull; Synced</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span>CBDT Income Tax PAN</span>
-                    <span className="text-emerald-600 font-semibold bg-emerald-50 px-1 rounded">&bull; Synced</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span>MoPNG Vigilance List</span>
-                    <span className="text-emerald-600 font-semibold bg-emerald-50 px-1 rounded">&bull; Synced</span>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="px-3 py-2.5 rounded-lg bg-blue-50/50 border border-blue-100 space-y-2">
-                <div className="flex items-center justify-between text-[10px] font-bold text-[#0B2546]">
-                  <span className="uppercase tracking-wider">Vendor Compliance Rules</span>
-                  <span className="text-blue-700 bg-blue-100 px-1.5 py-0.2 rounded text-[8px] font-semibold">
-                    GFR 2017
-                  </span>
-                </div>
-                <p className="text-[9px] text-slate-600 leading-tight">
-                  Ensure all uploaded statutory certificates exactly match legal registered entity names to maintain low-risk status.
-                </p>
-                <div className="space-y-1 text-[9px] text-slate-600 pt-1">
-                  <div className="flex items-center space-x-1.5">
-                    <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0" />
-                    <span>Upload GST REG-06 Certificate</span>
-                  </div>
-                  <div className="flex items-center space-x-1.5">
-                    <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0" />
-                    <span>Valid PAN Card linked to Entity</span>
-                  </div>
-                  <div className="flex items-center space-x-1.5">
-                    <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0" />
-                    <span>Active MSME Udyam Registration</span>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         </div>
 
-        {/* Bottom Section: Database Health & User Profile */}
-        <div className="p-3 border-t border-slate-200 bg-slate-50 space-y-2.5">
-          {/* Central DB Cloud Link */}
-          <div className="px-2.5 py-1.5 rounded-md bg-white border border-slate-200 flex items-center justify-between text-xs font-mono">
-            <div className="flex items-center space-x-1.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              <Database className="w-3 h-3 text-slate-400" />
-              <span className="text-[10px] text-slate-600 font-semibold">Turso Edge DB</span>
-            </div>
-            <span className="text-[9px] text-emerald-700 font-bold uppercase">
-              Cloud Active
-            </span>
-          </div>
+        {/* Bottom Section: User Profile & Logout */}
+        <div className="p-3 border-t border-slate-200 bg-slate-50">
 
           {/* User Account Card */}
           {user && (
