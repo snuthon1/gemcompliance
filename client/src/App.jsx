@@ -164,8 +164,8 @@ function AppLayout() {
             </div>
 
             <div className="flex items-center space-x-2 text-slate-500">
-              <span className="text-[11px] font-medium">Digital Technology Partner</span>
-              <span className="text-sm font-black tracking-tight text-[#0066CC]">NIC</span>
+              <span className="text-[11px] font-medium">Built for Smart India Hackathon 2026</span>
+              <span className="text-xs font-mono font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">SIH26100</span>
             </div>
           </div>
         </footer>
