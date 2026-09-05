@@ -251,7 +251,7 @@ export default function Login() {
               )}
 
               {/* Form Inputs */}
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
                 {activeTab === 'OFFICER' ? (
                   <>
                     <div className="space-y-1.5">
@@ -263,9 +263,10 @@ export default function Login() {
                         <input
                           type="email"
                           required
+                          autoComplete="off"
                           value={officerEmail}
                           onChange={(e) => setOfficerEmail(e.target.value)}
-                          placeholder="officer@cpcl.gov.in"
+                          placeholder="admin@admin.com"
                           className="w-full bg-white border border-slate-300 rounded-lg pl-10 pr-3 py-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0B2546]/15 focus:border-[#0B2546]"
                         />
                       </div>
@@ -280,9 +281,10 @@ export default function Login() {
                         <input
                           type={showPassword ? 'text' : 'password'}
                           required
+                          autoComplete="new-password"
                           value={officerPassword}
                           onChange={(e) => setOfficerPassword(e.target.value)}
-                          placeholder="••••••••••••"
+                          placeholder="Enter officer password"
                           className="w-full bg-white border border-slate-300 rounded-lg pl-10 pr-10 py-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0B2546]/15 focus:border-[#0B2546]"
                         />
                         <button
@@ -306,9 +308,10 @@ export default function Login() {
                         <input
                           type="text"
                           required
+                          autoComplete="off"
                           value={vendorIdentifier}
                           onChange={(e) => setVendorIdentifier(e.target.value)}
-                          placeholder="33AAACA1234A1Z5 or tenders@company.com"
+                          placeholder="GSTIN or tenders@company.com"
                           className="w-full bg-white border border-slate-300 rounded-lg pl-10 pr-3 py-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0B2546]/15 focus:border-[#0B2546]"
                         />
                       </div>
@@ -323,9 +326,10 @@ export default function Login() {
                         <input
                           type={showPassword ? 'text' : 'password'}
                           required
+                          autoComplete="new-password"
                           value={vendorPassword}
                           onChange={(e) => setVendorPassword(e.target.value)}
-                          placeholder="••••••••••••"
+                          placeholder="Enter vendor password"
                           className="w-full bg-white border border-slate-300 rounded-lg pl-10 pr-10 py-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0B2546]/15 focus:border-[#0B2546]"
                         />
                         <button
@@ -345,7 +349,6 @@ export default function Login() {
                   <label className="flex items-center space-x-2 cursor-pointer">
                     <input
                       type="checkbox"
-                      defaultChecked
                       className="rounded border-slate-300 text-[#0B2546] focus:ring-[#0B2546]"
                     />
                     <span>Remember this device</span>
