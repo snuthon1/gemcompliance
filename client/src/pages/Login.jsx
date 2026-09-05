@@ -179,7 +179,7 @@ export default function Login() {
 
       {/* 5. MAIN CONTENT AREA: WITH CPCL REFINERY BACKGROUND */}
       <div
-        className="relative flex-1 min-h-[calc(100vh-240px)] flex items-center justify-center py-8 sm:py-12 bg-slate-900 bg-cover bg-center bg-no-repeat"
+        className="relative flex-1 min-h-[calc(100vh-170px)] flex items-center justify-center py-12 sm:py-16 bg-slate-900 bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: "url('/cpcl_refinery_bg.png')" }}
       >
         {/* Crisp subtle overlay - NO BLUR */}
