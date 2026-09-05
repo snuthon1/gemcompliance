@@ -6,20 +6,9 @@ import {
   Eye,
   EyeOff,
   Shield,
-  FileCheck2,
   Landmark,
   AlertCircle,
-  Accessibility,
-  Headphones,
-  FileText,
-  AlertTriangle,
-  Download,
-  ExternalLink,
-  CheckCircle2,
-  Building2,
-  Phone,
-  Mail,
-  HelpCircle
+  Building2
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import NationalEmblem from '../components/NationalEmblem';
@@ -216,112 +205,9 @@ export default function Login() {
         {/* Crisp subtle overlay - NO BLUR */}
         <div className="absolute inset-0 bg-slate-950/35 pointer-events-none" />
 
-        <main className="relative z-10 max-w-6xl mx-auto w-full px-4 sm:px-8 my-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-            {/* LEFT COLUMN (7 cols): Official Departmental Notices & Statutory Rules */}
-            <div className="lg:col-span-7 space-y-4">
-            {/* Primary Notice Box with Government Navy Header Strip */}
-            <div className="bg-white rounded-lg border border-slate-300 shadow-xs overflow-hidden">
-              <div className="bg-slate-100 border-b border-slate-200 px-4 py-2.5 flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <FileText className="w-4 h-4 text-[#0B2546]" />
-                  <h2 className="text-xs font-bold uppercase tracking-wider text-[#0B2546]">
-                    Important Instructions &amp; Statutory Advisories for Bidders
-                  </h2>
-                </div>
-                <span className="text-[10px] font-mono text-slate-500 bg-white border border-slate-200 px-2 py-0.5 rounded font-semibold">
-                  GFR 2017
-                </span>
-              </div>
-
-              <div className="p-4 sm:p-5 space-y-3.5 text-xs text-slate-700 leading-relaxed divide-y divide-slate-100">
-                {/* Notice 1 */}
-                <div className="space-y-1">
-                  <div className="flex items-center space-x-1.5 font-bold text-slate-900">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#0B2546]"></span>
-                    <span>1. Land Border Restrictions (Rule 144(xi) of GFR 2017)</span>
-                  </div>
-                  <p className="text-slate-600 pl-3 text-[11px]">
-                    Any bidder from a country which shares a land border with India will be eligible to bid in this procurement only if the bidder is registered with the Competent Authority (DPIIT) as per Ministry of Finance Order F.No.6/18/2019-PPD.
-                  </p>
-                </div>
-
-                {/* Notice 2 */}
-                <div className="pt-3 space-y-1">
-                  <div className="flex items-center space-x-1.5 font-bold text-slate-900">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#0B2546]"></span>
-                    <span>2. Mandatory Real-Time Registry Cross-Referencing</span>
-                  </div>
-                  <p className="text-slate-600 pl-3 text-[11px]">
-                    All bids are subject to automated real-time verification against GSTN active status (REG-06), CBDT PAN database, and MSME Udyam Aadhaar. Inactive GSTINs or non-filing status will disqualify tender submissions.
-                  </p>
-                </div>
-
-                {/* Notice 3 */}
-                <div className="pt-3 space-y-1">
-                  <div className="flex items-center space-x-1.5 font-bold text-slate-900">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#0B2546]"></span>
-                    <span>3. Make in India (PPP-MII Order 2017) Compliance</span>
-                  </div>
-                  <p className="text-slate-600 pl-3 text-[11px]">
-                    Class-I Local Suppliers (Local Content &ge; 50%) receive purchase preference as per MoPNG policy. Bidders must upload a valid local content undertaking along with technical bids.
-                  </p>
-                </div>
-
-                {/* Notice 4 */}
-                <div className="pt-3 space-y-1">
-                  <div className="flex items-center space-x-1.5 font-bold text-rose-800">
-                    <span className="w-1.5 h-1.5 rounded-full bg-rose-600"></span>
-                    <span>4. Debarment &amp; Blacklist Cross-Check (Rule 151 of GFR 2017)</span>
-                  </div>
-                  <p className="text-slate-600 pl-3 text-[11px]">
-                    Bidders debarred by CPCL, IndianOil, CVC, GeM Incident Management, or any Central PSU are strictly prohibited from participating in CPCL public tenders.
-                  </p>
-                </div>
-              </div>
-
-              {/* Departmental Circular Downloads */}
-              <div className="bg-slate-50 border-t border-slate-200 p-3.5 flex flex-wrap items-center justify-between gap-2 text-[11px]">
-                <span className="font-semibold text-slate-700 flex items-center gap-1">
-                  <Download className="w-3.5 h-3.5 text-slate-500" />
-                  Official Circulars:
-                </span>
-                <div className="flex flex-wrap items-center gap-2">
-                  <a
-                    href="#"
-                    onClick={(e) => { e.preventDefault(); alert('CPCL Procurement Guidelines 2026 Manual available inside portal documents vault.'); }}
-                    className="text-[#0B2546] hover:underline font-medium bg-white border border-slate-200 px-2 py-1 rounded"
-                  >
-                    GFR 2017 Manual (PDF)
-                  </a>
-                  <a
-                    href="#"
-                    onClick={(e) => { e.preventDefault(); alert('CPCL Integrity Pact Template is accessible in the tender bidding desk.'); }}
-                    className="text-[#0B2546] hover:underline font-medium bg-white border border-slate-200 px-2 py-1 rounded"
-                  >
-                    Integrity Pact Undertaking
-                  </a>
-                </div>
-              </div>
-            </div>
-
-            {/* Helpdesk & Support Strip */}
-            <div className="bg-white rounded-lg border border-slate-200 p-3.5 flex items-center justify-between text-xs text-slate-600">
-              <div className="flex items-center space-x-2">
-                <Headphones className="w-4 h-4 text-[#0B2546]" />
-                <span>
-                  Technical Helpdesk: <strong className="text-slate-900 font-mono">044-2594 4000</strong> / <span className="text-[#0B2546]">eproc-support@cpcl.co.in</span>
-                </span>
-              </div>
-              <span className="text-[10px] text-slate-400 font-mono hidden sm:inline">
-                Mon - Fri (09:30 - 17:30 IST)
-              </span>
-            </div>
-          </div>
-
-          {/* RIGHT COLUMN (5 cols): Official Government Sign-In Form */}
-          <div className="lg:col-span-5">
-            <div className="bg-white rounded-lg border border-slate-300 shadow-sm overflow-hidden">
+        <main className="relative z-10 max-w-lg mx-auto w-full px-4 sm:px-6 my-auto">
+          {/* Official Government Sign-In Form - Centered */}
+          <div className="bg-white rounded-xl border border-slate-300 shadow-2xl overflow-hidden">
               {/* Card Header */}
               <div className="bg-[#0B2546] text-white px-5 py-3 flex items-center justify-between">
                 <div className="flex items-center space-x-2">
@@ -562,10 +448,8 @@ export default function Login() {
                 </div>
               </div>
             </div>
-          </div>
+          </main>
         </div>
-        </main>
-      </div>
 
       {/* 6. AUTHENTIC GOVERNMENT OF INDIA (NIC STYLE) FOOTER */}
       <footer className="bg-[#07182D] text-slate-300 text-xs border-t-4 border-t-[#0B2546] mt-auto">
