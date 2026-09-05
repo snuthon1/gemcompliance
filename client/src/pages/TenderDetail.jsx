@@ -166,7 +166,7 @@ export default function TenderDetail() {
               <span
                 className={`px-2.5 py-0.5 rounded-full text-xs font-semibold font-mono border ${
                   isTenderAwarded
-                    ? 'bg-purple-100 text-purple-800 border-purple-300'
+                    ? 'bg-amber-100 text-amber-800 border-amber-300'
                     : 'bg-emerald-100 text-emerald-800 border-emerald-300'
                 }`}
               >
@@ -206,7 +206,7 @@ export default function TenderDetail() {
         <div className="px-6 py-4 border-b border-slate-200 bg-slate-50/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wide flex items-center space-x-2">
-              <Award className="w-4 h-4 text-brand-600" />
+              <Award className="w-4 h-4 text-[#0B2546]" />
               <span>Bidder Comparison & Integrated Compliance Matrix</span>
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
@@ -221,7 +221,7 @@ export default function TenderDetail() {
             <button
               onClick={() => setSortBy('compliance')}
               className={`px-2 py-0.5 rounded font-semibold transition ${
-                sortBy === 'compliance' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:text-slate-900'
+                sortBy === 'compliance' ? 'bg-[#0B2546] text-white' : 'text-slate-600 hover:text-slate-900'
               }`}
             >
               Compliance Score &darr;
@@ -229,7 +229,7 @@ export default function TenderDetail() {
             <button
               onClick={() => setSortBy('price')}
               className={`px-2 py-0.5 rounded font-semibold transition ${
-                sortBy === 'price' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:text-slate-900'
+                sortBy === 'price' ? 'bg-[#0B2546] text-white' : 'text-slate-600 hover:text-slate-900'
               }`}
             >
               Lowest Price (L1) &uarr;
@@ -278,7 +278,7 @@ export default function TenderDetail() {
                     key={bid.bid_id}
                     className={`transition ${
                       isAwarded
-                        ? 'bg-purple-50/50 font-medium'
+                        ? 'bg-emerald-50/40 font-medium'
                         : isRejected
                         ? 'opacity-60 bg-slate-50/70'
                         : 'hover:bg-slate-50'
@@ -333,7 +333,7 @@ export default function TenderDetail() {
                       <span
                         className={`inline-block px-2 py-0.5 rounded text-[11px] font-mono font-semibold ${
                           isAwarded
-                            ? 'bg-purple-100 text-purple-800 border border-purple-300'
+                            ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
                             : isRejected
                             ? 'bg-slate-200 text-slate-600'
                             : 'bg-blue-50 text-blue-700 border border-blue-200'
@@ -354,7 +354,7 @@ export default function TenderDetail() {
                           type="button"
                           disabled={awardingId === bid.bidder_id}
                           onClick={() => handleAward(bid.bidder_id, bid.company_name)}
-                          className="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-brand-600 hover:bg-brand-700 text-white shadow-sm transition disabled:opacity-50"
+                          className="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-[#0B2546] hover:bg-[#07182D] text-white shadow-sm transition disabled:opacity-50"
                         >
                           {awardingId === bid.bidder_id ? 'Awarding...' : 'Award to this bidder'}
                         </button>
