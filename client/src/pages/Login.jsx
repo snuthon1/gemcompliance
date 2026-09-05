@@ -88,7 +88,7 @@ export default function Login() {
   return (
     <div className="min-h-screen bg-[#F1F5F9] flex flex-col justify-between font-sans text-slate-800 antialiased selection:bg-amber-500 selection:text-white">
       {/* 1. TOP OFFICIAL ACCESSIBILITY & GOI STRIP */}
-      <div>
+      <div className="shrink-0">
         <div className="bg-[#07182D] text-slate-300 px-4 sm:px-8 py-1 text-[11px] flex flex-col sm:flex-row justify-between items-center gap-1 border-b border-slate-700">
           <div className="flex items-center space-x-3">
             <span className="font-semibold text-white">भारत सरकार</span>
@@ -179,7 +179,7 @@ export default function Login() {
 
       {/* 5. MAIN CONTENT AREA: WITH CPCL REFINERY BACKGROUND */}
       <div
-        className="relative flex-1 flex items-center py-8 sm:py-12 bg-slate-900 bg-cover bg-center bg-no-repeat"
+        className="relative flex-1 min-h-[calc(100vh-200px)] flex items-center justify-center py-16 sm:py-24 bg-slate-900 bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: "url('/cpcl_refinery_bg.png')" }}
       >
         {/* Crisp subtle overlay - NO BLUR */}
@@ -401,7 +401,7 @@ export default function Login() {
         </div>
 
       {/* 6. AUTHENTIC GOVERNMENT OF INDIA (NIC STYLE) FOOTER */}
-      <footer className="bg-[#07182D] text-slate-300 text-xs border-t-4 border-t-[#0B2546] mt-auto">
+      <footer className="bg-[#07182D] text-slate-300 text-xs border-t-4 border-t-[#0B2546] mt-auto shrink-0">
         <div className="max-w-6xl mx-auto px-4 sm:px-8 py-6 space-y-4">
           {/* Top Links Row */}
           <div className="flex flex-wrap items-center justify-center sm:justify-start gap-x-6 gap-y-2 text-[11px] text-slate-300 pb-4 border-b border-slate-800">
