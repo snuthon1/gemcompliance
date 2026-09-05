@@ -359,10 +359,11 @@ STATUS:            ${doc.flagged ? 'FLAGGED: ' + doc.flag_reason : 'VERIFIED COM
       });
       const data = await res.json();
       if (data.success) {
+        const isDocFlagged = Boolean(data.document?.flagged);
         setUploadFeedback({
-          type: 'success',
-          text: data.document?.flagged
-            ? `⚠️ Document processed with notice: ${data.document?.flag_reason}`
+          type: isDocFlagged ? 'warning' : 'success',
+          text: isDocFlagged
+            ? `⚠️ Discrepancy Flagged: ${data.document?.flag_reason}`
             : '✅ Document verified clean against statutory requirements!'
         });
         setUploadFile(null);
@@ -1407,15 +1408,17 @@ STATUS:            ${doc.flagged ? 'FLAGGED: ' + doc.flag_reason : 'VERIFIED COM
                     className={`text-xs p-3.5 rounded-xl border flex items-center space-x-2.5 ${
                       uploadFeedback.type === 'success'
                         ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                        : uploadFeedback.type === 'warning'
+                        ? 'bg-amber-50 border-amber-300 text-amber-900 shadow-xs'
                         : 'bg-rose-50 border-rose-200 text-rose-800'
                     }`}
                   >
                     {uploadFeedback.type === 'success' ? (
                       <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
                     ) : (
-                      <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+                      <AlertCircle className="w-4 h-4 shrink-0 text-amber-600" />
                     )}
-                    <span className="font-medium">{uploadFeedback.text}</span>
+                    <span className="font-semibold">{uploadFeedback.text}</span>
                   </div>
                 )}
 
