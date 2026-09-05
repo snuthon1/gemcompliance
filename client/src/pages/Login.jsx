@@ -344,18 +344,19 @@ export default function Login() {
                   </>
                 )}
 
-                {/* Remember Me & Forgot Password */}
-                <div className="flex items-center justify-between text-xs text-slate-600 pt-0.5">
-                  <label className="flex items-center space-x-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      className="rounded border-slate-300 text-[#0B2546] focus:ring-[#0B2546]"
-                    />
-                    <span>Remember this device</span>
-                  </label>
-                  <a href="#" className="text-xs font-semibold text-[#0B2546] hover:underline">
-                    Forgot password?
-                  </a>
+                {/* Security Advisory & Help */}
+                <div className="flex items-center justify-between text-[11px] text-slate-500 pt-0.5">
+                  <span className="flex items-center space-x-1 text-slate-400">
+                    <Shield className="w-3 h-3 text-slate-400" />
+                    <span>CERT-In Secure Session</span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => alert('For credential assistance or official token reset, contact the CPCL Contracts & Vigilance Cell at support@cpcl.gov.in')}
+                    className="font-semibold text-[#0B2546] hover:underline cursor-pointer"
+                  >
+                    Need Help Signing In?
+                  </button>
                 </div>
 
                 {/* Primary Button */}
