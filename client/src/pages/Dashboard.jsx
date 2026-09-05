@@ -12,12 +12,17 @@ import {
   SlidersHorizontal,
   ArrowUpRight,
   Layers,
-  Sparkles
+  Download,
+  Users,
+  FileCheck2,
+  Eye,
+  ShieldAlert
 } from 'lucide-react';
 
 export default function Dashboard() {
   const [bidders, setBidders] = useState([]);
   const [complianceMap, setComplianceMap] = useState({});
+  const [documentsMap, setDocumentsMap] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedRisk, setSelectedRisk] = useState('All');
@@ -38,6 +43,8 @@ export default function Dashboard() {
       setBidders(biddersList);
 
       const scoreResults = {};
+      const docResults = {};
+
       await Promise.all(
         biddersList.map(async (b) => {
           try {
@@ -49,13 +56,20 @@ export default function Dashboard() {
             if (compData.success) {
               scoreResults[b.bidder_id] = compData;
             }
+
+            const docRes = await fetch(`/api/bidders/${b.bidder_id}/documents`);
+            const docData = await docRes.json();
+            if (docData.success) {
+              docResults[b.bidder_id] = docData.documents || [];
+            }
           } catch (e) {
-            console.error(`Failed to fetch compliance for ${b.bidder_id}`, e);
+            console.error(`Failed to fetch data for ${b.bidder_id}`, e);
           }
         })
       );
 
       setComplianceMap(scoreResults);
+      setDocumentsMap(docResults);
     } catch (err) {
       setError('Unable to connect to verification backend');
     } finally {
@@ -94,38 +108,76 @@ export default function Dashboard() {
     return { total: bidders.length, low, med, high };
   }, [bidders, complianceMap]);
 
+  // Export Bidders CSV
+  const handleExportCSV = () => {
+    if (bidders.length === 0) return;
+    const headers = ['Company Name', 'GSTIN', 'PAN Number', 'Udyam Registration', 'GFR Score', 'Risk Level', 'Recommendation', 'Flags'];
+    const rows = bidders.map((b) => {
+      const comp = complianceMap[b.bidder_id] || {};
+      const flags = (comp.flags || []).join('; ');
+      return [
+        `"${b.company_name.replace(/"/g, '""')}"`,
+        `"${b.gstin}"`,
+        `"${b.pan_number}"`,
+        `"${b.udyam_number}"`,
+        comp.score ?? 'N/A',
+        comp.risk || 'Pending',
+        comp.recommendation || 'Pending',
+        `"${flags.replace(/"/g, '""')}"`
+      ];
+    });
+
+    const csvContent = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `CPCL_Participating_Bidders_${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-7 font-sans">
       {/* 1. Header & Live Metrics Strip */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
           <div className="flex items-center space-x-2 mb-1.5">
-            <span className="text-xs font-semibold uppercase tracking-wider text-indigo-600 bg-indigo-50 border border-indigo-200/60 px-2.5 py-0.5 rounded-full">
-              Procurement Officer Console
+            <span className="text-[11px] font-bold uppercase tracking-wider text-[#0B2546] bg-slate-100 border border-slate-300 px-2.5 py-0.5 rounded-full flex items-center gap-1 font-mono">
+              <Users className="w-3.5 h-3.5 text-sky-600" />
+              <span>Participating Bidders Directory</span>
             </span>
-            <span className="text-slate-400 text-xs">&bull;</span>
-            <span className="text-xs text-slate-500 font-mono">CPCL / MoPNG Vigilance Verified</span>
+            <span className="text-slate-300">&bull;</span>
+            <span className="text-xs text-slate-500 font-mono font-semibold">
+              GFR 2017 &bull; Real-Time Statutory Dossiers
+            </span>
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-            Bidder Statutory Compliance Directory
+          <h1 className="text-2xl font-black tracking-tight text-slate-900">
+            Registered Vendor Compliance Directory
           </h1>
           <p className="text-xs text-slate-500 mt-1 max-w-2xl">
-            Autonomous multi-portal credential auditing across Udyam (MSME), GSTN (Taxes), Income Tax (PAN), and Central Debarment databases.
+            Autonomous multi-portal credential auditing across Udyam (MSME), GSTN (Taxes), Income Tax (CBDT), and Central Debarment databases.
           </p>
         </div>
 
-        <div className="flex items-center space-x-2">
-          <Link
-            to="/vendor"
-            className="text-xs font-semibold px-3.5 py-2 rounded-xl bg-white border border-slate-200/80 text-slate-700 hover:bg-slate-50 hover:text-indigo-600 shadow-sm transition flex items-center space-x-1.5"
-          >
-            <Building2 className="w-3.5 h-3.5 text-indigo-600" />
-            <span>Open Vendor Workspace</span>
-          </Link>
+        <div className="flex items-center space-x-2 shrink-0">
           <button
+            type="button"
+            onClick={handleExportCSV}
+            disabled={bidders.length === 0}
+            className="inline-flex items-center space-x-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold px-3.5 py-2 rounded-xl shadow-2xs transition cursor-pointer disabled:opacity-50"
+            title="Download CSV report of participating bidders"
+          >
+            <Download className="w-3.5 h-3.5 text-slate-500" />
+            <span>Export Directory (CSV)</span>
+          </button>
+
+          <button
+            type="button"
             onClick={fetchBiddersAndScores}
             disabled={loading}
-            className="p-2 bg-white border border-slate-200/80 hover:bg-slate-50 text-slate-600 hover:text-slate-900 rounded-xl shadow-sm transition disabled:opacity-50"
+            className="p-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-xl shadow-2xs transition disabled:opacity-50 cursor-pointer"
             title="Refresh Scores"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -133,88 +185,134 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* 2. Stat Metric Cards */}
+      {/* 2. Stat Metric Cards with Vibrant Colored Numbers */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col justify-between">
-          <span className="text-xs font-medium text-slate-500">Total Enrolled Bidders</span>
-          <div className="mt-2 flex items-baseline space-x-2">
-            <span className="text-3xl font-extrabold text-slate-900 font-mono">{counts.total}</span>
-            <span className="text-[11px] font-medium text-slate-400">Verified Vendors</span>
+        {/* Card 1: Total Enrolled */}
+        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between">
+          <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+            Total Enrolled Bidders
+          </span>
+          <div className="mt-3 flex items-baseline space-x-2">
+            <span className="text-4xl font-extrabold font-mono text-[#0B2546]">
+              {counts.total}
+            </span>
+            <span className="text-xs text-slate-400 font-semibold">Active Vendors</span>
+          </div>
+          <div className="mt-3 pt-2.5 border-t border-slate-100 text-[11px] text-slate-500 flex items-center justify-between">
+            <span>Registry Sync:</span>
+            <span className="font-bold text-emerald-700 font-mono">100% Online</span>
           </div>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-emerald-200/70 shadow-sm flex flex-col justify-between">
+        {/* Card 2: Pre-Qualified / Low Risk */}
+        <div className="bg-white p-5 rounded-2xl border border-emerald-200 shadow-xs flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-emerald-800">Compliant (Low Risk)</span>
-            <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+            <span className="text-xs font-bold uppercase tracking-wider text-emerald-800">
+              Compliant (Low Risk)
+            </span>
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
           </div>
-          <div className="mt-2 flex items-baseline space-x-2">
-            <span className="text-3xl font-extrabold text-emerald-700 font-mono">{counts.low}</span>
-            <span className="text-[11px] font-medium text-emerald-600">Pre-Qualified</span>
+          <div className="mt-3 flex items-baseline space-x-2">
+            <span className="text-4xl font-extrabold font-mono text-emerald-600">
+              {counts.low}
+            </span>
+            <span className="text-xs text-emerald-700 font-semibold">Pre-Qualified</span>
+          </div>
+          <div className="mt-3 pt-2.5 border-t border-emerald-100 text-[11px] text-emerald-700 flex items-center justify-between">
+            <span>Score Bracket:</span>
+            <span className="font-mono font-bold">&ge; 85 / 100</span>
           </div>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-amber-200/70 shadow-sm flex flex-col justify-between">
+        {/* Card 3: Needs Clarification / Medium Risk */}
+        <div className="bg-white p-5 rounded-2xl border border-amber-200 shadow-xs flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-amber-800">Needs Clarification</span>
-            <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+            <span className="text-xs font-bold uppercase tracking-wider text-amber-800">
+              Needs Clarification
+            </span>
+            <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
           </div>
-          <div className="mt-2 flex items-baseline space-x-2">
-            <span className="text-3xl font-extrabold text-amber-700 font-mono">{counts.med}</span>
-            <span className="text-[11px] font-medium text-amber-600">Discrepancies</span>
+          <div className="mt-3 flex items-baseline space-x-2">
+            <span className="text-4xl font-extrabold font-mono text-amber-600">
+              {counts.med}
+            </span>
+            <span className="text-xs text-amber-700 font-semibold">Discrepancies</span>
+          </div>
+          <div className="mt-3 pt-2.5 border-t border-amber-100 text-[11px] text-amber-700 flex items-center justify-between">
+            <span>Score Bracket:</span>
+            <span className="font-mono font-bold">60 &ndash; 84 / 100</span>
           </div>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-rose-200/70 shadow-sm flex flex-col justify-between">
+        {/* Card 4: Disqualified / High Risk */}
+        <div className="bg-white p-5 rounded-2xl border border-rose-200 shadow-xs flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-rose-800">High Risk / Blacklisted</span>
-            <span className="w-2 h-2 rounded-full bg-rose-500"></span>
+            <span className="text-xs font-bold uppercase tracking-wider text-rose-800">
+              High Risk / Debarred
+            </span>
+            <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse"></span>
           </div>
-          <div className="mt-2 flex items-baseline space-x-2">
-            <span className="text-3xl font-extrabold text-rose-700 font-mono">{counts.high}</span>
-            <span className="text-[11px] font-medium text-rose-600">Disqualified</span>
+          <div className="mt-3 flex items-baseline space-x-2">
+            <span className="text-4xl font-extrabold font-mono text-rose-600">
+              {counts.high}
+            </span>
+            <span className="text-xs text-rose-700 font-semibold">Disqualified</span>
+          </div>
+          <div className="mt-3 pt-2.5 border-t border-rose-100 text-[11px] text-rose-700 flex items-center justify-between">
+            <span>Debarment Check:</span>
+            <span className="font-mono font-bold text-rose-700">&lt; 60 / 100</span>
           </div>
         </div>
       </div>
 
       {/* 3. Search & Filter Bar */}
-      <div className="bg-white p-3 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div className="bg-white p-3 rounded-2xl border border-slate-200 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3">
         {/* Search */}
-        <div className="relative w-full sm:w-72">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+        <div className="relative w-full sm:w-80">
+          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-2.5" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search company, GSTIN, PAN..."
-            className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            placeholder="Search company, GSTIN, PAN, Udyam..."
+            className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-[#0B2546]"
           />
         </div>
 
-        {/* Risk Pills Filter */}
+        {/* Risk Filter Tabs */}
         <div className="flex items-center space-x-1.5 w-full sm:w-auto overflow-x-auto">
-          {['All', 'Low', 'Medium', 'High'].map((tier) => (
+          {[
+            { label: 'All Bidders', value: 'All', count: counts.total },
+            { label: 'Pre-Qualified', value: 'Low', count: counts.low },
+            { label: 'Clarification', value: 'Medium', count: counts.med },
+            { label: 'Disqualified', value: 'High', count: counts.high }
+          ].map((tab) => (
             <button
-              key={tier}
-              onClick={() => setSelectedRisk(tier)}
-              className={`px-3 py-1.5 rounded-full text-xs font-semibold transition ${
-                selectedRisk === tier
-                  ? 'bg-slate-900 text-white shadow-sm'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200/80 hover:text-slate-900'
+              key={tab.value}
+              onClick={() => setSelectedRisk(tab.value)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer ${
+                selectedRisk === tab.value
+                  ? 'bg-[#0B2546] text-white shadow-sm'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900'
               }`}
             >
-              {tier === 'All' ? 'All Tiers' : `${tier} Risk`}
+              <span>{tab.label}</span>
+              <span className={`text-[10px] font-mono px-1.5 py-0.2 rounded-full font-bold ${
+                selectedRisk === tab.value ? 'bg-white/20 text-white' : 'bg-white text-slate-600 border border-slate-200'
+              }`}>
+                {tab.count}
+              </span>
             </button>
           ))}
         </div>
       </div>
 
       {/* 4. Main Bidders Directory Table */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
         {loading ? (
           <div className="p-16 text-center text-slate-500">
-            <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
-            <p className="text-xs font-medium">Verifying real-time registry credentials across government databanks...</p>
+            <div className="w-8 h-8 border-4 border-[#0B2546] border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+            <p className="text-xs font-medium">Verifying real-time credentials across government registries...</p>
           </div>
         ) : error ? (
           <div className="p-8 text-center text-rose-600 bg-rose-50/50">
@@ -233,19 +331,22 @@ export default function Dashboard() {
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-slate-100 text-left">
-              <thead className="bg-slate-50/80 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+              <thead className="bg-slate-50/80 text-[11px] font-bold text-slate-600 uppercase tracking-wider">
                 <tr>
-                  <th className="px-6 py-3.5">Company Name</th>
+                  <th className="px-6 py-3.5">Company Legal Name</th>
                   <th className="px-5 py-3.5">GSTIN</th>
                   <th className="px-5 py-3.5">PAN Number</th>
                   <th className="px-5 py-3.5">Udyam Registration</th>
+                  <th className="px-5 py-3.5 text-center">Vault Docs</th>
                   <th className="px-6 py-3.5 text-center">Statutory Score & Risk</th>
-                  <th className="px-5 py-3.5 text-right">Audit</th>
+                  <th className="px-5 py-3.5 text-right">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-xs">
                 {filteredBidders.map((b) => {
                   const comp = complianceMap[b.bidder_id];
+                  const docs = documentsMap[b.bidder_id] || [];
+                  const flaggedDocs = docs.filter((d) => d.flagged);
                   const isLow = comp?.risk === 'Low';
                   const isMed = comp?.risk === 'Medium';
                   const isHigh = comp?.risk === 'High';
@@ -256,75 +357,92 @@ export default function Dashboard() {
                       onClick={() => navigate(`/bidder/${b.bidder_id}`)}
                       className="hover:bg-slate-50/80 cursor-pointer transition group"
                     >
+                      {/* Company Name & Avatar */}
                       <td className="px-6 py-4">
                         <div className="flex items-center space-x-3">
-                          <div className="w-8 h-8 rounded-xl bg-slate-100 text-slate-700 group-hover:bg-indigo-50 group-hover:text-indigo-600 flex items-center justify-center font-bold text-xs shrink-0 transition">
+                          <div className="w-8 h-8 rounded-xl bg-slate-100 text-[#0B2546] group-hover:bg-[#0B2546] group-hover:text-white flex items-center justify-center font-bold text-xs shrink-0 transition border border-slate-200">
                             {b.company_name.substring(0, 2).toUpperCase()}
                           </div>
                           <div>
-                            <div className="font-semibold text-slate-900 group-hover:text-indigo-600 transition">
+                            <div className="font-bold text-slate-900 group-hover:text-sky-700 transition">
                               {b.company_name}
                             </div>
                             <div className="text-[11px] text-slate-400 flex items-center space-x-2 mt-0.5">
                               <span>{b.email}</span>
                               <span>&bull;</span>
-                              <span>{b.phone}</span>
+                              <span className="font-mono text-[10px]">ID: {b.bidder_id.substring(0, 8)}</span>
                             </div>
                           </div>
                         </div>
                       </td>
 
-                      <td className="px-5 py-4 font-mono text-[11px] text-slate-600">
-                        <span className="bg-slate-100 px-2 py-0.5 rounded border border-slate-200/80">
+                      {/* GSTIN */}
+                      <td className="px-5 py-4 font-mono text-[11px] text-slate-700">
+                        <span className="bg-slate-100 px-2 py-0.5 rounded border border-slate-200 font-semibold">
                           {b.gstin}
                         </span>
                       </td>
 
-                      <td className="px-5 py-4 font-mono text-[11px] text-slate-600">
-                        <span className="bg-slate-100 px-2 py-0.5 rounded border border-slate-200/80">
+                      {/* PAN */}
+                      <td className="px-5 py-4 font-mono text-[11px] text-slate-700">
+                        <span className="bg-slate-100 px-2 py-0.5 rounded border border-slate-200 font-semibold">
                           {b.pan_number}
                         </span>
                       </td>
 
-                      <td className="px-5 py-4 font-mono text-[11px] text-slate-600">
-                        <span className="bg-slate-100 px-2 py-0.5 rounded border border-slate-200/80">
+                      {/* Udyam */}
+                      <td className="px-5 py-4 font-mono text-[11px] text-slate-700">
+                        <span className="bg-slate-100 px-2 py-0.5 rounded border border-slate-200 font-semibold">
                           {b.udyam_number}
                         </span>
                       </td>
 
+                      {/* Vault Docs Count */}
+                      <td className="px-5 py-4 text-center">
+                        <span className={`inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold font-mono border ${
+                          flaggedDocs.length > 0
+                            ? 'bg-rose-50 text-rose-700 border-rose-200'
+                            : docs.length > 0
+                            ? 'bg-slate-100 text-slate-700 border-slate-200'
+                            : 'bg-slate-50 text-slate-400 border-slate-200'
+                        }`}>
+                          <FileCheck2 className="w-3 h-3" />
+                          <span>{docs.length}</span>
+                          {flaggedDocs.length > 0 && <span className="text-rose-600">(!{flaggedDocs.length})</span>}
+                        </span>
+                      </td>
+
+                      {/* Score & Risk */}
                       <td className="px-6 py-4 text-center">
                         {comp ? (
                           <div className="inline-flex flex-col items-center">
                             <span
-                              className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-mono font-bold border ${
+                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-mono font-bold border ${
                                 isLow
-                                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                  ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
                                   : isMed
-                                  ? 'bg-amber-50 text-amber-700 border-amber-200'
-                                  : 'bg-rose-50 text-rose-700 border-rose-200'
+                                  ? 'bg-amber-50 text-amber-800 border-amber-300'
+                                  : 'bg-rose-50 text-rose-800 border-rose-300'
                               }`}
                             >
-                              <span
-                                className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
-                                  isLow ? 'bg-emerald-500' : isMed ? 'bg-amber-500' : 'bg-rose-500'
-                                }`}
-                              ></span>
-                              {comp.score}/100 &bull; {comp.risk} Risk
+                              <span className="mr-1">{comp.score}/100</span>
+                              <span className="opacity-75 font-sans font-semibold">({comp.risk})</span>
                             </span>
-                            <span className="text-[10px] text-slate-500 mt-0.5 font-medium">
+                            <span className="text-[10px] text-slate-500 font-medium mt-1">
                               {comp.recommendation}
                             </span>
                           </div>
                         ) : (
-                          <span className="text-slate-400 font-mono text-xs">Evaluating...</span>
+                          <span className="text-slate-400 text-xs font-mono">Evaluating...</span>
                         )}
                       </td>
 
-                      <td className="px-5 py-4 text-right">
-                        <div className="inline-flex items-center text-xs font-semibold text-slate-400 group-hover:text-indigo-600 transition">
+                      {/* Action */}
+                      <td className="px-5 py-4 text-right whitespace-nowrap">
+                        <span className="inline-flex items-center space-x-1 text-xs font-bold text-[#0B2546] bg-slate-100 group-hover:bg-[#0B2546] group-hover:text-white px-3 py-1.5 rounded-lg transition">
                           <span>Inspect</span>
-                          <ChevronRight className="w-4 h-4 ml-0.5 group-hover:translate-x-0.5 transition" />
-                        </div>
+                          <ArrowUpRight className="w-3.5 h-3.5" />
+                        </span>
                       </td>
                     </tr>
                   );
@@ -333,11 +451,6 @@ export default function Dashboard() {
             </table>
           </div>
         )}
-
-        <div className="px-6 py-3 bg-slate-50/60 border-t border-slate-100 text-[11px] text-slate-400 flex items-center justify-between">
-          <span>Click any row to open the complete 6-pillar verification ledger and officer decision console.</span>
-          <span className="font-mono">Showing {filteredBidders.length} of {bidders.length} bidders</span>
-        </div>
       </div>
     </div>
   );
