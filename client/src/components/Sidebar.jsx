@@ -111,8 +111,8 @@ export default function Sidebar() {
         <div className="flex items-center space-x-2.5">
           <NationalEmblem className="w-8 h-9 shrink-0" />
           <div>
-            <span className="font-bold text-[#0B2546] text-sm">NPCP &bull; BidShield</span>
-            <span className="block text-[10px] text-slate-500 font-medium">Government of India &bull; CPCL</span>
+            <span className="font-bold text-[#0B2546] text-sm">GeM-CPCL &bull; BidShield</span>
+            <span className="block text-[10px] text-slate-500 font-medium">Ministry of Petroleum &amp; Natural Gas</span>
           </div>
         </div>
         <button
@@ -158,10 +158,10 @@ export default function Sidebar() {
                   भारत सरकार
                 </span>
                 <span className="text-xs font-extrabold text-[#0B2546] tracking-tight leading-tight">
-                  National Procurement Compliance Portal
+                  GeM-CPCL Bid Compliance Portal
                 </span>
                 <span className="text-[10px] text-slate-500 font-semibold mt-0.5">
-                  Chennai Petroleum Corp Ltd
+                  Ministry of Petroleum &amp; Natural Gas
                 </span>
               </div>
             </Link>
