@@ -185,13 +185,20 @@ export default function Login() {
         </div>
       </div>
 
-      {/* 5. MAIN CONTENT AREA: DUAL-COLUMN GOVERNMENT LAYOUT */}
-      <main className="max-w-6xl mx-auto w-full px-4 sm:px-8 py-8 my-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      {/* 5. MAIN CONTENT AREA: REFINERY BACKGROUND + DUAL-COLUMN GOVERNMENT LAYOUT */}
+      <div
+        className="flex-1 relative bg-cover bg-center bg-no-repeat py-8 sm:py-12 flex items-center"
+        style={{ backgroundImage: "url('/cpcl_refinery_bg.png')" }}
+      >
+        {/* Deep Petroleum Overlay for optimal readability & contrast */}
+        <div className="absolute inset-0 bg-[#07182D]/75 backdrop-blur-[1px]"></div>
+
+        <main className="relative z-10 max-w-6xl mx-auto w-full px-4 sm:px-8 my-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           {/* LEFT COLUMN (7 cols): Official Departmental Notices & Statutory Rules */}
           <div className="lg:col-span-7 space-y-4">
             {/* Primary Notice Box with Government Navy Header Strip */}
-            <div className="bg-white rounded-lg border border-slate-300 shadow-xs overflow-hidden">
+            <div className="bg-white rounded-xl border border-slate-200 shadow-lg overflow-hidden">
               <div className="bg-slate-100 border-b border-slate-200 px-4 py-2.5 flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <FileText className="w-4 h-4 text-[#0B2546]" />
@@ -291,7 +298,7 @@ export default function Login() {
 
           {/* RIGHT COLUMN (5 cols): Official Government Sign-In Form */}
           <div className="lg:col-span-5">
-            <div className="bg-white rounded-lg border border-slate-300 shadow-sm overflow-hidden">
+            <div className="bg-white rounded-xl border border-slate-200 shadow-xl overflow-hidden">
               {/* Card Header */}
               <div className="bg-[#0B2546] text-white px-5 py-3 flex items-center justify-between">
                 <div className="flex items-center space-x-2">
@@ -535,6 +542,7 @@ export default function Login() {
           </div>
         </div>
       </main>
+      </div>
 
       {/* 6. AUTHENTIC GOVERNMENT OF INDIA (NIC STYLE) FOOTER */}
       <footer className="bg-[#07182D] text-slate-300 text-xs border-t-4 border-t-[#0B2546] mt-auto">
