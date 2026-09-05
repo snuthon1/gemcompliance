@@ -411,7 +411,7 @@ export default function Login() {
         </div>
       </main>
 
-      {/* Bottom Footer: Official Links & NIC Partner */}
+      {/* Bottom Footer: Official Links & SIH Hackathon Attribution */}
       <footer className="relative z-10 bg-white border-t border-slate-200 py-4 px-6 sm:px-12 text-xs text-slate-600">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center space-x-6">
@@ -432,8 +432,8 @@ export default function Login() {
           </div>
 
           <div className="flex items-center space-x-2 text-slate-500">
-            <span className="text-[11px] font-medium">Digital Technology Partner</span>
-            <span className="text-base font-black tracking-tight text-[#0066CC]">NIC</span>
+            <span className="text-[11px] font-medium">Built for Smart India Hackathon 2026</span>
+            <span className="text-xs font-mono font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">SIH26100</span>
           </div>
         </div>
       </footer>
