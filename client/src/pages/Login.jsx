@@ -251,7 +251,11 @@ export default function Login() {
               )}
 
               {/* Form Inputs */}
-              <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
+              <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off" autoCapitalize="off">
+                {/* Dummy hidden inputs to absorb browser autofill engines */}
+                <input type="text" name="fake_username_guard" style={{ display: 'none' }} tabIndex="-1" autoComplete="off" />
+                <input type="password" name="fake_password_guard" style={{ display: 'none' }} tabIndex="-1" autoComplete="new-password" />
+
                 {activeTab === 'OFFICER' ? (
                   <>
                     <div className="space-y-1.5">
@@ -263,7 +267,11 @@ export default function Login() {
                         <input
                           type="email"
                           required
+                          name="officer_email_direct"
                           autoComplete="off"
+                          readOnly
+                          onFocus={(e) => e.target.removeAttribute('readonly')}
+                          onMouseDown={(e) => e.target.removeAttribute('readonly')}
                           value={officerEmail}
                           onChange={(e) => setOfficerEmail(e.target.value)}
                           placeholder="admin@admin.com"
@@ -281,7 +289,11 @@ export default function Login() {
                         <input
                           type={showPassword ? 'text' : 'password'}
                           required
+                          name="officer_password_direct"
                           autoComplete="new-password"
+                          readOnly
+                          onFocus={(e) => e.target.removeAttribute('readonly')}
+                          onMouseDown={(e) => e.target.removeAttribute('readonly')}
                           value={officerPassword}
                           onChange={(e) => setOfficerPassword(e.target.value)}
                           placeholder="Enter officer password"
@@ -308,7 +320,11 @@ export default function Login() {
                         <input
                           type="text"
                           required
+                          name="vendor_id_direct"
                           autoComplete="off"
+                          readOnly
+                          onFocus={(e) => e.target.removeAttribute('readonly')}
+                          onMouseDown={(e) => e.target.removeAttribute('readonly')}
                           value={vendorIdentifier}
                           onChange={(e) => setVendorIdentifier(e.target.value)}
                           placeholder="GSTIN or tenders@company.com"
@@ -326,7 +342,11 @@ export default function Login() {
                         <input
                           type={showPassword ? 'text' : 'password'}
                           required
+                          name="vendor_password_direct"
                           autoComplete="new-password"
+                          readOnly
+                          onFocus={(e) => e.target.removeAttribute('readonly')}
+                          onMouseDown={(e) => e.target.removeAttribute('readonly')}
                           value={vendorPassword}
                           onChange={(e) => setVendorPassword(e.target.value)}
                           placeholder="Enter vendor password"
