@@ -3,6 +3,8 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   Layers,
   Users,
+  LayoutDashboard,
+  UserCheck,
   Building2,
   Database,
   LogOut,
@@ -24,13 +26,6 @@ export default function Sidebar() {
   const navigate = useNavigate();
   const { user, logout, isOfficer, isVendor } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
-
-  const isBiddersActive = location.pathname === '/bidders' || location.pathname.startsWith('/bidder/');
-  const isTendersActive = location.pathname === '/' || location.pathname.startsWith('/tenders');
-  const isVendorActive =
-    location.pathname.startsWith('/vendor') ||
-    location.pathname.startsWith('/portal') ||
-    location.pathname.startsWith('/user-dashboard');
 
   const handleLogout = () => {
     logout();
@@ -66,18 +61,32 @@ export default function Sidebar() {
 
   const vendorNavLinks = [
     {
-      name: 'My Compliance Workspace',
-      path: '/vendor',
-      icon: Building2,
-      badge: 'Dossier',
-      active: isVendorActive
+      name: 'Overview',
+      path: '/vendor/overview',
+      icon: LayoutDashboard,
+      badge: 'Summary',
+      active: location.pathname === '/vendor' || location.pathname === '/vendor/overview' || location.pathname === '/portal' || location.pathname === '/user-dashboard'
     },
     {
-      name: 'CPCL Active Tenders',
-      path: '/tenders',
+      name: 'Profile Status',
+      path: '/vendor/profile',
+      icon: UserCheck,
+      badge: 'KYC & Info',
+      active: location.pathname === '/vendor/profile'
+    },
+    {
+      name: 'Uploaded Documents',
+      path: '/vendor/documents',
+      icon: FileCheck2,
+      badge: 'Vault',
+      active: location.pathname === '/vendor/documents'
+    },
+    {
+      name: 'Apply for Tender/BIDs',
+      path: '/vendor/apply',
       icon: Layers,
-      badge: 'Open',
-      active: location.pathname.startsWith('/tenders')
+      badge: 'Live Desk',
+      active: location.pathname === '/vendor/apply'
     }
   ];
 
