@@ -6,7 +6,7 @@ export const DEMO_PROFILES = {
   officer: {
     id: 'officer-01',
     name: 'Demo Procurement Officer',
-    email: 'officer.demo@cpcl.gov.in',
+    email: 'officer@cpcl.gov.in',
     role: 'OFFICER',
     department: 'Chennai Petroleum Corporation Limited (CPCL)',
     designation: 'Tender Committee Convener & Head of Contracts'
@@ -33,6 +33,18 @@ export const DEMO_PROFILES = {
     gstin: '33BBBCB5678B1Z2',
     pan: 'BBBCB5678B',
     udyam: 'UDYAM-TN-03-0054321',
+    statusTag: 'MoPNG Debarred / High Risk (0/100)'
+  },
+  bharat: {
+    id: '6ca8e169-dc32-472e-b6d0-c3d3ceba3c78',
+    bidder_id: '6ca8e169-dc32-472e-b6d0-c3d3ceba3c78',
+    name: 'Bharat High-Pressure Seamless Pipes Pvt Ltd',
+    company_name: 'Bharat High-Pressure Seamless Pipes Pvt Ltd',
+    email: 'tenders@bharatpipes.in',
+    role: 'VENDOR',
+    gstin: '33EEECE9876E1Z3',
+    pan: 'EEECE9876E',
+    udyam: 'UDYAM-TN-05-0077889',
     statusTag: 'Name Mismatch Advisory (85/100)'
   },
   kaveri: {
@@ -45,7 +57,19 @@ export const DEMO_PROFILES = {
     gstin: '33DDDCD4321D1Z4',
     pan: 'DDDCD4321D',
     udyam: 'UDYAM-TN-04-0099887',
-    statusTag: 'MoPNG Debarred / High Risk (0/100)'
+    statusTag: 'Statutory Non-Compliant (45/100)'
+  },
+  deccan: {
+    id: '6b88b3eb-460b-4e08-96ef-9f37fe25774a',
+    bidder_id: '6b88b3eb-460b-4e08-96ef-9f37fe25774a',
+    name: 'Deccan Petro Instrumentation & Flow Systems',
+    company_name: 'Deccan Petro Instrumentation & Flow Systems',
+    email: 'contact@deccanpetro.com',
+    role: 'VENDOR',
+    gstin: '36FFFDF4321F1Z1',
+    pan: 'FFFDF4321F',
+    udyam: 'UDYAM-TS-01-0022334',
+    statusTag: 'Compliant Tier (90/100)'
   }
 };
 
@@ -70,28 +94,55 @@ export function AuthProvider({ children }) {
     }
   }, [user]);
 
-  const login = ({ email, role, bidder_id, company_name }) => {
-    // If role is officer
+  const login = ({ identifier, password, role }) => {
+    const trimmedId = (identifier || '').trim().toLowerCase();
+    const trimmedPw = (password || '').trim();
+
     if (role === 'OFFICER') {
+      const validOfficerEmails = [
+        'officer@cpcl.gov.in',
+        'officer.demo@cpcl.gov.in',
+        'officer@gem.gov.in'
+      ];
+      const isEmailValid = validOfficerEmails.includes(trimmedId);
+      const isPasswordValid = trimmedPw === 'Officer@2026' || trimmedPw === 'admin123';
+
+      if (!isEmailValid || !isPasswordValid) {
+        return {
+          success: false,
+          error: 'Invalid Officer Credentials. Official designated email and authorized password required.'
+        };
+      }
+
       const officerUser = {
         ...DEMO_PROFILES.officer,
-        email: email || DEMO_PROFILES.officer.email
+        email: trimmedId
       };
       setUser(officerUser);
       return { success: true, user: officerUser };
     }
 
-    // If role is vendor
-    const vendorUser = {
-      id: bidder_id || '9ea6bad0-51b7-4e11-9491-e66fa52d2cc2',
-      bidder_id: bidder_id || '9ea6bad0-51b7-4e11-9491-e66fa52d2cc2',
-      name: company_name || 'Apex Petrochem Engineering Pvt Ltd',
-      company_name: company_name || 'Apex Petrochem Engineering Pvt Ltd',
-      email: email || 'tenders@apexpetrochem.in',
-      role: 'VENDOR'
-    };
-    setUser(vendorUser);
-    return { success: true, user: vendorUser };
+    if (role === 'VENDOR') {
+      const vendorProfiles = Object.values(DEMO_PROFILES).filter(p => p.role === 'VENDOR');
+      const matchedVendor = vendorProfiles.find(v => 
+        v.email.toLowerCase() === trimmedId || 
+        v.gstin.toLowerCase() === trimmedId
+      );
+
+      const isPasswordValid = trimmedPw === 'Vendor@2026' || trimmedPw === 'vendor123';
+
+      if (!matchedVendor || !isPasswordValid) {
+        return {
+          success: false,
+          error: 'Invalid Vendor Credentials. Enter registered GSTIN or official email with authorized enterprise password.'
+        };
+      }
+
+      setUser(matchedVendor);
+      return { success: true, user: matchedVendor };
+    }
+
+    return { success: false, error: 'Unrecognized user role' };
   };
 
   const quickLogin = (profileKey) => {
