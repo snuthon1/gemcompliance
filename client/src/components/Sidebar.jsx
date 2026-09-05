@@ -16,7 +16,9 @@ import {
   FileText,
   CheckCircle2,
   Lock,
-  ExternalLink
+  ExternalLink,
+  ShieldAlert,
+  BarChart3
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import NationalEmblem from './NationalEmblem';
@@ -51,11 +53,25 @@ export default function Sidebar() {
       active: location.pathname.startsWith('/tenders') || location.pathname === '/'
     },
     {
-      name: 'Bidder Statutory Directory',
+      name: 'Participating Bidders',
       path: '/bidders',
       icon: Users,
       badge: 'Dossiers',
       active: location.pathname === '/bidders' || location.pathname.startsWith('/bidder/')
+    },
+    {
+      name: 'Blacklisted Entities',
+      path: '/blacklist',
+      icon: ShieldAlert,
+      badge: 'Vigilance',
+      active: location.pathname === '/blacklist'
+    },
+    {
+      name: 'Compliance & Analytics',
+      path: '/analytics',
+      icon: BarChart3,
+      badge: 'Controls',
+      active: location.pathname === '/analytics'
     }
   ];
 
