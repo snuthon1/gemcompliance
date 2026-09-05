@@ -6,7 +6,6 @@ import {
   Eye,
   EyeOff,
   Shield,
-  Landmark,
   AlertCircle,
   Building2
 } from 'lucide-react';
@@ -427,25 +426,7 @@ export default function Login() {
                   </button>
                 </form>
 
-                {/* Government SSO (Jan Parichay) */}
-                <div className="pt-2 border-t border-slate-200 text-center space-y-2">
-                  <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider block">
-                    National Single Sign-On
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => alert('Jan Parichay (National Single Sign-On) integration is active for central PSU intranet networks. For hackathon evaluation, please use the direct credentials above.')}
-                    className="w-full py-2 px-3 bg-slate-50 hover:bg-slate-100 border border-slate-300 text-slate-700 font-bold text-xs rounded transition-colors flex items-center justify-center space-x-2 cursor-pointer"
-                  >
-                    <Landmark className="w-3.5 h-3.5 text-[#0B2546]" />
-                    <span>Sign in with Jan Parichay (e-Pramaan)</span>
-                  </button>
-                </div>
 
-                {/* Statutory Warning Box */}
-                <div className="p-2.5 bg-slate-50 border border-slate-200 rounded text-[10px] text-slate-500 leading-tight">
-                  <strong className="text-slate-700">Notice:</strong> This system is reserved solely for authorized CPCL procurement officers and enrolled bidders. Unauthorized attempts are punishable under Sections 43 &amp; 66 of the Information Technology Act, 2000.
-                </div>
               </div>
             </div>
           </main>
