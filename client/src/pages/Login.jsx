@@ -110,8 +110,6 @@ export default function Login() {
             <span className="text-amber-300 font-medium">पेट्रोलियम एवं प्राकृतिक गैस मंत्रालय (MoPNG)</span>
           </div>
           <div className="flex items-center space-x-4 text-[10px] font-mono text-slate-400">
-            <span className="hidden md:inline">Helpline: 1800-425-4252 (09:30 - 17:30 IST)</span>
-            <span className="hidden sm:inline text-slate-600">|</span>
             <span className="hover:text-white cursor-pointer">Screen Reader Access</span>
             <span className="text-slate-600">|</span>
             <span className="bg-slate-800 text-slate-200 px-1.5 py-0.5 rounded border border-slate-700 font-bold">A-</span>
