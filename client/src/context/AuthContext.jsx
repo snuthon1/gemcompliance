@@ -74,9 +74,20 @@ export const DEMO_PROFILES = {
 };
 
 export function AuthProvider({ children }) {
+  // Purge any stale localStorage login data so fresh sessions cannot bypass /login
+  useEffect(() => {
+    try {
+      localStorage.removeItem('bidshield_auth_user');
+      localStorage.removeItem('bidshield_active_vendor_id');
+    } catch {
+      // ignore
+    }
+  }, []);
+
   const [user, setUser] = useState(() => {
     try {
-      const stored = localStorage.getItem('bidshield_auth_user');
+      // Session-scoped authentication: closing tab or opening new window enforces login
+      const stored = sessionStorage.getItem('bidshield_session_user');
       return stored ? JSON.parse(stored) : null;
     } catch {
       return null;
@@ -85,12 +96,13 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     if (user) {
-      localStorage.setItem('bidshield_auth_user', JSON.stringify(user));
+      sessionStorage.setItem('bidshield_session_user', JSON.stringify(user));
       if (user.bidder_id) {
-        localStorage.setItem('bidshield_active_vendor_id', user.bidder_id);
+        sessionStorage.setItem('bidshield_active_vendor_id', user.bidder_id);
       }
     } else {
-      localStorage.removeItem('bidshield_auth_user');
+      sessionStorage.removeItem('bidshield_session_user');
+      sessionStorage.removeItem('bidshield_active_vendor_id');
     }
   }, [user]);
 
@@ -98,32 +110,28 @@ export function AuthProvider({ children }) {
     const trimmedId = (identifier || '').trim().toLowerCase();
     const trimmedPw = (password || '').trim();
 
+    // STRICT OFFICER LOGIN: ONLY admin@admin.com and password. NO FALLBACKS!
     if (role === 'OFFICER') {
-      const validOfficerEmails = [
-        'admin@admin.com',
-        'officer@cpcl.gov.in',
-        'officer.demo@cpcl.gov.in',
-        'officer@gem.gov.in'
-      ];
-      const isEmailValid = validOfficerEmails.includes(trimmedId);
-      const isPasswordValid = trimmedPw === 'password' || trimmedPw === 'Officer@2026' || trimmedPw === 'admin123';
+      const isEmailValid = trimmedId === 'admin@admin.com';
+      const isPasswordValid = trimmedPw === 'password';
 
       if (!isEmailValid || !isPasswordValid) {
         return {
           success: false,
-          error: 'Invalid Officer Credentials. Use email "admin@admin.com" and password "password".'
+          error: 'Invalid Officer Credentials. Strict Login: admin@admin.com and password required.'
         };
       }
 
       const officerUser = {
         ...DEMO_PROFILES.officer,
-        email: trimmedId,
-        name: trimmedId === 'admin@admin.com' ? 'Super Admin / Procurement Officer' : DEMO_PROFILES.officer.name
+        email: 'admin@admin.com',
+        name: 'Chief Procurement Officer / Administrator'
       };
       setUser(officerUser);
       return { success: true, user: officerUser };
     }
 
+    // STRICT VENDOR LOGIN: Registered email or GSTIN with password. NO FALLBACK PASSWORDS!
     if (role === 'VENDOR') {
       const vendorProfiles = Object.values(DEMO_PROFILES).filter(p => p.role === 'VENDOR');
       const matchedVendor = vendorProfiles.find(v => 
@@ -134,19 +142,18 @@ export function AuthProvider({ children }) {
       if (!matchedVendor) {
         return {
           success: false,
-          error: 'Invalid Vendor Credentials. Enter registered GSTIN or company email.'
+          error: 'Invalid Vendor Credentials. No registered company found with this Email or GSTIN.'
         };
       }
 
-      // Check if custom password exists
+      // Check if custom password was set by this vendor, else strictly 'password'
       const customPwd = localStorage.getItem('bidshield_vendor_custom_pwd_' + matchedVendor.id);
-      const isDefaultValid = trimmedPw === 'password' || trimmedPw === 'Vendor@2026' || trimmedPw === 'vendor123';
-      const isCustomValid = customPwd && trimmedPw === customPwd;
+      const isPasswordValid = customPwd ? trimmedPw === customPwd : trimmedPw === 'password';
 
-      if (!isDefaultValid && !isCustomValid) {
+      if (!isPasswordValid) {
         return {
           success: false,
-          error: 'Invalid password. Enter your enterprise password or "password".'
+          error: 'Invalid password. Enter "password" or your updated enterprise password.'
         };
       }
 
@@ -198,12 +205,19 @@ export function AuthProvider({ children }) {
     // Dismisses for current session, so NEXT time they log in they will be prompted again!
     const updated = { ...user, must_change_password: false };
     setUser(updated);
-    localStorage.setItem('bidshield_auth_user', JSON.stringify(updated));
+    sessionStorage.setItem('bidshield_session_user', JSON.stringify(updated));
   };
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem('bidshield_auth_user');
+    try {
+      sessionStorage.clear();
+      localStorage.removeItem('bidshield_auth_user');
+      localStorage.removeItem('bidshield_active_vendor_id');
+      localStorage.removeItem('bidshield_session_user');
+    } catch {
+      // ignore
+    }
   };
 
   return (
