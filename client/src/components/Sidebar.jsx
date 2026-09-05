@@ -18,7 +18,11 @@ import {
   Lock,
   ExternalLink,
   ShieldAlert,
-  BarChart3
+  BarChart3,
+  Network,
+  Scale,
+  Zap,
+  Fingerprint
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import NationalEmblem from './NationalEmblem';
@@ -43,66 +47,145 @@ export default function Sidebar() {
     return name.slice(0, 2).toUpperCase();
   };
 
-  // Strictly segregated navigation links based on user role
-  const officerNavLinks = [
+  // Structured Officer Navigation Sections
+  const officerSections = [
     {
-      name: 'Tenders & Bids',
-      path: '/tenders',
-      icon: Layers,
-      active: location.pathname.startsWith('/tenders') || location.pathname === '/'
+      heading: 'Procurement Operations',
+      items: [
+        {
+          name: 'Tenders & Bids',
+          path: '/tenders',
+          icon: Layers,
+          badge: 'Active',
+          active: location.pathname.startsWith('/tenders') || location.pathname === '/'
+        },
+        {
+          name: 'Bidders Directory',
+          path: '/bidders',
+          icon: Users,
+          badge: 'Enrolled',
+          active: location.pathname === '/bidders' || location.pathname.startsWith('/bidder/')
+        }
+      ]
     },
     {
-      name: 'Bidders Directory',
-      path: '/bidders',
-      icon: Users,
-      active: location.pathname === '/bidders' || location.pathname.startsWith('/bidder/')
+      heading: 'Vigilance & Risk Intelligence',
+      items: [
+        {
+          name: 'Cartel & Collusion Watch',
+          path: '/cartel-watch',
+          icon: Network,
+          badge: 'AI Vigilance',
+          active: location.pathname === '/cartel-watch'
+        },
+        {
+          name: 'National Debarment',
+          path: '/blacklist',
+          icon: ShieldAlert,
+          badge: 'CVC / MoPNG',
+          active: location.pathname === '/blacklist'
+        },
+        {
+          name: 'Forensic Audit Ledger',
+          path: '/audit-trail',
+          icon: Fingerprint,
+          badge: 'SHA-256',
+          active: location.pathname === '/audit-trail'
+        }
+      ]
     },
     {
-      name: 'Blacklist Search',
-      path: '/blacklist',
-      icon: ShieldAlert,
-      active: location.pathname === '/blacklist'
-    },
-    {
-      name: 'Reports & Analytics',
-      path: '/analytics',
-      icon: BarChart3,
-      active: location.pathname === '/analytics'
+      heading: 'Statutory & Governance',
+      items: [
+        {
+          name: 'GFR 2017 Rulebook',
+          path: '/gfr-rules',
+          icon: Scale,
+          badge: 'Mandates',
+          active: location.pathname === '/gfr-rules'
+        },
+        {
+          name: 'Statutory Gateway (APIs)',
+          path: '/registry-gateway',
+          icon: Zap,
+          badge: 'Live APIs',
+          active: location.pathname === '/registry-gateway'
+        },
+        {
+          name: 'Dispute Redressal Desk',
+          path: '/representations',
+          icon: FileText,
+          badge: 'GFR 175',
+          active: location.pathname === '/representations'
+        },
+        {
+          name: 'Reports & Analytics',
+          path: '/analytics',
+          icon: BarChart3,
+          badge: 'BI',
+          active: location.pathname === '/analytics'
+        }
+      ]
     }
   ];
 
-  const vendorNavLinks = [
+  // Structured Vendor Navigation Sections
+  const vendorSections = [
     {
-      name: 'Overview',
-      path: '/vendor/overview',
-      icon: LayoutDashboard,
-      badge: 'Summary',
-      active: location.pathname === '/vendor' || location.pathname === '/vendor/overview' || location.pathname === '/portal' || location.pathname === '/user-dashboard'
+      heading: 'Enterprise Workspace',
+      items: [
+        {
+          name: 'Overview',
+          path: '/vendor/overview',
+          icon: LayoutDashboard,
+          badge: 'Summary',
+          active: location.pathname === '/vendor' || location.pathname === '/vendor/overview' || location.pathname === '/portal' || location.pathname === '/user-dashboard'
+        },
+        {
+          name: 'Profile Status',
+          path: '/vendor/profile',
+          icon: UserCheck,
+          badge: 'KYC & Info',
+          active: location.pathname === '/vendor/profile'
+        },
+        {
+          name: 'Uploaded Documents',
+          path: '/vendor/documents',
+          icon: FileCheck2,
+          badge: 'Vault',
+          active: location.pathname === '/vendor/documents'
+        },
+        {
+          name: 'Apply for Tender/BIDs',
+          path: '/vendor/apply',
+          icon: Layers,
+          badge: 'Live Desk',
+          active: location.pathname === '/vendor/apply'
+        }
+      ]
     },
     {
-      name: 'Profile Status',
-      path: '/vendor/profile',
-      icon: UserCheck,
-      badge: 'KYC & Info',
-      active: location.pathname === '/vendor/profile'
-    },
-    {
-      name: 'Uploaded Documents',
-      path: '/vendor/documents',
-      icon: FileCheck2,
-      badge: 'Vault',
-      active: location.pathname === '/vendor/documents'
-    },
-    {
-      name: 'Apply for Tender/BIDs',
-      path: '/vendor/apply',
-      icon: Layers,
-      badge: 'Live Desk',
-      active: location.pathname === '/vendor/apply'
+      heading: 'Statutory Benchmarks',
+      items: [
+        {
+          name: 'GFR 2017 Matrix',
+          path: '/gfr-rules',
+          icon: Scale,
+          badge: 'Mandates',
+          active: location.pathname === '/gfr-rules'
+        },
+        {
+          name: 'Statutory Gateway',
+          path: '/registry-gateway',
+          icon: Zap,
+          badge: 'Live APIs',
+          active: location.pathname === '/registry-gateway'
+        }
+      ]
     }
   ];
 
-  const activeLinks = isOfficer ? officerNavLinks : vendorNavLinks;
+  const activeSections = isOfficer ? officerSections : vendorSections;
 
   return (
     <>
@@ -138,7 +221,7 @@ export default function Sidebar() {
         }`}
       >
         {/* Top Header & Brand */}
-        <div>
+        <div className="shrink-0">
           {/* National Tricolor Line */}
           <div className="h-1.5 w-full flex">
             <div className="h-full w-1/3 bg-[#FF671F]"></div>
@@ -146,21 +229,21 @@ export default function Sidebar() {
             <div className="h-full w-1/3 bg-[#046A38]"></div>
           </div>
 
-          <div className="p-4 border-b border-slate-200 bg-white flex items-center justify-between">
+          <div className="p-3.5 border-b border-slate-200 bg-white flex items-center justify-between">
             <Link
               to={isOfficer ? '/tenders' : '/vendor'}
               onClick={() => setMobileOpen(false)}
-              className="flex items-center space-x-3 group"
+              className="flex items-center space-x-2.5 group"
             >
-              <NationalEmblem className="w-10 h-12 shrink-0" />
+              <NationalEmblem className="w-9 h-11 shrink-0" />
               <div className="flex flex-col min-w-0">
-                <span className="text-[10px] font-bold text-slate-500 tracking-wider uppercase font-mono">
+                <span className="text-[9px] font-bold text-slate-500 tracking-wider uppercase font-mono">
                   भारत सरकार
                 </span>
                 <span className="text-xs font-extrabold text-[#0B2546] tracking-tight leading-tight">
-                  GeM-CPCL Bid Compliance Portal
+                  GeM-CPCL Bid Compliance
                 </span>
-                <span className="text-[10px] text-slate-500 font-semibold mt-0.5">
+                <span className="text-[9px] text-slate-500 font-semibold mt-0.5">
                   Ministry of Petroleum &amp; Natural Gas
                 </span>
               </div>
@@ -175,43 +258,45 @@ export default function Sidebar() {
           </div>
 
           {/* Subheader Role Pillar Badge */}
-          <div className="px-4 py-2 bg-slate-50 border-b border-slate-200/80 text-[10px] text-slate-600 font-medium flex items-center justify-between">
-            <span className="font-bold text-[#0B2546] flex items-center gap-1">
+          <div className="px-3.5 py-1.5 bg-slate-50 border-b border-slate-200/80 text-[10px] text-slate-600 font-medium flex items-center justify-between">
+            <span className="font-bold text-[#0B2546] flex items-center gap-1 text-[10px]">
               <span className={`w-1.5 h-1.5 rounded-full ${isOfficer ? 'bg-[#0B2546]' : 'bg-emerald-500'}`}></span>
               {isOfficer ? 'OFFICER COMMITTEE' : 'VENDOR DESK'}
             </span>
-            <span className="font-mono text-slate-500 text-[9px] bg-white border border-slate-200 px-1.5 py-0.5 rounded">
-              {isOfficer ? 'GFR 2017' : 'GeM Registered'}
+            <span className="font-mono text-slate-500 text-[9px] bg-white border border-slate-200 px-1.5 py-0.5 rounded font-bold">
+              {isOfficer ? 'GFR 2017 &bull; CVC' : 'GeM Registered'}
             </span>
           </div>
+        </div>
 
-          {/* Navigation Section */}
-          <div className="px-3 py-4 space-y-5">
-            <div>
-              <div className="px-3 mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-400 font-mono">
-                {isOfficer ? 'Procurement Governance' : 'Enterprise Workspace'}
+        {/* Middle Scrollable Navigation Section */}
+        <div className="flex-1 overflow-y-auto px-3 py-3 space-y-4">
+          {activeSections.map((section, sIdx) => (
+            <div key={sIdx} className="space-y-1">
+              <div className="px-2 text-[9px] font-bold uppercase tracking-wider text-slate-400 font-mono">
+                {section.heading}
               </div>
-              <nav className="space-y-1">
-                {activeLinks.map((item) => {
+              <nav className="space-y-0.5">
+                {section.items.map((item) => {
                   const Icon = item.icon;
                   return (
                     <Link
                       key={item.path}
                       to={item.path}
                       onClick={() => setMobileOpen(false)}
-                      className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-semibold transition-all ${
+                      className={`flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                         item.active
                           ? 'bg-[#0B2546] text-white shadow-sm'
                           : 'text-slate-600 hover:text-[#0B2546] hover:bg-slate-100'
                       }`}
                     >
-                      <div className="flex items-center space-x-2.5">
-                        <Icon className={`w-4 h-4 ${item.active ? 'text-white' : 'text-slate-500'}`} />
-                        <span>{item.name}</span>
+                      <div className="flex items-center space-x-2 min-w-0">
+                        <Icon className={`w-3.5 h-3.5 shrink-0 ${item.active ? 'text-white' : 'text-slate-500'}`} />
+                        <span className="truncate text-[11px]">{item.name}</span>
                       </div>
                       {item.badge && (
                         <span
-                          className={`text-[9px] font-mono px-1.5 py-0.5 rounded font-bold ${
+                          className={`text-[8px] font-mono px-1.5 py-0.2 rounded font-bold shrink-0 ${
                             item.active
                               ? 'bg-white/20 text-white'
                               : 'bg-slate-100 text-slate-500 border border-slate-200'
@@ -225,13 +310,11 @@ export default function Sidebar() {
                 })}
               </nav>
             </div>
-          </div>
+          ))}
         </div>
 
         {/* Bottom Section: User Profile & Logout */}
-        <div className="p-3 border-t border-slate-200 bg-slate-50">
-
-          {/* User Account Card */}
+        <div className="shrink-0 p-2.5 border-t border-slate-200 bg-slate-50">
           {user && (
             <div className="p-2 rounded-lg bg-white border border-slate-200 flex items-center justify-between gap-2 shadow-2xs">
               <div className="flex items-center space-x-2 min-w-0">
