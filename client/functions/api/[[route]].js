@@ -196,6 +196,28 @@ export async function onRequest(context) {
       });
     }
 
+    // 1b. Blacklist Registry
+    if (path === '/api/blacklist' && method === 'GET') {
+      const { rows } = await executeSql('SELECT * FROM BlacklistRegistry ORDER BY id ASC');
+      return jsonResponse({ success: true, count: rows.length, blacklist: rows });
+    }
+
+    if (path === '/api/blacklist/check' && method === 'POST') {
+      const body = await request.json();
+      const identifier = (body.identifier || body.pan_or_gstin || '').trim();
+      if (!identifier) {
+        return jsonResponse({ success: false, message: 'Identifier required' }, 400);
+      }
+      const { rows } = await executeSql(
+        'SELECT * FROM BlacklistRegistry WHERE (pan_or_gstin = ? OR LOWER(entity_name) LIKE ?) AND (blacklisted = 1 OR blacklisted = true)',
+        [identifier, `%${identifier.toLowerCase()}%`]
+      );
+      if (rows.length > 0) {
+        return jsonResponse({ success: true, blacklisted: true, entry: rows[0] });
+      }
+      return jsonResponse({ success: true, blacklisted: false, message: 'Entity is clean and not listed on central debarment registers.' });
+    }
+
     // 2. All Bidders
     if (path === '/api/bidders' && method === 'GET') {
       const { rows } = await executeSql('SELECT * FROM Bidder ORDER BY created_at ASC');
