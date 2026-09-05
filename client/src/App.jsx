@@ -5,6 +5,7 @@ import Dashboard from './pages/Dashboard';
 import BidderDetail from './pages/BidderDetail';
 import TendersList from './pages/TendersList';
 import TenderDetail from './pages/TenderDetail';
+import UserDashboard from './pages/UserDashboard';
 
 export default function App() {
   return (
@@ -17,6 +18,9 @@ export default function App() {
             <Route path="/bidder/:bidder_id" element={<BidderDetail />} />
             <Route path="/tenders" element={<TendersList />} />
             <Route path="/tenders/:tender_id" element={<TenderDetail />} />
+            <Route path="/vendor" element={<UserDashboard />} />
+            <Route path="/portal" element={<UserDashboard />} />
+            <Route path="/user-dashboard" element={<UserDashboard />} />
           </Routes>
         </main>
         <footer className="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500">
