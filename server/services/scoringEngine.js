@@ -13,7 +13,9 @@ const CHECK_WEIGHTS = {
   GST_RETURNS: 15,
   PAN_COMPLIANCE: 10,
   BLACKLIST_CHECK: 20,
-  NAME_MATCH: 15
+  NAME_MATCH: 10,
+  EPFO_ESIC_COMPLIANCE: 10,
+  LOCAL_CONTENT_MII: 5
 };
 
 /**
@@ -33,7 +35,7 @@ function calculateScore(verificationResults, documents = []) {
   let isBlacklisted = false;
   let isNameMismatch = false;
 
-  // 1. Process 6-point statutory checks from central registries
+  // 1. Process statutory checks from central registries
   for (const check of verificationResults) {
     if (check.match_status === 'Mismatch') {
       const weight = CHECK_WEIGHTS[check.check_type] || 0;
@@ -64,7 +66,13 @@ function calculateScore(verificationResults, documents = []) {
           flags.push('GST registration is not in Active status on GSTN portal');
           break;
         case 'PAN_COMPLIANCE':
-          flags.push('PAN compliance issue — Income Tax Return (ITR) was not filed for the previous assessment year');
+          flags.push('PAN compliance issue — Income Tax Return (ITR) was not filed for previous assessment year');
+          break;
+        case 'EPFO_ESIC_COMPLIANCE':
+          flags.push('EPFO / ESIC non-compliance — pending electronic challans on Shram Suvidha portal');
+          break;
+        case 'LOCAL_CONTENT_MII':
+          flags.push('Make in India (PPP-MII) failure — local content declaration below mandatory PSU tender threshold');
           break;
         default:
           flags.push(`Check ${check.check_type} failed verification`);
