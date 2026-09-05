@@ -118,6 +118,50 @@ export default function UserDashboard() {
   const [savingProfile, setSavingProfile] = useState(false);
   const [profileSaveSuccess, setProfileSaveSuccess] = useState(false);
 
+  const handleDownloadDoc = (doc) => {
+    if (!doc) return;
+    const extData = typeof doc.extracted_data === 'string' ? JSON.parse(doc.extracted_data || '{}') : (doc.extracted_data || {});
+    const fileName = doc.file_url ? doc.file_url.split('/').pop() : `${doc.doc_type}_${(currentBidder?.company_name || 'document').replace(/\\s+/g, '_')}.pdf`;
+
+    if (doc.file_content) {
+      let content = doc.file_content;
+      if (!content.startsWith('data:')) {
+        const isImage = doc.file_url?.match(/\\.(png|jpg|jpeg|webp)$/i) || content.startsWith('iVBORw0KGgo') || content.startsWith('/9j/');
+        const mime = isImage ? 'image/png' : 'application/pdf';
+        content = `data:${mime};base64,${content}`;
+      }
+      const a = document.createElement('a');
+      a.href = content;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      return;
+    }
+
+    const textContent = `=======================================================
+CHENNAI PETROLEUM CORPORATION LIMITED (CPCL)
+STATUTORY CERTIFICATE AUDIT RECORD (VENDOR VAULT)
+=======================================================
+DOCUMENT TYPE:     ${doc.doc_type}
+LEGAL ENTITY:      ${extData.company_name || extData.entity_name || currentBidder?.company_name}
+GSTIN:             ${extData.gstin || currentBidder?.gstin}
+PAN:               ${extData.pan || currentBidder?.pan_number}
+REGISTRATION NO:   ${extData.registration_number || extData.udyam || currentBidder?.udyam_number || 'N/A'}
+UPLOAD DATE:       ${new Date(doc.uploaded_at).toLocaleString('en-IN')}
+STATUS:            ${doc.flagged ? 'FLAGGED: ' + doc.flag_reason : 'VERIFIED COMPLIANT'}
+=======================================================`;
+    const blob = new Blob([textContent], { type: 'text/plain;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${doc.doc_type}_${(currentBidder?.company_name || 'document').replace(/\\s+/g, '_')}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   // 1. Fetch bidders & initialize
   useEffect(() => {
     async function loadBidders() {
@@ -1249,7 +1293,17 @@ export default function UserDashboard() {
                                 title="Preview certificate & view metadata"
                               >
                                 <Eye className="w-3.5 h-3.5" />
-                                <span>View Document</span>
+                                <span>View</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => handleDownloadDoc(doc)}
+                                className="inline-flex items-center space-x-1 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition cursor-pointer"
+                                title="Download certificate file"
+                              >
+                                <Download className="w-3.5 h-3.5 text-slate-600" />
+                                <span>Download</span>
                               </button>
 
                               <button
@@ -1790,6 +1844,128 @@ export default function UserDashboard() {
           </div>
         </div>
       )}
+
+      {/* DOCUMENT PREVIEW & DOWNLOAD MODAL */}
+      {previewDoc && (() => {
+        const ext = typeof previewDoc.extracted_data === 'string' ? JSON.parse(previewDoc.extracted_data || '{}') : (previewDoc.extracted_data || {});
+        const hasImage = previewDoc.file_content || (previewDoc.file_url && previewDoc.file_url.match(/\.(png|jpg|jpeg|webp)$/i));
+        let imgSrc = previewDoc.file_content;
+        if (imgSrc && !imgSrc.startsWith('data:') && !imgSrc.startsWith('http') && !imgSrc.startsWith('/')) {
+          imgSrc = `data:image/png;base64,${imgSrc}`;
+        } else if (!imgSrc && previewDoc.file_url) {
+          imgSrc = previewDoc.file_url;
+        }
+
+        return (
+          <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6 animate-fadeIn">
+            <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] shadow-2xl border border-slate-200 flex flex-col overflow-hidden">
+              {/* Modal Header */}
+              <div className="px-6 py-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+                <div className="flex items-center space-x-2.5">
+                  <span className="text-xs font-mono font-black uppercase bg-[#0B2546] text-white px-2.5 py-1 rounded">
+                    {previewDoc.doc_type}
+                  </span>
+                  <div>
+                    <h3 className="text-sm font-bold text-slate-900">
+                      {previewDoc.file_url ? previewDoc.file_url.split('/').pop() : 'Statutory Certificate'}
+                    </h3>
+                    <span className="text-[10px] text-slate-400 font-mono">
+                      Uploaded {formatDate(previewDoc.uploaded_at)} &bull; {currentBidder?.company_name}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <button
+                    type="button"
+                    onClick={() => handleDownloadDoc(previewDoc)}
+                    className="inline-flex items-center space-x-1.5 bg-[#0B2546] hover:bg-[#07182D] text-white text-xs font-bold px-3.5 py-1.5 rounded-lg shadow-sm transition cursor-pointer"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    <span>Download File</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setPreviewDoc(null)}
+                    className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-200/60 transition cursor-pointer"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Modal Body */}
+              <div className="flex-1 overflow-y-auto p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Left: Image or Certificate Preview */}
+                <div className="bg-slate-50 rounded-xl border border-slate-200 p-4 flex flex-col items-center justify-center min-h-[380px]">
+                  {hasImage && imgSrc ? (
+                    <img
+                      src={imgSrc}
+                      alt="Uploaded Document"
+                      className="max-h-[360px] w-auto max-w-full object-contain rounded-lg border border-slate-200 shadow-sm bg-white"
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                      }}
+                    />
+                  ) : (
+                    <div className="w-full bg-white rounded-xl border-2 border-slate-300 p-5 shadow-sm space-y-4 text-center">
+                      <div className="text-[10px] uppercase font-bold tracking-widest text-slate-500">
+                        भारत सरकार &bull; Government of India
+                      </div>
+                      <div className="text-xs font-black uppercase text-[#0B2546]">
+                        {previewDoc.doc_type} Verification
+                      </div>
+                      <div className="text-xs text-slate-600 py-4 font-mono border-y border-slate-100">
+                        Registration: {ext.registration_number || ext.udyam || ext.gstin || ext.pan || currentBidder?.gstin}
+                      </div>
+                      <div className="text-[10px] text-emerald-700 font-bold uppercase">
+                        Certified in GeM Compliance Ledger
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Right: Extracted Data */}
+                <div className="space-y-4 text-xs font-sans">
+                  <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                    <span className="font-bold uppercase tracking-wider text-slate-500">
+                      Status
+                    </span>
+                    <span className={`inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full font-bold ${
+                      previewDoc.flagged ? 'bg-rose-100 text-rose-800' : 'bg-emerald-100 text-emerald-800'
+                    }`}>
+                      {previewDoc.flagged ? 'Discrepancy Detected' : 'Verified Clean'}
+                    </span>
+                  </div>
+
+                  {previewDoc.flagged && (
+                    <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-800 space-y-1">
+                      <span className="font-bold">⚠️ Finding:</span>
+                      <p>{previewDoc.flag_reason}</p>
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-200 flex justify-between items-center">
+                      <span className="text-slate-500">Legal Entity</span>
+                      <span className="font-bold text-slate-900">{ext.company_name || ext.entity_name || currentBidder?.company_name}</span>
+                    </div>
+                    <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-200 flex justify-between items-center font-mono">
+                      <span className="text-slate-500 font-sans">GSTIN</span>
+                      <span className="font-bold text-slate-900">{ext.gstin || currentBidder?.gstin}</span>
+                    </div>
+                    <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-200 flex justify-between items-center font-mono">
+                      <span className="text-slate-500 font-sans">PAN</span>
+                      <span className="font-bold text-slate-900">{ext.pan || currentBidder?.pan_number}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
