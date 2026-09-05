@@ -9,7 +9,9 @@ import {
   Clock,
   FileCheck2,
   Landmark,
-  AlertCircle
+  AlertCircle,
+  Accessibility,
+  Headphones
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import NationalEmblem from '../components/NationalEmblem';
