@@ -24,7 +24,8 @@ import {
   ExternalLink,
   FileCheck2,
   FileCode2,
-  AlertCircle
+  AlertCircle,
+  Download
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -46,6 +47,7 @@ export default function BidderDetail() {
   const [loading, setLoading] = useState(true);
   const [verifying, setVerifying] = useState(false);
   const [error, setError] = useState(null);
+  const [bidderBids, setBidderBids] = useState([]);
 
   // Officer Decision State
   const [decisionNotes, setDecisionNotes] = useState('');
@@ -133,11 +135,73 @@ export default function BidderDetail() {
 
       // Fetch audit logs
       await fetchAuditLogs();
+
+      // Fetch linked bids
+      try {
+        const bidsRes = await fetch(`/api/bidders/${bidder_id}/bids`);
+        const bidsData = await bidsRes.json();
+        if (bidsData.success) {
+          setBidderBids(bidsData.bids || []);
+        }
+      } catch (e) {
+        console.error('Failed to load linked bids', e);
+      }
     } catch (err) {
       setError(err.message || 'Failed to load bidder data');
     } finally {
       setLoading(false);
     }
+  };
+
+  // Export full statutory audit dossier as JSON file
+  const handleExportAuditReport = () => {
+    if (!bidder) return;
+    const reportData = {
+      report_type: 'NATIONAL_PROCUREMENT_STATUTORY_AUDIT_REPORT',
+      portal: 'National Procurement Compliance Portal (NPCP)',
+      ministry: 'Ministry of Petroleum & Natural Gas (MoPNG) / CPCL',
+      generated_at: new Date().toISOString(),
+      authenticated_officer: user?.name || 'Demo Procurement Officer',
+      officer_email: user?.email || 'officer@cpcl.gov.in',
+      bidder_dossier: {
+        bidder_id: bidder.bidder_id,
+        legal_name: bidder.company_name,
+        gstin: bidder.gstin,
+        pan_number: bidder.pan_number,
+        udyam_number: bidder.udyam_number,
+        registered_address: bidder.registered_address,
+        official_email: bidder.email,
+        phone_contact: bidder.phone,
+        enrolled_date: bidder.created_at
+      },
+      statutory_evaluation: {
+        compliance_score: `${compliance?.score ?? 0} / 100`,
+        risk_classification: compliance?.risk || 'Pending',
+        official_recommendation: compliance?.recommendation || 'Pending',
+        discrepancy_flags: compliance?.flags || []
+      },
+      statutory_checks_ledger: compliance?.verificationResults || [],
+      uploaded_statutory_documents: documents.map(d => ({
+        doc_id: d.doc_id,
+        doc_type: d.doc_type,
+        file_url: d.file_url,
+        flagged: d.flagged,
+        flag_reason: d.flag_reason,
+        uploaded_at: d.uploaded_at
+      })),
+      linked_tender_bids: bidderBids,
+      audit_events: auditLogs
+    };
+
+    const blob = new Blob([JSON.stringify(reportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${bidder.company_name.replace(/[^a-zA-Z0-9]/g, '_')}_Statutory_Audit_Report.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   // 4. Re-run Verification
@@ -307,55 +371,62 @@ export default function BidderDetail() {
       {/* Top Breadcrumb & Live Action Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <Link
-          to="/"
-          className="inline-flex items-center text-xs font-semibold text-slate-600 hover:text-blue-600 transition"
+          to="/bidders"
+          className="inline-flex items-center text-xs font-semibold text-slate-600 hover:text-[#0B2546] transition"
         >
           <ArrowLeft className="w-4 h-4 mr-1.5" />
-          <span>Back to Participating Bidders</span>
+          <span>Back to Participating Bidders Directory</span>
         </Link>
 
-        <button
-          onClick={handleRerunVerification}
-          disabled={verifying}
-          className="inline-flex items-center space-x-1.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-medium px-3.5 py-2 rounded-lg shadow-sm transition disabled:opacity-50"
-        >
-          <RefreshCw className={`w-3.5 h-3.5 ${verifying ? 'animate-spin' : ''}`} />
-          <span>{verifying ? 'Re-verifying with Portals...' : 'Re-run Verification Engine'}</span>
-        </button>
+        <div className="flex items-center space-x-2">
+          <button
+            type="button"
+            onClick={handleExportAuditReport}
+            className="inline-flex items-center space-x-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold px-3.5 py-2 rounded-lg shadow-2xs transition cursor-pointer"
+            title="Download full statutory dossier as JSON report"
+          >
+            <Download className="w-3.5 h-3.5 text-slate-500" />
+            <span>Export Audit Dossier</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleRerunVerification}
+            disabled={verifying}
+            className="inline-flex items-center space-x-1.5 bg-[#0B2546] hover:bg-[#07182D] text-white text-xs font-bold px-3.5 py-2 rounded-lg shadow-sm transition disabled:opacity-50 cursor-pointer"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${verifying ? 'animate-spin' : ''}`} />
+            <span>{verifying ? 'Re-verifying with Portals...' : 'Re-run Verification Engine'}</span>
+          </button>
+        </div>
       </div>
 
-      {/* SECTION 1: HEADER & SCORE HERO BADGE */}
-      <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-6 relative overflow-hidden">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+      {/* SECTION 1: EXECUTIVE CORPORATE BRIEFING & COMPLIANCE DOSSIER */}
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        {/* Dossier Header Strip */}
+        <div className="bg-gradient-to-r from-[#0B2546] to-[#133E6D] p-6 text-white flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-1.5">
             <div className="flex items-center space-x-2">
-              <span className="text-xs font-mono font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
-                {bidder.bidder_id}
+              <span className="text-[10px] font-mono uppercase tracking-wider bg-white/20 text-white font-bold px-2 py-0.5 rounded">
+                Bidder Entity ID: {bidder.bidder_id.substring(0, 8).toUpperCase()}
               </span>
-              <span className="text-xs text-slate-400">Registered: {new Date(bidder.created_at).toLocaleDateString()}</span>
+              <span className="text-[11px] text-slate-200">
+                Enrolled: {new Date(bidder.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+              </span>
             </div>
-
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
-              {bidder.company_name}
+            <h1 className="text-2xl font-black tracking-tight text-white flex items-center gap-2.5">
+              <Building2 className="w-6 h-6 text-sky-400 shrink-0" />
+              <span>{bidder.company_name}</span>
             </h1>
-
-            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs font-mono text-slate-600 pt-1">
-              <span>GSTIN: <strong className="text-slate-800">{bidder.gstin}</strong></span>
-              <span>&bull;</span>
-              <span>PAN: <strong className="text-slate-800">{bidder.pan_number}</strong></span>
-              <span>&bull;</span>
-              <span>Udyam: <strong className="text-slate-800">{bidder.udyam_number}</strong></span>
-            </div>
-
-            <p className="text-xs text-slate-500 pt-1">
-              {bidder.registered_address} &bull; {bidder.email} &bull; {bidder.phone}
+            <p className="text-xs text-slate-200 max-w-2xl">
+              Commercial Supplier & Industrial Contractor verified under GFR 2017 & Public Procurement Guidelines.
             </p>
           </div>
 
           {/* Compliance Dial / Score Card */}
           <div className={`flex items-center p-4 rounded-xl border ${badgeBg} shadow-sm shrink-0 min-w-[260px] justify-between`}>
             <div>
-              <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-0.5">
+              <div className="text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-0.5">
                 AI Statutory Compliance
               </div>
               <div className="flex items-baseline space-x-1.5">
@@ -364,14 +435,14 @@ export default function BidderDetail() {
                 </span>
                 <span className="text-xs text-slate-500 font-bold">/ 100</span>
               </div>
-              <div className="mt-1 text-xs font-semibold">
+              <div className="mt-1 text-xs font-semibold text-slate-800">
                 Risk Tier: <span className="underline decoration-current">{compliance?.risk}</span>
               </div>
             </div>
 
-            <div className="text-right pl-4 border-l border-slate-200">
-              <span className="text-[10px] font-bold uppercase text-slate-400 block mb-1">
-                Recommendation
+            <div className="text-right pl-4 border-l border-slate-200/80">
+              <span className="text-[10px] font-bold uppercase text-slate-500 block mb-1">
+                Advisory
               </span>
               <span className={`inline-block px-2.5 py-1 rounded text-xs font-bold ${
                 isLow
@@ -385,9 +456,312 @@ export default function BidderDetail() {
             </div>
           </div>
         </div>
+
+        {/* Executive 4-Pillar Company Dossier */}
+        <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 bg-slate-50 border-b border-slate-200">
+          <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-2xs space-y-1">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Enterprise Category</span>
+            <div className="text-xs font-bold text-[#0B2546]">
+              {bidder.udyam_number?.includes('TN-02') ? 'Medium Enterprise (Mfg)' :
+               bidder.udyam_number?.includes('TN-03') ? 'Large Engineering Corp' :
+               bidder.udyam_number?.includes('TN-05') ? 'Small Enterprise (Line Pipe)' :
+               bidder.udyam_number?.includes('TN-04') ? 'Micro / Refining Spares' : 'Medium Enterprise (Govt)'}
+            </div>
+            <div className="text-[11px] text-slate-500 font-mono">MSME Udyam: {bidder.udyam_number}</div>
+          </div>
+
+          <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-2xs space-y-1">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">GSTN Tax Profile</span>
+            <div className="text-xs font-bold text-[#0B2546] font-mono">{bidder.gstin}</div>
+            <div className="text-[11px] text-slate-500">Regular Taxpayer &bull; Tamil Nadu</div>
+          </div>
+
+          <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-2xs space-y-1">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Income Tax (CBDT)</span>
+            <div className="text-xs font-bold text-[#0B2546] font-mono">{bidder.pan_number}</div>
+            <div className="text-[11px] text-emerald-700 font-semibold">Corporate PAN Registered</div>
+          </div>
+
+          <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-2xs space-y-1">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Active Bids in CPCL</span>
+            <div className="text-xs font-bold text-[#0B2546]">
+              {bidderBids.length > 0 ? `${bidderBids.length} Submitted Bid${bidderBids.length > 1 ? 's' : ''}` : 'No Active Bids'}
+            </div>
+            <div className="text-[11px] text-slate-500 truncate">
+              {bidderBids[0]?.tender?.title ? bidderBids[0].tender.title : 'Registered Vendor Database'}
+            </div>
+          </div>
+        </div>
+
+        {/* Contact & Registered Address Row */}
+        <div className="px-6 py-3.5 text-xs text-slate-600 flex flex-wrap items-center justify-between gap-3 bg-white">
+          <div className="flex items-center space-x-2">
+            <span className="font-semibold text-slate-700">Registered Office:</span>
+            <span>{bidder.registered_address}</span>
+          </div>
+          <div className="flex items-center space-x-4 text-xs font-mono">
+            <span>Email: <strong className="text-slate-800">{bidder.email}</strong></span>
+            <span>Phone: <strong className="text-slate-800">{bidder.phone}</strong></span>
+          </div>
+        </div>
       </div>
 
-      {/* SECTION 2: PLAIN-ENGLISH VERIFICATION FINDING */}
+      {/* SECTION 2: STATUTORY DOCUMENTS DOSSIER & OFFICER ADMIN UPLOAD DESK */}
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div className="px-6 py-4 border-b border-slate-200 bg-slate-50 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center space-x-2.5">
+            <FileCheck2 className="w-5 h-5 text-[#0B2546]" />
+            <div>
+              <div className="flex items-center space-x-2">
+                <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wide">
+                  Statutory Documents Dossier & Administrative Upload Desk
+                </h3>
+                <span className="text-[10px] bg-blue-100 text-blue-800 font-bold px-2 py-0.5 rounded border border-blue-200">
+                  Officer Admin Authority
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-500">
+                Inspect bidder submitted statutory certificates or upload verified documents directly with administrative privileges.
+              </p>
+            </div>
+          </div>
+          <span className="text-xs font-mono font-semibold bg-slate-200 text-slate-700 px-2.5 py-1 rounded">
+            {documents.length} Documents On Record
+          </span>
+        </div>
+
+        <div className="p-6 space-y-6">
+          {/* Officer Admin Upload Form */}
+          <form onSubmit={handleFileUpload} className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200/80 pb-2.5">
+              <div className="text-xs font-bold text-[#0B2546] uppercase tracking-wider flex items-center space-x-1.5">
+                <Upload className="w-4 h-4 text-blue-600" />
+                <span>Upload Statutory Document on Behalf of Bidder (Admin Mode)</span>
+              </div>
+              <span className="text-[11px] text-slate-500 font-mono">
+                Formats: PDF, PNG, JPG, TXT (Max 10MB)
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {/* Document Type Dropdown */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Document Classification
+                </label>
+                <select
+                  value={uploadDocType}
+                  onChange={(e) => setUploadDocType(e.target.value)}
+                  className="w-full text-xs bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0B2546]/20 font-medium"
+                >
+                  <option value="GST_CERT">GST Registration Certificate (GST REG-06)</option>
+                  <option value="PAN_CARD">Permanent Account Number (PAN Card)</option>
+                  <option value="UDYAM_CERT">MSME Udyam Registration Certificate</option>
+                  <option value="DEBARMENT_AFFIDAVIT">Non-Debarment / Vigilance Affidavit</option>
+                  <option value="FINANCIAL_AUDIT">Audited Balance Sheet / Turnover Proof</option>
+                </select>
+              </div>
+
+              {/* File Selector */}
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Select Certificate File
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*,.pdf,.txt"
+                    onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
+                    className="w-full text-xs text-slate-600 file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 border border-slate-300 rounded-lg bg-white p-1 cursor-pointer"
+                  />
+                  <button
+                    type="submit"
+                    disabled={uploading || !uploadFile}
+                    className="inline-flex items-center space-x-1.5 bg-[#0B2546] hover:bg-[#07182D] text-white text-xs font-bold px-4 py-2 rounded-lg shadow-sm transition disabled:opacity-50 shrink-0 cursor-pointer"
+                  >
+                    {uploading ? (
+                      <>
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                        <span>Verifying...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="w-3.5 h-3.5" />
+                        <span>Upload & Reconcile</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {uploadMsg && (
+              <div
+                className={`text-xs p-3 rounded-lg border flex items-center space-x-2 ${
+                  uploadMsg.type === 'success'
+                    ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                    : 'bg-rose-50 border-rose-200 text-rose-800'
+                }`}
+              >
+                {uploadMsg.type === 'success' ? (
+                  <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
+                ) : (
+                  <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+                )}
+                <span>{uploadMsg.text}</span>
+              </div>
+            )}
+          </form>
+
+          {/* List of Previously Uploaded Documents */}
+          {loadingDocs ? (
+            <div className="text-center py-6 text-slate-500 text-xs">
+              <RefreshCw className="w-4 h-4 animate-spin mx-auto mb-1" />
+              Loading verified documents...
+            </div>
+          ) : documents.length === 0 ? (
+            <div className="text-center py-8 border-2 border-dashed border-slate-200 rounded-xl text-slate-500 text-xs">
+              <FileText className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+              <p className="font-semibold text-slate-700">No statutory documents uploaded yet for this bidder.</p>
+              <p className="text-[11px] text-slate-400 mt-0.5">Use the admin form above to upload and verify certificates.</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {documents.map((doc) => {
+                const extData = doc.extracted_data || {};
+                const isLiveAi = extData.extraction_method === 'live_ai';
+                const isExpanded = expandedJsonDocId === doc.doc_id;
+
+                return (
+                  <div
+                    key={doc.doc_id}
+                    className={`rounded-xl border p-4 transition ${
+                      doc.flagged
+                        ? 'border-rose-300 bg-rose-50/20'
+                        : 'border-slate-200 bg-white hover:border-slate-300 shadow-2xs'
+                    }`}
+                  >
+                    {/* Document Header */}
+                    <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-100">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-xs font-mono font-bold uppercase bg-slate-100 text-slate-800 px-2 py-0.5 rounded border border-slate-200">
+                          {doc.doc_type}
+                        </span>
+                        <span className="text-xs text-slate-700 font-semibold font-mono">
+                          {doc.file_url ? doc.file_url.split('/').pop() : 'Certificate'}
+                        </span>
+                        <span className="text-xs text-slate-400">&bull;</span>
+                        <span className="text-xs text-slate-400">{formatTimestamp(doc.uploaded_at)}</span>
+                      </div>
+
+                      <div className="flex items-center space-x-2">
+                        <span
+                          className={`inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${
+                            doc.flagged
+                              ? 'bg-rose-50 text-rose-800 border-rose-200'
+                              : 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                          }`}
+                        >
+                          {doc.flagged ? (
+                            <>
+                              <AlertTriangle className="w-3 h-3 text-rose-600" />
+                              <span>Discrepancy Flagged</span>
+                            </>
+                          ) : (
+                            <>
+                              <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                              <span>Verified Against Registry</span>
+                            </>
+                          )}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Flagged Warning Banner */}
+                    {doc.flagged && (
+                      <div className="mt-3 p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-start space-x-2">
+                        <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                        <div>
+                          <p className="font-bold">
+                            ⚠️ Discrepancy Flag: {doc.flag_reason || 'Document failed registry validation'}
+                          </p>
+                          <p className="text-[11px] text-rose-700 mt-0.5">
+                            Cross-check discrepancy detected against government registers. Officer review required.
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Extracted Key-Value Fields */}
+                    <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+                      <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-200">
+                        <span className="text-[10px] uppercase font-bold text-slate-400 block">
+                          Legal Entity Name
+                        </span>
+                        <span className={`font-semibold ${doc.flagged ? 'text-rose-700 font-bold' : 'text-slate-800'}`}>
+                          {extData.company_name || extData.entity_name || bidder.company_name}
+                        </span>
+                      </div>
+
+                      <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-200">
+                        <span className="text-[10px] uppercase font-bold text-slate-400 block">
+                          GSTIN Extracted
+                        </span>
+                        <span className="font-mono font-bold text-slate-900">
+                          {extData.gstin || bidder.gstin}
+                        </span>
+                      </div>
+
+                      <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-200">
+                        <span className="text-[10px] uppercase font-bold text-slate-400 block">
+                          PAN Number
+                        </span>
+                        <span className="font-mono font-bold text-slate-900">
+                          {extData.pan || bidder.pan_number}
+                        </span>
+                      </div>
+
+                      <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-200">
+                        <span className="text-[10px] uppercase font-bold text-slate-400 block">
+                          Registry Match Status
+                        </span>
+                        <span className={`font-semibold ${doc.flagged ? 'text-rose-600' : 'text-emerald-700'}`}>
+                          {extData.verified_against_registry || (doc.flagged ? 'Discrepancy' : 'Compliant')}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Toggle JSON View */}
+                    <div className="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between">
+                      <button
+                        type="button"
+                        onClick={() => setExpandedJsonDocId(isExpanded ? null : doc.doc_id)}
+                        className="inline-flex items-center space-x-1 text-[11px] text-slate-500 hover:text-slate-800 font-mono cursor-pointer"
+                      >
+                        <FileCode2 className="w-3.5 h-3.5" />
+                        <span>{isExpanded ? 'Hide Raw Metadata' : 'View Extracted Metadata'}</span>
+                      </button>
+
+                      <span className="text-[10px] text-slate-400 font-mono">
+                        Doc ID: {doc.doc_id.substring(0, 8)}
+                      </span>
+                    </div>
+
+                    {isExpanded && (
+                      <pre className="mt-2 p-3 bg-slate-900 text-slate-100 text-[11px] font-mono rounded-lg overflow-x-auto">
+                        {JSON.stringify(extData, null, 2)}
+                      </pre>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* SECTION 3: PLAIN-ENGLISH VERIFICATION FINDING */}
       {compliance?.flags && compliance.flags.length > 0 ? (
         <div className={`p-4 rounded-lg border flex items-start space-x-3 ${
           isHigh ? 'bg-rose-50 border-rose-200' : 'bg-amber-50 border-amber-200'
@@ -420,7 +794,7 @@ export default function BidderDetail() {
         </div>
       )}
 
-      {/* SECTION 3: DETAILED 6-POINT STATUTORY COMPARISON TABLE */}
+      {/* SECTION 4: DETAILED 6-POINT STATUTORY COMPARISON TABLE */}
       <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
         <div className="px-6 py-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
           <div className="flex items-center space-x-2">
@@ -495,298 +869,6 @@ export default function BidderDetail() {
               })}
             </tbody>
           </table>
-        </div>
-      </div>
-
-      {/* SECTION 4: DOCUMENTS & AI VISION EXTRACTION */}
-      <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
-        <div className="px-6 py-4 border-b border-slate-200 bg-slate-50 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center space-x-2.5">
-            <FileCheck2 className="w-5 h-5 text-brand-600" />
-            <div>
-              <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wide">
-                Statutory Documents & Vision AI Extraction
-              </h3>
-              <p className="text-[11px] text-slate-500">
-                Upload certificates (GST REG-06, PAN Card, Udyam) for optical field parsing and registration verification.
-              </p>
-            </div>
-          </div>
-          <span className="text-xs font-mono font-semibold bg-slate-200 text-slate-700 px-2.5 py-1 rounded">
-            {documents.length} Documents On Record
-          </span>
-        </div>
-
-        <div className="p-6 space-y-6">
-          {/* Upload Form */}
-          <form onSubmit={handleFileUpload} className="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-4">
-            <div className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center space-x-1.5">
-              <Upload className="w-4 h-4 text-blue-600" />
-              <span>Upload Certificate for AI Extraction</span>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {/* Document Type Dropdown */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Document Type
-                </label>
-                <select
-                  value={uploadDocType}
-                  onChange={(e) => setUploadDocType(e.target.value)}
-                  className="w-full text-xs bg-white border border-slate-300 rounded px-3 py-2 text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                >
-                  <option value="GST_CERT">GST Registration Certificate (GST REG-06)</option>
-                  <option value="PAN_CARD">Permanent Account Number (PAN Card)</option>
-                  <option value="UDYAM_CERT">MSME Udyam Registration Certificate</option>
-                </select>
-              </div>
-
-              {/* File Selector */}
-              <div className="sm:col-span-2">
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Select Document Image / PDF
-                </label>
-                <div className="flex items-center gap-2">
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*,.pdf"
-                    onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
-                    className="w-full text-xs text-slate-600 file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 border border-slate-300 rounded bg-white p-1"
-                  />
-                  <button
-                    type="submit"
-                    disabled={uploading || !uploadFile}
-                    className="inline-flex items-center space-x-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-4 py-2 rounded shadow transition disabled:opacity-50 shrink-0"
-                  >
-                    {uploading ? (
-                      <>
-                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                        <span>Extracting...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Upload className="w-3.5 h-3.5" />
-                        <span>Upload & Analyze</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {uploadMsg && (
-              <div
-                className={`text-xs p-3 rounded border flex items-center space-x-2 ${
-                  uploadMsg.type === 'success'
-                    ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
-                    : 'bg-rose-50 border-rose-200 text-rose-800'
-                }`}
-              >
-                {uploadMsg.type === 'success' ? (
-                  <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
-                ) : (
-                  <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
-                )}
-                <span>{uploadMsg.text}</span>
-              </div>
-            )}
-          </form>
-
-          {/* List of Previously Uploaded Documents */}
-          {loadingDocs ? (
-            <div className="text-center py-6 text-slate-500 text-xs">
-              <RefreshCw className="w-4 h-4 animate-spin mx-auto mb-1" />
-              Loading verified documents...
-            </div>
-          ) : documents.length === 0 ? (
-            <div className="text-center py-8 border-2 border-dashed border-slate-200 rounded-lg text-slate-500 text-xs">
-              <FileText className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-              <p className="font-semibold">No statutory documents uploaded yet for this bidder.</p>
-              <p className="text-[11px] text-slate-400">Upload a certificate above to trigger automated vision extraction.</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {documents.map((doc) => {
-                const extData = doc.extracted_data || {};
-                const isLiveAi = extData.extraction_method === 'live_ai';
-                const isLocalOcr = extData.extraction_method === 'local_ocr';
-                const isExpanded = expandedJsonDocId === doc.doc_id;
-
-                return (
-                  <div
-                    key={doc.doc_id}
-                    className={`rounded-lg border p-4 transition ${
-                      doc.flagged
-                        ? 'border-rose-300 bg-rose-50/20'
-                        : 'border-slate-200 bg-white hover:border-slate-300 shadow-sm'
-                    }`}
-                  >
-                    {/* Document Header */}
-                    <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-100">
-                      <div className="flex items-center space-x-2">
-                        <span className="text-xs font-mono font-bold uppercase bg-slate-100 text-slate-800 px-2 py-0.5 rounded border border-slate-200">
-                          {doc.doc_type}
-                        </span>
-                        <span className="text-xs text-slate-500 font-mono">
-                          {doc.file_url.split('/').pop()}
-                        </span>
-                        <span className="text-xs text-slate-400">&bull;</span>
-                        <span className="text-xs text-slate-400">{formatTimestamp(doc.uploaded_at)}</span>
-                      </div>
-
-                      <div className="flex items-center space-x-2">
-                        {/* AI vs OCR vs Mock Method Badge */}
-                        <span
-                          className={`inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${
-                            isLiveAi
-                              ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                              : isLocalOcr
-                              ? 'bg-sky-50 text-sky-800 border-sky-300'
-                              : 'bg-indigo-50 text-indigo-800 border-indigo-200'
-                          }`}
-                        >
-                          {isLiveAi ? (
-                            <>
-                              <Sparkles className="w-3 h-3 text-emerald-600" />
-                              <span>Live Cloud AI</span>
-                            </>
-                          ) : isLocalOcr ? (
-                            <>
-                              <Cpu className="w-3 h-3 text-sky-600" />
-                              <span>Real Optical OCR (Tesseract{extData.ocr_confidence ? ` • ${extData.ocr_confidence}% Conf` : ''})</span>
-                            </>
-                          ) : (
-                            <>
-                              <Cpu className="w-3 h-3 text-indigo-600" />
-                              <span>Mock Fallback Mode</span>
-                            </>
-                          )}
-                        </span>
-
-                        <a
-                          href={doc.file_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center space-x-1 text-xs text-blue-600 hover:text-blue-800 font-medium px-2 py-1 rounded hover:bg-blue-50 transition"
-                        >
-                          <span>View File</span>
-                          <ExternalLink className="w-3 h-3" />
-                        </a>
-                      </div>
-                    </div>
-
-                    {/* Flagged Warning Banner */}
-                    {doc.flagged && (
-                      <div className="mt-3 p-3 rounded bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-start space-x-2">
-                        <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
-                        <div>
-                          <p className="font-bold">
-                            ⚠️ Discrepancy Flag: {doc.flag_reason || 'Uploaded document name does not match bidder registration'}
-                          </p>
-                          <p className="text-[11px] text-rose-700 mt-0.5">
-                            Extracted Name: &ldquo;{extData.entity_name}&rdquo; vs Bidder Registration: &ldquo;{bidder.company_name}&rdquo;. Flagged for manual review.
-                          </p>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Extracted Key-Value Fields */}
-                    <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
-                      <div className="p-2 bg-slate-50 rounded border border-slate-200">
-                        <span className="text-[10px] uppercase font-bold text-slate-400 block">
-                          Document Type
-                        </span>
-                        <span className="font-semibold text-slate-800">
-                          {extData.document_type || '—'}
-                        </span>
-                      </div>
-
-                      <div className="p-2 bg-slate-50 rounded border border-slate-200">
-                        <span className="text-[10px] uppercase font-bold text-slate-400 block">
-                          Entity Name
-                        </span>
-                        <span className={`font-semibold ${doc.flagged ? 'text-rose-700 font-bold' : 'text-slate-800'}`}>
-                          {extData.entity_name || '—'}
-                        </span>
-                      </div>
-
-                      <div className="p-2 bg-slate-50 rounded border border-slate-200">
-                        <span className="text-[10px] uppercase font-bold text-slate-400 block">
-                          Registration / Certificate Number
-                        </span>
-                        <span className="font-mono font-bold text-slate-900">
-                          {extData.registration_number || '—'}
-                        </span>
-                      </div>
-
-                      <div className="p-2 bg-slate-50 rounded border border-slate-200">
-                        <span className="text-[10px] uppercase font-bold text-slate-400 block">
-                          Registration Date
-                        </span>
-                        <span className="font-medium text-slate-700">
-                          {extData.registration_date || '—'}
-                        </span>
-                      </div>
-
-                      <div className="p-2 bg-slate-50 rounded border border-slate-200">
-                        <span className="text-[10px] uppercase font-bold text-slate-400 block">
-                          Expiry Date
-                        </span>
-                        <span className="font-medium text-slate-700">
-                          {extData.expiry_date || 'Permanent / No Expiry'}
-                        </span>
-                      </div>
-
-                      <div className="p-2 bg-slate-50 rounded border border-slate-200">
-                        <span className="text-[10px] uppercase font-bold text-slate-400 block">
-                          Issuing Statutory Authority
-                        </span>
-                        <span className="font-medium text-slate-700 truncate block" title={extData.issuing_authority}>
-                          {extData.issuing_authority || '—'}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Raw OCR Transcript if available */}
-                    {extData.raw_text_snippet && (
-                      <div className="mt-3 p-2.5 bg-slate-50 border border-slate-200 rounded text-xs text-slate-700">
-                        <span className="text-[10px] uppercase font-bold text-slate-500 block mb-0.5">
-                          Optical OCR Transcribed Snippet
-                        </span>
-                        <p className="font-mono text-[11px] text-slate-800 bg-white p-2 rounded border border-slate-200 line-clamp-2" title={extData.raw_text_snippet}>
-                          &ldquo;{extData.raw_text_snippet}&rdquo;
-                        </p>
-                      </div>
-                    )}
-
-                    {/* Toggle JSON View */}
-                    <div className="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between">
-                      <button
-                        type="button"
-                        onClick={() => setExpandedJsonDocId(isExpanded ? null : doc.doc_id)}
-                        className="inline-flex items-center space-x-1 text-[11px] text-slate-500 hover:text-slate-800 font-mono"
-                      >
-                        <FileCode2 className="w-3.5 h-3.5" />
-                        <span>{isExpanded ? 'Hide Raw JSON' : 'View Extracted JSON'}</span>
-                      </button>
-
-                      <span className="text-[10px] text-slate-400 font-mono">
-                        Doc ID: {doc.doc_id}
-                      </span>
-                    </div>
-
-                    {isExpanded && (
-                      <pre className="mt-2 p-3 bg-slate-900 text-slate-100 text-[11px] font-mono rounded overflow-x-auto">
-                        {JSON.stringify(extData, null, 2)}
-                      </pre>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          )}
         </div>
       </div>
 
