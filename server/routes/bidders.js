@@ -67,15 +67,24 @@ router.post('/:bidder_id/documents', upload.single('file'), async (req, res) => 
     const filePath = req.file.path;
     const extractedData = await extractDocumentData(filePath, doc_type, bidder, req.file.originalname);
 
-    // PART C: Cross-check extracted entity name against bidder registration
+    // Check client scan results if provided, otherwise check extracted entity name
     let flagged = false;
     let flag_reason = null;
+    let finalExtractedData = extractedData;
 
-    if (extractedData.entity_name) {
-      const extractedName = extractedData.entity_name.trim().toLowerCase();
-      const bidderName = bidder.company_name.trim().toLowerCase();
+    if (req.body.extracted_data) {
+      try {
+        const clientExt = JSON.parse(req.body.extracted_data);
+        finalExtractedData = { ...extractedData, ...clientExt };
+      } catch (e) {}
+    }
 
-      if (extractedName !== bidderName) {
+    if (req.body.flagged === '1' || req.body.flagged === 1 || req.body.flagged === 'true' || req.body.flagged === true) {
+      flagged = true;
+      flag_reason = req.body.flag_reason || 'Discrepancy detected during statutory document scan';
+    } else if (extractedData.entity_name) {
+      const norm = (s) => (s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      if (norm(extractedData.entity_name) !== norm(bidder.company_name)) {
         flagged = true;
         flag_reason = 'Uploaded document name does not match bidder registration — flagged for manual review';
       }
@@ -89,7 +98,7 @@ router.post('/:bidder_id/documents', upload.single('file'), async (req, res) => 
         bidder_id,
         doc_type,
         file_url: fileUrl,
-        extracted_data: JSON.stringify(extractedData),
+        extracted_data: JSON.stringify(finalExtractedData),
         flagged,
         flag_reason
       }
