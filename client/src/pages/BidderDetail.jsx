@@ -836,12 +836,17 @@ STATUS:            ${doc.flagged ? 'DISCREPANCY: ' + doc.flag_reason : 'VERIFIED
       {/* DOCUMENT PREVIEW & DOWNLOAD MODAL */}
       {previewDoc && (() => {
         const ext = typeof previewDoc.extracted_data === 'string' ? JSON.parse(previewDoc.extracted_data || '{}') : (previewDoc.extracted_data || {});
-        const hasImage = previewDoc.file_content || (previewDoc.file_url && previewDoc.file_url.match(/\\.(png|jpg|jpeg|webp)$/i));
-        let imgSrc = previewDoc.file_content;
-        if (imgSrc && !imgSrc.startsWith('data:') && !imgSrc.startsWith('http') && !imgSrc.startsWith('/')) {
-          imgSrc = `data:image/png;base64,${imgSrc}`;
-        } else if (!imgSrc && previewDoc.file_url) {
-          imgSrc = previewDoc.file_url;
+        const fileName = previewDoc.file_url ? previewDoc.file_url.split('/').pop() : `${previewDoc.doc_type || 'document'}.pdf`;
+        const isPdf = /\.pdf$/i.test(fileName) ||
+                      (previewDoc.file_content && (previewDoc.file_content.startsWith('JVBERi') || previewDoc.file_content.startsWith('data:application/pdf')));
+        const isImage = /\.(png|jpe?g|webp|bmp|gif)$/i.test(fileName) ||
+                        (previewDoc.file_content && !isPdf && (previewDoc.file_content.startsWith('data:image/') || previewDoc.file_content.startsWith('iVBORw0KGgo')));
+
+        let docSrc = previewDoc.file_content;
+        if (docSrc && !docSrc.startsWith('data:') && !docSrc.startsWith('http') && !docSrc.startsWith('/')) {
+          docSrc = `data:${isPdf ? 'application/pdf' : 'image/png'};base64,${docSrc}`;
+        } else if (!docSrc && previewDoc.file_url) {
+          docSrc = previewDoc.file_url;
         }
 
         return (
@@ -855,7 +860,7 @@ STATUS:            ${doc.flagged ? 'DISCREPANCY: ' + doc.flag_reason : 'VERIFIED
                   </span>
                   <div>
                     <h3 className="text-sm font-bold text-slate-900">
-                      {previewDoc.file_url ? previewDoc.file_url.split('/').pop() : 'Statutory Certificate'}
+                      {fileName}
                     </h3>
                     <span className="text-[10px] text-slate-400 font-mono">
                       Uploaded {formatTimestamp(previewDoc.uploaded_at)} &bull; {bidder.company_name}
@@ -885,11 +890,31 @@ STATUS:            ${doc.flagged ? 'DISCREPANCY: ' + doc.flag_reason : 'VERIFIED
 
               {/* Modal Body */}
               <div className="flex-1 overflow-y-auto p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Left: Image or Certificate Preview */}
-                <div className="bg-slate-50 rounded-xl border border-slate-200 p-4 flex flex-col items-center justify-center min-h-[380px]">
-                  {hasImage && imgSrc ? (
+                {/* Left: Image or PDF Preview */}
+                <div className="bg-slate-50 rounded-xl border border-slate-200 p-2 flex flex-col items-center justify-center min-h-[380px] overflow-hidden">
+                  {isPdf && docSrc ? (
+                    <div className="w-full h-full flex flex-col items-center justify-between">
+                      <iframe
+                        src={docSrc}
+                        title="PDF Document Preview"
+                        className="w-full h-[360px] rounded-lg border border-slate-200 bg-white shadow-xs"
+                      />
+                      <div className="w-full mt-2 flex items-center justify-between text-[11px] px-1 font-sans">
+                        <span className="text-slate-500 font-medium">Digital PDF Certificate</span>
+                        <a
+                          href={docSrc}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center space-x-1 font-bold text-[#0B2546] hover:underline"
+                        >
+                          <ExternalLink className="w-3 h-3" />
+                          <span>Open Fullscreen</span>
+                        </a>
+                      </div>
+                    </div>
+                  ) : isImage && docSrc ? (
                     <img
-                      src={imgSrc}
+                      src={docSrc}
                       alt="Uploaded Document"
                       className="max-h-[360px] w-auto max-w-full object-contain rounded-lg border border-slate-200 shadow-sm bg-white"
                       onError={(e) => {
