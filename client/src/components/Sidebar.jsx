@@ -181,28 +181,30 @@ export default function Sidebar() {
             {/* Statutory Connected Portals Status Box */}
             <div className="px-3.5 py-3 rounded-lg bg-slate-50 border border-slate-200 space-y-2">
               <div className="flex items-center justify-between text-[11px] font-bold text-slate-800">
-                <span className="uppercase tracking-wider text-[10px]">Verified Ledgers</span>
-                <span className="text-emerald-700 text-[10px] font-semibold flex items-center">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 mr-1 animate-pulse"></span>
-                  Active
+                <span className="uppercase tracking-wider text-[10px]">Simulated Data Sources</span>
+                <span className="text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded text-[9px] font-semibold">
+                  Demo Data
                 </span>
               </div>
-              <div className="space-y-1 text-[10px] text-slate-600 font-mono">
+              <p className="text-[9px] text-slate-500 leading-tight">
+                Simulated registries for demonstration — not connected to live government systems.
+              </p>
+              <div className="space-y-1 text-[10px] text-slate-600 font-mono pt-1">
                 <div className="flex items-center justify-between">
                   <span>GSTN Registry (GSTR-3B)</span>
-                  <span className="text-emerald-700 font-bold">&check; Live</span>
+                  <span className="text-slate-600 font-semibold bg-slate-100 px-1 rounded">&bull; Simulated</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span>MSME Udyam Aadhaar</span>
-                  <span className="text-emerald-700 font-bold">&check; Live</span>
+                  <span className="text-slate-600 font-semibold bg-slate-100 px-1 rounded">&bull; Simulated</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span>CBDT Income Tax PAN</span>
-                  <span className="text-emerald-700 font-bold">&check; Live</span>
+                  <span className="text-slate-600 font-semibold bg-slate-100 px-1 rounded">&bull; Simulated</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span>MoPNG Vigilance List</span>
-                  <span className="text-emerald-700 font-bold">&check; Live</span>
+                  <span className="text-slate-600 font-semibold bg-slate-100 px-1 rounded">&bull; Simulated</span>
                 </div>
               </div>
             </div>
@@ -211,15 +213,15 @@ export default function Sidebar() {
 
         {/* Bottom Section: Database Health & User Profile */}
         <div className="p-4 border-t border-slate-200 bg-slate-50 space-y-3">
-          {/* Turso Cloud Status */}
+          {/* Database Health Status */}
           <div className="px-3 py-1.5 rounded-md bg-white border border-slate-200 flex items-center justify-between text-xs font-mono">
             <div className="flex items-center space-x-2">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
               <Database className="w-3.5 h-3.5 text-slate-400" />
-              <span className="text-[10px] text-slate-600 font-semibold">Turso Cloud DB</span>
+              <span className="text-[10px] text-slate-600 font-semibold">Database</span>
             </div>
             <span className="text-[9px] text-emerald-700 font-bold uppercase">
-              Mumbai (Live)
+              Connected (Demo Env)
             </span>
           </div>
 
@@ -235,7 +237,7 @@ export default function Sidebar() {
                     {user.name || user.company_name}
                   </span>
                   <span className="text-[10px] text-[#0B2546] font-semibold truncate font-mono">
-                    {isOfficer ? 'PSU Procurement Officer' : 'Authorized Signatory'}
+                    {isOfficer ? 'Demo Procurement Officer' : 'Authorized Signatory'}
                   </span>
                 </div>
               </div>
