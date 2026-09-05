@@ -174,52 +174,7 @@ export default function TendersList() {
         </div>
       </div>
 
-      {/* 2. Executive Metric KPI Ribbon (Refined & Compact) */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 font-mono">Total Value</span>
-            <TrendingUp className="w-4 h-4 text-[#0B2546]" />
-          </div>
-          <div className="text-xl font-black font-mono text-[#0B2546] mt-1">
-            {formatCurrency(totalValue)}
-          </div>
-          <div className="text-[10px] text-slate-500 mt-0.5 font-medium">Under active administration</div>
-        </div>
 
-        <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 font-mono">Total Tenders</span>
-            <Layers className="w-4 h-4 text-sky-600" />
-          </div>
-          <div className="text-xl font-black font-mono text-slate-900 mt-1">
-            {tenders.length} <span className="text-xs font-normal text-slate-400">Published</span>
-          </div>
-          <div className="text-[10px] text-slate-500 mt-0.5 font-medium">{openCount} Live • {awardedCount} Awarded</div>
-        </div>
-
-        <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 font-mono">Total Bids</span>
-            <Users className="w-4 h-4 text-emerald-600" />
-          </div>
-          <div className="text-xl font-black font-mono text-emerald-700 mt-1">
-            {totalBids} <span className="text-xs font-normal text-slate-400">Quotations</span>
-          </div>
-          <div className="text-[10px] text-slate-500 mt-0.5 font-medium">Screened by AI Watchdog</div>
-        </div>
-
-        <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 font-mono">Governance</span>
-            <ShieldCheck className="w-4 h-4 text-emerald-700" />
-          </div>
-          <div className="text-xl font-black font-mono text-emerald-700 mt-1">
-            100% <span className="text-xs font-normal text-slate-400">Rule 144</span>
-          </div>
-          <div className="text-[10px] text-slate-500 mt-0.5 font-medium">CVC &amp; GFR 2017 Enforcement</div>
-        </div>
-      </div>
 
       {/* 3. Search & Filter Bar */}
       <div className="bg-white p-3 rounded-2xl border border-slate-200 shadow-2xs flex flex-col sm:flex-row items-center justify-between gap-3">
