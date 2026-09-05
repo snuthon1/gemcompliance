@@ -1021,10 +1021,12 @@ STATUS:            ${doc.flagged ? 'FLAGGED: ' + doc.flag_reason : 'VERIFIED COM
               {/* ACTIONABLE SECTION 1B: SPECIALIZED CPCL / MoPNG STATUTORY STANDINGS */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* A. Make in India (PPP-MII 2017) Card */}
-                <div className="bg-white rounded-xl border border-slate-200 p-4.5 shadow-2xs space-y-2.5">
+                <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs space-y-3">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-base">🇮🇳</span>
+                    <div className="flex items-center space-x-2.5">
+                      <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center justify-center shrink-0">
+                        <Award className="w-4 h-4 text-emerald-600" />
+                      </div>
                       <div>
                         <h4 className="text-xs font-bold text-[#0B2546]">Make in India (PPP-MII) Standing</h4>
                         <p className="text-[10px] text-slate-400">Public Procurement Order 2017 (MoPNG)</p>
@@ -1035,7 +1037,7 @@ STATUS:            ${doc.flagged ? 'FLAGGED: ' + doc.flag_reason : 'VERIFIED COM
                     </span>
                   </div>
 
-                  <div className="space-y-1 pt-1">
+                  <div className="space-y-1.5 pt-1">
                     <div className="flex justify-between text-xs font-semibold">
                       <span className="text-slate-600">Local Content (Domestic Value Addition):</span>
                       <span className="font-mono text-emerald-700 font-bold">
@@ -1056,11 +1058,11 @@ STATUS:            ${doc.flagged ? 'FLAGGED: ' + doc.flag_reason : 'VERIFIED COM
                 </div>
 
                 {/* B. EPFO & ESIC Labour Compliance Card */}
-                <div className="bg-white rounded-xl border border-slate-200 p-4.5 shadow-2xs space-y-2.5">
+                <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs space-y-3">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <div className="w-6 h-6 rounded-md bg-blue-100 text-blue-800 flex items-center justify-center font-bold text-xs">
-                        <Building2 className="w-3.5 h-3.5" />
+                    <div className="flex items-center space-x-2.5">
+                      <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-700 border border-blue-200 flex items-center justify-center font-bold text-xs shrink-0">
+                        <Building2 className="w-4 h-4 text-blue-600" />
                       </div>
                       <div>
                         <h4 className="text-xs font-bold text-[#0B2546]">EPFO & ESIC Labour Standing</h4>
@@ -1596,7 +1598,7 @@ STATUS:            ${doc.flagged ? 'FLAGGED: ' + doc.flag_reason : 'VERIFIED COM
                 )}
 
                 {/* Document Upload Form */}
-                <form onSubmit={handleDocUpload} className="bg-slate-50/80 border border-slate-200 rounded-xl p-4.5 space-y-4">
+                <form onSubmit={handleDocUpload} className="bg-slate-50/80 border border-slate-200 rounded-xl p-5 space-y-4">
                   <div className="text-xs font-bold text-[#0B2546] uppercase tracking-wider flex items-center space-x-2">
                     <Upload className="w-4 h-4 text-sky-600" />
                     <span>Upload New Statutory Certificate to Vault</span>
@@ -1960,7 +1962,7 @@ STATUS:            ${doc.flagged ? 'FLAGGED: ' + doc.flag_reason : 'VERIFIED COM
 
               {/* My Submitted Bids Table */}
               <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
-                <div className="p-4.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+                <div className="px-5 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
                   <div className="flex items-center space-x-2">
                     <Layers className="w-4 h-4 text-[#0B2546]" />
                     <h4 className="text-xs font-bold uppercase tracking-wider text-slate-800">
@@ -2138,7 +2140,7 @@ STATUS:            ${doc.flagged ? 'FLAGGED: ' + doc.flag_reason : 'VERIFIED COM
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl border border-slate-200 flex flex-col">
             {/* Modal Header */}
-            <div className="p-4.5 bg-gradient-to-r from-[#0B2546] to-[#143D6D] text-white flex items-center justify-between">
+            <div className="px-5 py-4 bg-gradient-to-r from-[#0B2546] to-[#143D6D] text-white flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 <Layers className="w-5 h-5 text-sky-400" />
                 <h3 className="text-sm font-bold">
