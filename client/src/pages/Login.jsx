@@ -185,7 +185,7 @@ export default function Login() {
         {/* Crisp subtle overlay - NO BLUR */}
         <div className="absolute inset-0 bg-slate-950/35 pointer-events-none" />
 
-        <main className="relative z-10 max-w-lg mx-auto w-full px-4 sm:px-6 my-auto">
+        <main className="relative z-10 max-w-[420px] mx-auto w-full px-4 my-auto">
           {/* Official Government Sign-In Form - Centered */}
           <div className="bg-white rounded-xl border border-slate-300 shadow-2xl overflow-hidden">
               <div className="p-6 space-y-5">
