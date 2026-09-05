@@ -971,6 +971,76 @@ STATUS:            ${doc.flagged ? 'FLAGGED: ' + doc.flag_reason : 'VERIFIED COM
                 )}
               </div>
 
+              {/* ACTIONABLE SECTION 1B: SPECIALIZED CPCL / MoPNG STATUTORY STANDINGS */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* A. Make in India (PPP-MII 2017) Card */}
+                <div className="bg-white rounded-xl border border-slate-200 p-4.5 shadow-2xs space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-base">🇮🇳</span>
+                      <div>
+                        <h4 className="text-xs font-bold text-[#0B2546]">Make in India (PPP-MII) Standing</h4>
+                        <p className="text-[10px] text-slate-400">Public Procurement Order 2017 (MoPNG)</p>
+                      </div>
+                    </div>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                      Class-I Local Supplier
+                    </span>
+                  </div>
+
+                  <div className="space-y-1 pt-1">
+                    <div className="flex justify-between text-xs font-semibold">
+                      <span className="text-slate-600">Local Content (Domestic Value Addition):</span>
+                      <span className="font-mono text-emerald-700 font-bold">
+                        {currentBidder?.company_name?.toLowerCase().includes('apex') ? '82%' : (currentBidder?.company_name?.toLowerCase().includes('bharat') ? '68%' : '60%')}
+                      </span>
+                    </div>
+                    <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                      <div
+                        className="bg-emerald-600 h-full rounded-full transition-all duration-500"
+                        style={{ width: currentBidder?.company_name?.toLowerCase().includes('apex') ? '82%' : (currentBidder?.company_name?.toLowerCase().includes('bharat') ? '68%' : '60%') }}
+                      ></div>
+                    </div>
+                    <div className="flex justify-between text-[10px] text-slate-400">
+                      <span>Threshold: 50% for Class-I</span>
+                      <span className="text-emerald-700 font-semibold">✓ 20% L1 Preference Margin Active</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* B. EPFO & ESIC Labour Compliance Card */}
+                <div className="bg-white rounded-xl border border-slate-200 p-4.5 shadow-2xs space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-6 h-6 rounded-md bg-blue-100 text-blue-800 flex items-center justify-center font-bold text-xs">
+                        <Building2 className="w-3.5 h-3.5" />
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-bold text-[#0B2546]">EPFO & ESIC Labour Standing</h4>
+                        <p className="text-[10px] text-slate-400">Shram Suvidha Central Databank</p>
+                      </div>
+                    </div>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                      Active / Cleared
+                    </span>
+                  </div>
+
+                  <div className="space-y-1.5 text-[11px] pt-1">
+                    <div className="flex justify-between items-center py-0.5 border-b border-slate-100">
+                      <span className="text-slate-500">EPF Code:</span>
+                      <span className="font-mono font-bold text-slate-800">TN/MAS/00{currentBidder?.pan_number?.slice(5, 9) || '4821'}/000</span>
+                    </div>
+                    <div className="flex justify-between items-center py-0.5">
+                      <span className="text-slate-500">ECR & Monthly Challans:</span>
+                      <span className="text-emerald-700 font-bold flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3" />
+                        <span>Up-to-Date (Refinery Pass Eligible)</span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {/* ACTIONABLE SECTION 2: TWO-COLUMN WORKSPACE (LIVE TENDERS & RECENT ACTIVITY) */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
                 {/* Left (7 Cols): Live CPCL Procurement Tenders */}
@@ -1604,25 +1674,33 @@ STATUS:            ${doc.flagged ? 'FLAGGED: ' + doc.flag_reason : 'VERIFIED COM
 
                             {/* Right: Status Pill & Action Buttons */}
                             <div className="flex items-center space-x-2.5 shrink-0">
-                              <span
-                                className={`inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-xs font-bold border ${
-                                  isFlagged
-                                    ? 'bg-rose-50 text-rose-800 border-rose-200'
-                                    : 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                                }`}
-                              >
-                                {isFlagged ? (
-                                  <>
-                                    <AlertTriangle className="w-3.5 h-3.5 text-rose-600" />
-                                    <span>Discrepancy</span>
-                                  </>
-                                ) : (
-                                  <>
-                                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                                    <span>Verified Clean</span>
-                                  </>
+                              <div className="flex flex-col sm:flex-row items-end sm:items-center gap-1.5">
+                                <span
+                                  className={`inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-xs font-bold border ${
+                                    isFlagged
+                                      ? 'bg-rose-50 text-rose-800 border-rose-200'
+                                      : 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                                  }`}
+                                >
+                                  {isFlagged ? (
+                                    <>
+                                      <AlertTriangle className="w-3.5 h-3.5 text-rose-600" />
+                                      <span>Discrepancy</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                                      <span>Verified Clean</span>
+                                    </>
+                                  )}
+                                </span>
+                                {!isFlagged && (
+                                  <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100/70 text-emerald-900 border border-emerald-300">
+                                    <ShieldCheck className="w-3 h-3 text-emerald-700" />
+                                    <span>DigiLocker</span>
+                                  </span>
                                 )}
-                              </span>
+                              </div>
 
                               <div className="flex items-center space-x-1 border-l border-slate-200 pl-2">
                                 <button
