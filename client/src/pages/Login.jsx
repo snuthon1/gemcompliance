@@ -19,10 +19,10 @@ import NationalEmblem from '../components/NationalEmblem';
 
 export default function Login() {
   const [activeTab, setActiveTab] = useState('OFFICER'); // 'OFFICER' or 'VENDOR'
-  const [officerEmail, setOfficerEmail] = useState('officer@cpcl.gov.in');
-  const [officerPassword, setOfficerPassword] = useState('Officer@2026');
+  const [officerEmail, setOfficerEmail] = useState('admin@admin.com');
+  const [officerPassword, setOfficerPassword] = useState('password');
   const [vendorIdentifier, setVendorIdentifier] = useState('tenders@apexpetrochem.in');
-  const [vendorPassword, setVendorPassword] = useState('Vendor@2026');
+  const [vendorPassword, setVendorPassword] = useState('password');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
@@ -391,21 +391,21 @@ export default function Login() {
                   <div className="grid grid-cols-2 gap-2 text-[10px]">
                     <button
                       type="button"
-                      onClick={() => handleQuickFill('OFFICER', 'officer@cpcl.gov.in', 'Officer@2026')}
+                      onClick={() => handleQuickFill('OFFICER', 'admin@admin.com', 'password')}
                       className="p-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 text-left transition flex flex-col cursor-pointer"
                     >
-                      <span className="font-bold text-[#0B2546]">Officer Account</span>
-                      <span className="text-slate-500 font-mono text-[9px] truncate">officer@cpcl.gov.in</span>
-                      <span className="text-emerald-700 font-mono text-[9px] font-semibold">PW: Officer@2026</span>
+                      <span className="font-bold text-[#0B2546]">Admin / Officer Account</span>
+                      <span className="text-slate-500 font-mono text-[9px] truncate">admin@admin.com</span>
+                      <span className="text-emerald-700 font-mono text-[9px] font-semibold">PW: password</span>
                     </button>
                     <button
                       type="button"
-                      onClick={() => handleQuickFill('VENDOR', 'tenders@apexpetrochem.in', 'Vendor@2026')}
+                      onClick={() => handleQuickFill('VENDOR', 'tenders@apexpetrochem.in', 'password')}
                       className="p-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 text-left transition flex flex-col cursor-pointer"
                     >
-                      <span className="font-bold text-[#0B2546]">Vendor (Apex)</span>
+                      <span className="font-bold text-[#0B2546]">Vendor (Apex Petrochem)</span>
                       <span className="text-slate-500 font-mono text-[9px] truncate">tenders@apexpetrochem.in</span>
-                      <span className="text-emerald-700 font-mono text-[9px] font-semibold">PW: Vendor@2026</span>
+                      <span className="text-emerald-700 font-mono text-[9px] font-semibold">PW: password</span>
                     </button>
                   </div>
                 </div>
