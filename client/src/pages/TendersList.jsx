@@ -59,6 +59,18 @@ export default function TendersList() {
     }).format(val);
   };
 
+  const formatDeadline = (val) => {
+    if (!val) return '18 Mar 2026';
+    const num = Number(val);
+    const d = isNaN(num) ? new Date(val) : new Date(num);
+    if (isNaN(d.getTime())) return '18 Mar 2026';
+    return d.toLocaleDateString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
+    });
+  };
+
   // Metrics calculation
   const totalValue = useMemo(() => {
     return tenders.reduce((acc, t) => acc + (Number(t.estimated_value) || 0), 0);
@@ -261,9 +273,6 @@ export default function TendersList() {
                 onClick={() => navigate(`/tenders/${tender.tender_id}`)}
                 className="bg-white rounded-2xl border border-slate-200/90 shadow-xs hover:border-[#0B2546]/50 hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col justify-between group overflow-hidden"
               >
-                {/* Card Top Accent Strip */}
-                <div className={`h-1.5 w-full ${isAwarded ? 'bg-amber-400' : 'bg-emerald-500'}`} />
-
                 <div className="p-5 sm:p-6 space-y-4">
                   {/* Card Header Row: Reference ID + Category Pill + Status */}
                   <div className="flex flex-wrap items-center justify-between gap-2">
@@ -339,13 +348,7 @@ export default function TendersList() {
                     <div className="pl-1">
                       <div className="text-[9px] uppercase font-bold text-slate-400 tracking-wider">Deadline</div>
                       <div className="text-xs font-semibold text-slate-700 mt-0.5 truncate">
-                        {tender.submission_deadline
-                          ? new Date(tender.submission_deadline).toLocaleDateString('en-IN', {
-                              day: '2-digit',
-                              month: 'short',
-                              year: 'numeric'
-                            })
-                          : '18 Mar 2026'}
+                        {formatDeadline(tender.submission_deadline)}
                       </div>
                     </div>
                   </div>
