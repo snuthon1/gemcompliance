@@ -5,6 +5,7 @@ import {
   User,
   Eye,
   EyeOff,
+  Shield,
   AlertCircle,
   Building2
 } from 'lucide-react';
