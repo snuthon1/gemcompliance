@@ -10,6 +10,11 @@ import TenderDetail from './pages/TenderDetail';
 import UserDashboard from './pages/UserDashboard';
 import BlacklistDirectory from './pages/BlacklistDirectory';
 import Analytics from './pages/Analytics';
+import CartelDetection from './pages/CartelDetection';
+import GFRComplianceMatrix from './pages/GFRComplianceMatrix';
+import RegistryGateway from './pages/RegistryGateway';
+import AuditTrail from './pages/AuditTrail';
+import Representations from './pages/Representations';
 import NationalEmblem from './components/NationalEmblem';
 import { Accessibility, Shield, Headphones } from 'lucide-react';
 
@@ -135,6 +140,46 @@ function AppLayout() {
               element={
                 <OfficerRoute>
                   <Analytics />
+                </OfficerRoute>
+              }
+            />
+            <Route
+              path="/cartel-watch"
+              element={
+                <OfficerRoute>
+                  <CartelDetection />
+                </OfficerRoute>
+              }
+            />
+            <Route
+              path="/gfr-rules"
+              element={
+                <ProtectedRoute>
+                  <GFRComplianceMatrix />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/registry-gateway"
+              element={
+                <ProtectedRoute>
+                  <RegistryGateway />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/audit-trail"
+              element={
+                <OfficerRoute>
+                  <AuditTrail />
+                </OfficerRoute>
+              }
+            />
+            <Route
+              path="/representations"
+              element={
+                <OfficerRoute>
+                  <Representations />
                 </OfficerRoute>
               }
             />
