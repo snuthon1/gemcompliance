@@ -19,11 +19,13 @@ import {
   TrendingUp,
   UserCheck
 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 export default function UserDashboard() {
+  const { user } = useAuth();
   const [bidders, setBidders] = useState([]);
   const [selectedBidderId, setSelectedBidderId] = useState(() => {
-    return localStorage.getItem('bidshield_active_vendor_id') || '';
+    return user?.bidder_id || localStorage.getItem('bidshield_active_vendor_id') || '';
   });
   const [currentBidder, setCurrentBidder] = useState(null);
   const [compliance, setCompliance] = useState(null);
