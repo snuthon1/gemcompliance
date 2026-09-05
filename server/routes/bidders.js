@@ -315,7 +315,34 @@ router.get('/:bidder_id/audit-log', async (req, res) => {
   }
 });
 
-// GET /api/bidders/:bidder_id - Full details for a single bidder
+// GET /api/bidders/:bidder_id/bids - Get all tender bids submitted by this bidder
+router.get('/:bidder_id/bids', async (req, res) => {
+  try {
+    const { bidder_id } = req.params;
+    const bids = await prisma.bid.findMany({
+      where: { bidder_id },
+      orderBy: { submitted_at: 'desc' }
+    });
+
+    const enrichedBids = await Promise.all(
+      bids.map(async (b) => {
+        const tender = await prisma.tender.findUnique({
+          where: { tender_id: b.tender_id }
+        });
+        return {
+          ...b,
+          tender
+        };
+      })
+    );
+
+    res.json({ success: true, count: enrichedBids.length, bids: enrichedBids });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// GET /api/bidders/:bidder_id - Single bidder profile
 router.get('/:bidder_id', async (req, res) => {
   try {
     const bidder = await prisma.bidder.findUnique({
