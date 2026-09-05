@@ -7,7 +7,9 @@ import {
   EyeOff,
   Shield,
   AlertCircle,
-  Building2
+  Building2,
+  Accessibility,
+  Headphones
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import NationalEmblem from '../components/NationalEmblem';
@@ -89,24 +91,24 @@ export default function Login() {
     <div className="min-h-screen bg-[#F1F5F9] flex flex-col justify-between font-sans text-slate-800 antialiased selection:bg-amber-500 selection:text-white">
       {/* 1. TOP OFFICIAL ACCESSIBILITY & GOI STRIP */}
       <div className="shrink-0">
-        <div className="bg-[#07182D] text-slate-300 px-4 sm:px-8 py-1 text-[11px] flex flex-col sm:flex-row justify-between items-center gap-1 border-b border-slate-700">
+        <div className="bg-slate-50 text-slate-600 px-4 sm:px-8 py-1.5 text-[11px] flex flex-col sm:flex-row justify-between items-center gap-1 border-b border-slate-200">
           <div className="flex items-center space-x-3">
-            <span className="font-semibold text-white">भारत सरकार</span>
-            <span className="text-slate-500">|</span>
-            <span>Government of India</span>
-            <span className="text-slate-500">|</span>
-            <span className="text-amber-300 font-medium">पेट्रोलियम एवं प्राकृतिक गैस मंत्रालय (MoPNG)</span>
+            <span className="font-bold text-slate-800">भारत सरकार</span>
+            <span className="text-slate-300">|</span>
+            <span className="font-medium">Government of India</span>
+            <span className="text-slate-300">|</span>
+            <span className="text-[#0B2546] font-semibold">पेट्रोलियम एवं प्राकृतिक गैस मंत्रालय (MoPNG)</span>
           </div>
-          <div className="flex items-center space-x-4 text-[10px] font-mono text-slate-400">
+          <div className="flex items-center space-x-4 text-[10px] font-mono text-slate-500">
             <span className="hidden md:inline">Helpline: 1800-425-4252 (09:30 - 17:30 IST)</span>
-            <span className="hidden sm:inline text-slate-600">|</span>
-            <span className="hover:text-white cursor-pointer">Screen Reader Access</span>
-            <span className="text-slate-600">|</span>
-            <span className="bg-slate-800 text-slate-200 px-1.5 py-0.5 rounded border border-slate-700 font-bold">A-</span>
-            <span className="bg-slate-800 text-slate-200 px-1.5 py-0.5 rounded border border-slate-700 font-bold">A</span>
-            <span className="bg-slate-800 text-slate-200 px-1.5 py-0.5 rounded border border-slate-700 font-bold">A+</span>
-            <span className="text-slate-600">|</span>
-            <span className="text-amber-400 font-bold cursor-pointer">English</span>
+            <span className="hidden sm:inline text-slate-300">|</span>
+            <span className="hover:text-[#0B2546] cursor-pointer">Screen Reader Access</span>
+            <span className="text-slate-300">|</span>
+            <span className="bg-white text-slate-700 px-1.5 py-0.5 rounded border border-slate-200 font-bold hover:border-slate-300">A-</span>
+            <span className="bg-white text-slate-700 px-1.5 py-0.5 rounded border border-slate-200 font-bold hover:border-slate-300">A</span>
+            <span className="bg-white text-slate-700 px-1.5 py-0.5 rounded border border-slate-200 font-bold hover:border-slate-300">A+</span>
+            <span className="text-slate-300">|</span>
+            <span className="text-[#0B2546] font-bold cursor-pointer">English</span>
           </div>
         </div>
 
@@ -229,17 +231,17 @@ export default function Login() {
                 </div>
 
                 {/* Demo Credentials Quick-Fill Pill */}
-                <div className="bg-amber-50 border border-amber-200 rounded py-1.5 px-3 text-[11px] flex items-center justify-between">
-                  <div className="text-amber-900">
-                    <span className="font-bold">Evaluation Demo Login:</span>{' '}
-                    <span className="font-mono text-slate-700">
+                <div className="bg-slate-50 border border-slate-200 rounded-lg py-1.5 px-3 text-[11px] flex items-center justify-between">
+                  <div className="text-slate-700">
+                    <span className="font-bold text-[#0B2546]">Evaluation Demo:</span>{' '}
+                    <span className="font-mono text-slate-600">
                       {activeTab === 'OFFICER' ? 'admin@admin.com / password' : '33AABCA1234F1Z5 / password'}
                     </span>
                   </div>
                   <button
                     type="button"
                     onClick={() => handleQuickFill(activeTab)}
-                    className="ml-2 text-[10px] font-bold text-amber-900 bg-amber-200/80 hover:bg-amber-300 px-2 py-0.5 rounded transition cursor-pointer"
+                    className="ml-2 text-[10px] font-bold text-[#0B2546] bg-slate-200/80 hover:bg-slate-300 px-2 py-0.5 rounded transition cursor-pointer"
                   >
                     Auto-Fill
                   </button>
@@ -400,51 +402,31 @@ export default function Login() {
           </main>
         </div>
 
-      {/* 6. AUTHENTIC GOVERNMENT OF INDIA (NIC STYLE) FOOTER */}
-      <footer className="bg-[#07182D] text-slate-300 text-xs border-t-4 border-t-[#0B2546] mt-auto shrink-0">
-        <div className="max-w-6xl mx-auto px-4 sm:px-8 py-6 space-y-4">
-          {/* Top Links Row */}
-          <div className="flex flex-wrap items-center justify-center sm:justify-start gap-x-6 gap-y-2 text-[11px] text-slate-300 pb-4 border-b border-slate-800">
-            <a href="https://india.gov.in" target="_blank" rel="noreferrer" className="hover:text-white transition">
-              National Portal of India (india.gov.in)
+      {/* 6. CLEAN OFFICIAL FOOTER (Matches site design system) */}
+      <footer className="border-t border-slate-200 bg-white py-4 text-xs text-slate-600 px-4 sm:px-8 shrink-0 mt-auto">
+        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="flex items-center space-x-6">
+            <a href="https://india.gov.in" target="_blank" rel="noreferrer" className="flex items-center space-x-1.5 hover:text-[#0B2546] transition">
+              <Accessibility className="w-3.5 h-3.5 text-slate-500" />
+              <span className="font-semibold">Accessibility</span>
             </a>
-            <span className="text-slate-600 hidden sm:inline">&bull;</span>
-            <a href="https://gem.gov.in" target="_blank" rel="noreferrer" className="hover:text-white transition">
-              Government e-Marketplace (gem.gov.in)
+            <span className="text-slate-300">|</span>
+            <a href="#" onClick={(e) => { e.preventDefault(); alert('CPCL Procurement Privacy Policy: Compliant with CERT-In and Ministry of Petroleum guidelines.'); }} className="flex items-center space-x-1.5 hover:text-[#0B2546] transition">
+              <Shield className="w-3.5 h-3.5 text-slate-500" />
+              <span className="font-semibold">Privacy Policy</span>
             </a>
-            <span className="text-slate-600 hidden sm:inline">&bull;</span>
-            <a href="https://eprocure.gov.in" target="_blank" rel="noreferrer" className="hover:text-white transition">
-              Central Public Procurement Portal (eprocure.gov.in)
-            </a>
-            <span className="text-slate-600 hidden sm:inline">&bull;</span>
-            <a href="https://mopng.gov.in" target="_blank" rel="noreferrer" className="hover:text-white transition">
-              Ministry of Petroleum &amp; Natural Gas
-            </a>
-            <span className="text-slate-600 hidden sm:inline">&bull;</span>
-            <a href="https://cpcl.co.in" target="_blank" rel="noreferrer" className="hover:text-white transition">
-              CPCL Official Website
+            <span className="text-slate-300">|</span>
+            <a href="mailto:eproc-support@cpcl.co.in" className="flex items-center space-x-1.5 hover:text-[#0B2546] transition">
+              <Headphones className="w-3.5 h-3.5 text-slate-500" />
+              <span className="font-semibold">Helpdesk</span>
             </a>
           </div>
 
-          {/* Bottom Attribution & Statutory Row */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-[10px] text-slate-400 font-mono">
-            <div className="space-y-0.5 text-center sm:text-left">
-              <p>
-                &copy; 2026 Chennai Petroleum Corporation Limited. Content owned, maintained and updated by CPCL Procurement Cell.
-              </p>
-              <p className="text-slate-500">
-                Developed for Smart India Hackathon 2026 &bull; Problem Statement ID: SIH26100 (CPCL / MoPNG)
-              </p>
-            </div>
-
-            <div className="flex items-center space-x-3 shrink-0">
-              <span className="bg-slate-800 border border-slate-700 px-2 py-1 rounded text-slate-300">
-                CERT-In Baseline Audited
-              </span>
-              <span className="bg-slate-800 border border-slate-700 px-2 py-1 rounded text-slate-300">
-                W3C HTML5 Validated
-              </span>
-            </div>
+          <div className="flex items-center space-x-2 text-slate-500">
+            <span className="text-[11px] font-medium">Built for Smart India Hackathon 2026</span>
+            <span className="text-xs font-mono font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
+              SIH26100
+            </span>
           </div>
         </div>
       </footer>
