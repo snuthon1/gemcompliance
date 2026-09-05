@@ -22,10 +22,13 @@ import {
   ArrowUpRight
 } from 'lucide-react';
 
+import { useAuth } from '../context/AuthContext';
+
 export default function UserDashboard() {
+  const { user, isVendor, isOfficer } = useAuth();
   const [bidders, setBidders] = useState([]);
   const [selectedBidderId, setSelectedBidderId] = useState(() => {
-    return localStorage.getItem('bidshield_active_vendor_id') || '';
+    return (user?.bidder_id) || localStorage.getItem('bidshield_active_vendor_id') || '';
   });
   const [currentBidder, setCurrentBidder] = useState(null);
   const [compliance, setCompliance] = useState(null);
@@ -48,7 +51,7 @@ export default function UserDashboard() {
   const [uploadingDoc, setUploadingDoc] = useState(false);
   const [uploadFeedback, setUploadFeedback] = useState(null);
 
-  // 1. Fetch all bidders to populate the Vendor Switcher
+  // 1. Fetch all bidders to populate the Vendor Switcher (Officer only) or bind to enrolled vendor
   useEffect(() => {
     async function loadBidders() {
       try {
@@ -56,8 +59,11 @@ export default function UserDashboard() {
         const data = await res.json();
         if (data.success && data.bidders.length > 0) {
           setBidders(data.bidders);
-          if (!selectedBidderId || !data.bidders.some(b => b.bidder_id === selectedBidderId)) {
-            const defaultId = data.bidders[0].bidder_id;
+          if (isVendor && user?.bidder_id) {
+            setSelectedBidderId(user.bidder_id);
+            localStorage.setItem('bidshield_active_vendor_id', user.bidder_id);
+          } else if (!selectedBidderId || !data.bidders.some(b => b.bidder_id === selectedBidderId)) {
+            const defaultId = (isVendor && user?.bidder_id) ? user.bidder_id : data.bidders[0].bidder_id;
             setSelectedBidderId(defaultId);
             localStorage.setItem('bidshield_active_vendor_id', defaultId);
           }
@@ -67,7 +73,7 @@ export default function UserDashboard() {
       }
     }
     loadBidders();
-  }, []);
+  }, [isVendor, user]);
 
   // 2. Fetch bidder-specific data
   const loadVendorData = async (bidderId) => {
@@ -242,23 +248,37 @@ export default function UserDashboard() {
           </p>
         </div>
 
-        {/* Vendor Switcher */}
+        {/* Vendor Switcher (Officer) or Enrolled Vendor Identity (Vendor) */}
         <div className="flex flex-col sm:flex-row sm:items-center gap-2.5">
-          <div className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 flex items-center space-x-2">
-            <Building2 className="w-4 h-4 text-slate-400 shrink-0" />
-            <span className="text-xs text-slate-500 font-medium whitespace-nowrap">Viewing as:</span>
-            <select
-              value={selectedBidderId}
-              onChange={(e) => handleVendorSwitch(e.target.value)}
-              className="bg-transparent text-xs font-semibold text-slate-900 focus:outline-none cursor-pointer"
-            >
-              {bidders.map((b) => (
-                <option key={b.bidder_id} value={b.bidder_id}>
-                  {b.company_name}
-                </option>
-              ))}
-            </select>
-          </div>
+          {isVendor ? (
+            <div className="bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 flex items-center space-x-2.5">
+              <Building2 className="w-4 h-4 text-[#0B2546] shrink-0" />
+              <div className="flex items-center space-x-2">
+                <span className="text-xs font-bold text-slate-800">
+                  {user?.company_name || currentBidder?.company_name}
+                </span>
+                <span className="text-[10px] font-mono bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.5 rounded border border-emerald-200">
+                  Enterprise Enrolled
+                </span>
+              </div>
+            </div>
+          ) : (
+            <div className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 flex items-center space-x-2">
+              <Building2 className="w-4 h-4 text-slate-400 shrink-0" />
+              <span className="text-xs text-slate-500 font-medium whitespace-nowrap">Officer Inspecting:</span>
+              <select
+                value={selectedBidderId}
+                onChange={(e) => handleVendorSwitch(e.target.value)}
+                className="bg-transparent text-xs font-semibold text-slate-900 focus:outline-none cursor-pointer"
+              >
+                {bidders.map((b) => (
+                  <option key={b.bidder_id} value={b.bidder_id}>
+                    {b.company_name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           <button
             onClick={handleReverify}
