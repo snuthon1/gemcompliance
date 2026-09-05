@@ -41,7 +41,7 @@ import { useAuth } from '../context/AuthContext';
 import { scanAndVerifyDocument } from '../utils/documentScanner';
 
 export default function UserDashboard() {
-  const { user, isVendor, isOfficer } = useAuth();
+  const { user, isVendor, isOfficer, updatePassword, deferPasswordChange } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -55,6 +55,49 @@ export default function UserDashboard() {
   };
 
   const [activeTab, setActiveTab] = useState(getActiveTabFromUrl);
+
+  // Mandatory First-Time Password Reset State
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [newPasswordInput, setNewPasswordInput] = useState('');
+  const [confirmPasswordInput, setConfirmPasswordInput] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordSuccess, setPasswordSuccess] = useState(false);
+
+  useEffect(() => {
+    if (isVendor && user?.must_change_password) {
+      setShowPasswordModal(true);
+    }
+  }, [user, isVendor]);
+
+  const handlePasswordSubmit = (e) => {
+    if (e) e.preventDefault();
+    setPasswordError('');
+    if (!newPasswordInput || newPasswordInput.length < 6) {
+      setPasswordError('New password must be at least 6 characters.');
+      return;
+    }
+    if (newPasswordInput !== confirmPasswordInput) {
+      setPasswordError('Passwords do not match. Please verify.');
+      return;
+    }
+    if (updatePassword) {
+      updatePassword(newPasswordInput);
+    }
+    setPasswordSuccess(true);
+    setTimeout(() => {
+      setShowPasswordModal(false);
+      setPasswordSuccess(false);
+      setNewPasswordInput('');
+      setConfirmPasswordInput('');
+    }, 1500);
+  };
+
+  const handleDeferPassword = () => {
+    if (deferPasswordChange) {
+      deferPasswordChange();
+    }
+    setShowPasswordModal(false);
+  };
 
   useEffect(() => {
     setActiveTab(getActiveTabFromUrl());
@@ -2380,6 +2423,103 @@ STATUS:            ${doc.flagged ? 'FLAGGED: ' + doc.flag_reason : 'VERIFIED COM
           </div>
         );
       })()}
+
+      {/* 6. First-Time Enterprise Login: Mandatory Password Reset Modal */}
+      {showPasswordModal && (
+        <div className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in duration-200">
+            {/* Header */}
+            <div className="bg-[#0B2546] text-white p-5 flex items-start space-x-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-400/30 flex items-center justify-center shrink-0">
+                <ShieldAlert className="w-5 h-5" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center space-x-2">
+                  <span className="text-[10px] font-mono uppercase tracking-wider bg-amber-400/20 text-amber-300 px-2 py-0.5 rounded font-bold">
+                    Security Advisory
+                  </span>
+                </div>
+                <h3 className="text-sm font-bold text-white mt-1">
+                  Change Initial System Password
+                </h3>
+                <p className="text-[11px] text-slate-300 mt-0.5">
+                  In compliance with GeM & CERT-In cyber-security protocols, vendor organizations must replace their initial system-generated password.
+                </p>
+              </div>
+            </div>
+
+            {/* Body Form */}
+            <form onSubmit={handlePasswordSubmit} className="p-6 space-y-4 text-xs font-sans">
+              <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-[11px]">
+                <span className="font-bold">Enterprise Account:</span> {user?.company_name || currentBidder?.company_name}
+                <div className="text-[10px] text-amber-700 mt-0.5 font-mono">
+                  User ID / Email: {user?.email}
+                </div>
+              </div>
+
+              {passwordError && (
+                <div className="p-2.5 bg-rose-50 border border-rose-200 text-rose-800 rounded-lg text-xs font-semibold flex items-center space-x-1.5">
+                  <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+                  <span>{passwordError}</span>
+                </div>
+              )}
+
+              {passwordSuccess && (
+                <div className="p-2.5 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-lg text-xs font-semibold flex items-center space-x-1.5">
+                  <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
+                  <span>Password successfully updated! Your account is now secured.</span>
+                </div>
+              )}
+
+              <div className="space-y-1.5">
+                <label className="block font-bold text-slate-700">
+                  New Confidential Password (min 6 characters)
+                </label>
+                <input
+                  type="password"
+                  required
+                  value={newPasswordInput}
+                  onChange={(e) => setNewPasswordInput(e.target.value)}
+                  placeholder="Enter new confidential password"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-900 focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#0B2546]/20 focus:border-[#0B2546]"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="block font-bold text-slate-700">
+                  Confirm New Password
+                </label>
+                <input
+                  type="password"
+                  required
+                  value={confirmPasswordInput}
+                  onChange={(e) => setConfirmPasswordInput(e.target.value)}
+                  placeholder="Re-enter new confidential password"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-900 focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#0B2546]/20 focus:border-[#0B2546]"
+                />
+              </div>
+
+              <div className="pt-2 flex items-center justify-between gap-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={handleDeferPassword}
+                  className="px-3.5 py-2 text-slate-500 hover:text-slate-800 text-xs font-bold transition cursor-pointer"
+                  title="Ask again on your next login"
+                >
+                  Remind Me Next Login
+                </button>
+
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-[#0B2546] hover:bg-[#07182D] text-white rounded-lg text-xs font-bold shadow-sm transition cursor-pointer"
+                >
+                  Set Password & Continue
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
