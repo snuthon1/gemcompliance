@@ -99,10 +99,9 @@ async function runVerification(bidder_id) {
     severity: 'Critical'
   });
 
-  // Check 6: NAME_MATCH -> Compare Bidder.company_name against GstnRegistry.legal_name (case-insensitive, trimmed). Match if equal, else Mismatch. severity: "Major"
-  const bidderName = bidder.company_name.trim().toLowerCase();
-  const gstnName = gstnRecord ? gstnRecord.legal_name.trim().toLowerCase() : '';
-  const isNameMatch = gstnRecord && bidderName === gstnName;
+  // Check 6: NAME_MATCH -> Compare Bidder.company_name against GstnRegistry.legal_name (normalized alphanumerics). Match if equal, else Mismatch. severity: "Major"
+  const norm = (s) => (s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const isNameMatch = gstnRecord && norm(bidder.company_name) === norm(gstnRecord.legal_name);
   checks.push({
     bidder_id,
     check_type: 'NAME_MATCH',
