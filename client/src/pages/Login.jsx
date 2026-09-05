@@ -164,30 +164,21 @@ export default function Login() {
           </div>
         </header>
 
-        {/* 4. CPCL REFINERY HERO STRIP BANNER */}
-        <div
-          className="relative h-44 sm:h-52 w-full bg-cover bg-center border-b border-slate-300 overflow-hidden flex items-center shadow-xs"
-          style={{ backgroundImage: "url('/cpcl_refinery_bg.png')" }}
-        >
-          {/* Subtle gradient overlay to keep refinery visible while enhancing text */}
-          <div className="absolute inset-0 bg-gradient-to-r from-[#07182D]/90 via-[#0B2546]/65 to-slate-900/30"></div>
-
-          <div className="relative z-10 max-w-6xl mx-auto w-full px-4 sm:px-8 flex flex-col justify-center text-white">
-            <div className="inline-flex items-center space-x-2 bg-amber-500/20 backdrop-blur-xs border border-amber-400/40 px-2.5 py-0.5 rounded text-[11px] font-mono font-bold text-amber-300 w-fit mb-1.5">
-              <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-              <span>CPCL Manali Refinery Complex &bull; Crude Distillation &amp; Petrochemicals</span>
+        {/* 4. SUB-BAR: PORTAL IDENTIFIER & SYSTEM STATUS */}
+        <div className="bg-[#0B2546] text-white px-4 sm:px-8 py-2 text-xs border-b border-[#07182D]">
+          <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 font-mono text-[11px]">
+            <div className="flex items-center space-x-2">
+              <Shield className="w-3.5 h-3.5 text-amber-400" />
+              <span className="font-semibold text-slate-100">
+                Official GeM Bidder Credential Verification &amp; Anti-Debarment Portal
+              </span>
             </div>
-            <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white drop-shadow-sm">
-              E-Procurement &amp; Statutory Bid Compliance Gateway
-            </h2>
-            <div className="flex flex-wrap items-center gap-3 text-xs text-slate-200 mt-1 font-medium drop-shadow-xs">
-              <span>Ministry of Petroleum &amp; Natural Gas</span>
-              <span className="text-slate-400">&bull;</span>
-              <span>GFR 2017 &amp; GeM Framework</span>
-              <span className="text-slate-400">&bull;</span>
-              <span className="text-emerald-300 font-bold flex items-center gap-1 font-mono">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                Portal Operational (100% SLA)
+            <div className="flex items-center space-x-3 text-slate-300 text-[10px]">
+              <span>Server Time: {new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })} IST</span>
+              <span>&bull;</span>
+              <span className="text-emerald-300 font-bold flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                Portal Operational
               </span>
             </div>
           </div>
@@ -200,7 +191,7 @@ export default function Login() {
           {/* LEFT COLUMN (7 cols): Official Departmental Notices & Statutory Rules */}
           <div className="lg:col-span-7 space-y-4">
             {/* Primary Notice Box with Government Navy Header Strip */}
-            <div className="bg-white rounded-xl border border-slate-200 shadow-lg overflow-hidden">
+            <div className="bg-white rounded-lg border border-slate-300 shadow-xs overflow-hidden">
               <div className="bg-slate-100 border-b border-slate-200 px-4 py-2.5 flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <FileText className="w-4 h-4 text-[#0B2546]" />
@@ -300,7 +291,7 @@ export default function Login() {
 
           {/* RIGHT COLUMN (5 cols): Official Government Sign-In Form */}
           <div className="lg:col-span-5">
-            <div className="bg-white rounded-xl border border-slate-200 shadow-xl overflow-hidden">
+            <div className="bg-white rounded-lg border border-slate-300 shadow-sm overflow-hidden">
               {/* Card Header */}
               <div className="bg-[#0B2546] text-white px-5 py-3 flex items-center justify-between">
                 <div className="flex items-center space-x-2">
