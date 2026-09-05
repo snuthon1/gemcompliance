@@ -181,7 +181,7 @@ export default function CartelDetection() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-7 font-sans">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 space-y-4 font-sans">
       {/* 1. Header & Vigilance Badge */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
@@ -240,62 +240,64 @@ export default function CartelDetection() {
         </div>
       )}
 
-      {/* 3. KPI Statistics Ribbon */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
-        <div className="bg-white border border-rose-200 p-4 rounded-xl shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-rose-600 font-mono">
-              Collusion Risk
-            </span>
-            <ShieldAlert className="w-4 h-4 text-rose-500" />
+      {/* 3. Compact Horizontal KPI Ribbon */}
+      <div className="bg-white rounded-lg border border-slate-200 shadow-2xs overflow-hidden">
+        <div className="grid grid-cols-2 lg:grid-cols-4 divide-y lg:divide-y-0 lg:divide-x divide-slate-100">
+          {/* Metric 1 */}
+          <div className="px-3.5 py-2 flex items-center justify-between gap-2">
+            <div className="min-w-0">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-rose-600 font-mono block">
+                Collusion Risk
+              </span>
+              <div className="flex items-baseline gap-1.5 mt-0.5">
+                <span className="text-sm font-black text-rose-700 font-mono">CRITICAL</span>
+                <span className="text-[10px] text-slate-500 font-medium">4 Anomalies</span>
+              </div>
+            </div>
+            <ShieldAlert className="w-3.5 h-3.5 text-rose-500 shrink-0" />
           </div>
-          <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-2xl font-black text-rose-700 font-mono">CRITICAL</span>
-            <span className="text-[11px] text-slate-500 font-medium">4 Anomalies</span>
-          </div>
-          <span className="text-[10px] text-slate-400 mt-1 block">Active across 4 Tenders</span>
-        </div>
 
-        <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 font-mono">
-              Shared Directors
-            </span>
-            <Users className="w-4 h-4 text-[#0B2546]" />
+          {/* Metric 2 */}
+          <div className="px-3.5 py-2 flex items-center justify-between gap-2">
+            <div className="min-w-0">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 font-mono block">
+                Shared Directors
+              </span>
+              <div className="flex items-baseline gap-1.5 mt-0.5">
+                <span className="text-sm font-black text-[#0B2546] font-mono">2 Entities</span>
+                <span className="text-[10px] text-rose-600 font-bold font-mono">DIN Match</span>
+              </div>
+            </div>
+            <Users className="w-3.5 h-3.5 text-[#0B2546] shrink-0" />
           </div>
-          <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-2xl font-black text-[#0B2546] font-mono">2 Entities</span>
-            <span className="text-[11px] text-rose-600 font-semibold font-mono">DIN Match</span>
-          </div>
-          <span className="text-[10px] text-slate-400 mt-1 block">Rule 175 Conflict Flag</span>
-        </div>
 
-        <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 font-mono">
-              IP Subnet Clusters
-            </span>
-            <Globe className="w-4 h-4 text-amber-600" />
+          {/* Metric 3 */}
+          <div className="px-3.5 py-2 flex items-center justify-between gap-2">
+            <div className="min-w-0">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 font-mono block">
+                IP Subnet Clusters
+              </span>
+              <div className="flex items-baseline gap-1.5 mt-0.5">
+                <span className="text-sm font-black text-amber-700 font-mono">1 Cluster</span>
+                <span className="text-[10px] text-amber-700 font-medium font-mono">&lt; 4m Window</span>
+              </div>
+            </div>
+            <Globe className="w-3.5 h-3.5 text-amber-600 shrink-0" />
           </div>
-          <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-2xl font-black text-amber-700 font-mono">1 Cluster</span>
-            <span className="text-[11px] text-amber-700 font-medium font-mono">&lt; 4m Window</span>
-          </div>
-          <span className="text-[10px] text-slate-400 mt-1 block">Guindy / Chennai Node</span>
-        </div>
 
-        <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 font-mono">
-              Detection Accuracy
-            </span>
-            <Fingerprint className="w-4 h-4 text-emerald-600" />
+          {/* Metric 4 */}
+          <div className="px-3.5 py-2 flex items-center justify-between gap-2">
+            <div className="min-w-0">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 font-mono block">
+                Accuracy
+              </span>
+              <div className="flex items-baseline gap-1.5 mt-0.5">
+                <span className="text-sm font-black text-emerald-700 font-mono">94.8%</span>
+                <span className="text-[10px] text-emerald-600 font-medium">Deterministic</span>
+              </div>
+            </div>
+            <Fingerprint className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
           </div>
-          <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-2xl font-black text-emerald-700 font-mono">94.8%</span>
-            <span className="text-[11px] text-emerald-600 font-medium">Deterministic</span>
-          </div>
-          <span className="text-[10px] text-slate-400 mt-1 block">Telemetry &amp; MCA-21 Data</span>
         </div>
       </div>
 
