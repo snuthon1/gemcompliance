@@ -221,99 +221,134 @@ export default function Analytics() {
         </div>
       </div>
 
-      {/* 2. Vibrant KPI Metric Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-        {/* Total Bidders */}
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between">
-          <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
-            Total Vendors
-          </span>
-          <div className="mt-3 flex items-baseline space-x-1.5">
-            <span className="text-4xl font-extrabold font-mono text-[#0B2546]">
-              {stats.total}
+      {/* 2. Compact Interactive Metric KPI Ribbon */}
+      <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 divide-y sm:divide-y-0 sm:divide-x divide-slate-100">
+          {/* Segment 1: Total */}
+          <button
+            type="button"
+            onClick={() => setSelectedRiskFilter('All')}
+            className={`p-3 sm:px-4 sm:py-3 text-left transition-all flex items-center justify-between group cursor-pointer ${
+              selectedRiskFilter === 'All'
+                ? 'bg-slate-50 ring-2 ring-inset ring-[#0B2546]/20'
+                : 'hover:bg-slate-50/70'
+            }`}
+          >
+            <div className="space-y-0.5">
+              <div className="flex items-center space-x-1.5">
+                <span className="w-2 h-2 rounded-full bg-[#0B2546]"></span>
+                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                  Total
+                </span>
+              </div>
+              <div className="flex items-baseline space-x-1.5">
+                <span className="text-2xl font-black font-mono text-[#0B2546]">{stats.total}</span>
+                <span className="text-[11px] text-slate-400 font-medium">Vendors</span>
+              </div>
+            </div>
+            <span className="text-[10px] font-mono font-semibold text-slate-700 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded-md hidden sm:inline-block">
+              100%
             </span>
-            <span className="text-xs text-slate-400 font-semibold">Registered</span>
-          </div>
-          <div className="mt-3 pt-2 border-t border-slate-100 text-[11px] text-slate-500 flex justify-between">
-            <span>Enrolled in Portals</span>
-            <span className="font-mono font-bold text-slate-700">100%</span>
-          </div>
-        </div>
+          </button>
 
-        {/* Low Risk / Compliant */}
-        <div className="bg-white p-5 rounded-2xl border border-emerald-200 shadow-xs flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-emerald-800">
-              Low Risk
+          {/* Segment 2: Low Risk */}
+          <button
+            type="button"
+            onClick={() => setSelectedRiskFilter('Low')}
+            className={`p-3 sm:px-4 sm:py-3 text-left transition-all flex items-center justify-between group cursor-pointer ${
+              selectedRiskFilter === 'Low'
+                ? 'bg-emerald-50/50 ring-2 ring-inset ring-emerald-500/30'
+                : 'hover:bg-slate-50/70'
+            }`}
+          >
+            <div className="space-y-0.5">
+              <div className="flex items-center space-x-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-800">
+                  Low Risk
+                </span>
+              </div>
+              <div className="flex items-baseline space-x-1.5">
+                <span className="text-2xl font-black font-mono text-emerald-600">{stats.low}</span>
+                <span className="text-[11px] text-emerald-700 font-medium">Passed</span>
+              </div>
+            </div>
+            <span className="text-[10px] font-mono font-semibold text-emerald-800 bg-emerald-100/60 border border-emerald-200 px-1.5 py-0.5 rounded-md hidden sm:inline-block">
+              {stats.total > 0 ? Math.round((stats.low / stats.total) * 100) : 0}%
             </span>
-            <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-          </div>
-          <div className="mt-3 flex items-baseline space-x-1.5">
-            <span className="text-4xl font-extrabold font-mono text-emerald-600">
-              {stats.low}
-            </span>
-            <span className="text-xs text-emerald-700 font-semibold">Pre-Qualified</span>
-          </div>
-          <div className="mt-3 pt-2 border-t border-emerald-100 text-[11px] text-emerald-700 flex justify-between">
-            <span>Pass Rate:</span>
-            <span className="font-mono font-bold">{stats.total > 0 ? Math.round((stats.low / stats.total) * 100) : 0}%</span>
-          </div>
-        </div>
+          </button>
 
-        {/* Medium Risk */}
-        <div className="bg-white p-5 rounded-2xl border border-amber-200 shadow-xs flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-amber-800">
-              Clarification
+          {/* Segment 3: Medium Risk */}
+          <button
+            type="button"
+            onClick={() => setSelectedRiskFilter('Medium')}
+            className={`p-3 sm:px-4 sm:py-3 text-left transition-all flex items-center justify-between group cursor-pointer ${
+              selectedRiskFilter === 'Medium'
+                ? 'bg-amber-50/50 ring-2 ring-inset ring-amber-500/30'
+                : 'hover:bg-slate-50/70'
+            }`}
+          >
+            <div className="space-y-0.5">
+              <div className="flex items-center space-x-1.5">
+                <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+                <span className="text-[11px] font-bold uppercase tracking-wider text-amber-800">
+                  Clarify
+                </span>
+              </div>
+              <div className="flex items-baseline space-x-1.5">
+                <span className="text-2xl font-black font-mono text-amber-600">{stats.med}</span>
+                <span className="text-[11px] text-amber-700 font-medium">Review</span>
+              </div>
+            </div>
+            <span className="text-[10px] font-mono font-semibold text-amber-800 bg-amber-100/60 border border-amber-200 px-1.5 py-0.5 rounded-md hidden sm:inline-block">
+              Flags
             </span>
-            <span className="w-2 h-2 rounded-full bg-amber-500"></span>
-          </div>
-          <div className="mt-3 flex items-baseline space-x-1.5">
-            <span className="text-4xl font-extrabold font-mono text-amber-600">
-              {stats.med}
-            </span>
-            <span className="text-xs text-amber-700 font-semibold">Under Review</span>
-          </div>
-          <div className="mt-3 pt-2 border-t border-amber-100 text-[11px] text-amber-700 flex justify-between">
-            <span>Discrepancies:</span>
-            <span className="font-mono font-bold">Minor Flags</span>
-          </div>
-        </div>
+          </button>
 
-        {/* High Risk / Debarred */}
-        <div className="bg-white p-5 rounded-2xl border border-rose-200 shadow-xs flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-rose-800">
-              High Risk
+          {/* Segment 4: High Risk */}
+          <button
+            type="button"
+            onClick={() => setSelectedRiskFilter('High')}
+            className={`p-3 sm:px-4 sm:py-3 text-left transition-all flex items-center justify-between group cursor-pointer ${
+              selectedRiskFilter === 'High'
+                ? 'bg-rose-50/50 ring-2 ring-inset ring-rose-500/30'
+                : 'hover:bg-slate-50/70'
+            }`}
+          >
+            <div className="space-y-0.5">
+              <div className="flex items-center space-x-1.5">
+                <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
+                <span className="text-[11px] font-bold uppercase tracking-wider text-rose-800">
+                  High Risk
+                </span>
+              </div>
+              <div className="flex items-baseline space-x-1.5">
+                <span className="text-2xl font-black font-mono text-rose-600">{stats.high}</span>
+                <span className="text-[11px] text-rose-700 font-medium">Debarred</span>
+              </div>
+            </div>
+            <span className="text-[10px] font-mono font-semibold text-rose-800 bg-rose-100/60 border border-rose-200 px-1.5 py-0.5 rounded-md hidden sm:inline-block">
+              0 / 100
             </span>
-            <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
-          </div>
-          <div className="mt-3 flex items-baseline space-x-1.5">
-            <span className="text-4xl font-extrabold font-mono text-rose-600">
-              {stats.high}
-            </span>
-            <span className="text-xs text-rose-700 font-semibold">Disqualified</span>
-          </div>
-          <div className="mt-3 pt-2 border-t border-rose-100 text-[11px] text-rose-700 flex justify-between">
-            <span>Debarment / Ban:</span>
-            <span className="font-mono font-bold text-rose-700">0 / 100</span>
-          </div>
-        </div>
+          </button>
 
-        {/* Average Compliance Score */}
-        <div className="bg-white p-5 rounded-2xl border border-sky-200 shadow-xs flex flex-col justify-between col-span-2 lg:col-span-1">
-          <span className="text-xs font-bold uppercase tracking-wider text-sky-800">
-            Average GFR Score
-          </span>
-          <div className="mt-3 flex items-baseline space-x-1.5">
-            <span className="text-4xl font-extrabold font-mono text-sky-600">
-              {stats.avgScore}
+          {/* Segment 5: Avg Score */}
+          <div className="p-3 sm:px-4 sm:py-3 text-left flex items-center justify-between col-span-2 sm:col-span-1">
+            <div className="space-y-0.5">
+              <div className="flex items-center space-x-1.5">
+                <span className="w-2 h-2 rounded-full bg-sky-600"></span>
+                <span className="text-[11px] font-bold uppercase tracking-wider text-sky-800">
+                  Avg GFR Score
+                </span>
+              </div>
+              <div className="flex items-baseline space-x-1.5">
+                <span className="text-2xl font-black font-mono text-sky-600">{stats.avgScore}</span>
+                <span className="text-[11px] text-sky-700 font-medium">/ 100</span>
+              </div>
+            </div>
+            <span className="text-[10px] font-mono font-semibold text-sky-800 bg-sky-100/60 border border-sky-200 px-1.5 py-0.5 rounded-md hidden sm:inline-block">
+              Aggregate
             </span>
-            <span className="text-xs text-slate-400 font-bold">/ 100</span>
-          </div>
-          <div className="mt-3 pt-2 border-t border-sky-100 text-[11px] text-sky-800 flex justify-between">
-            <span>Overall Readiness:</span>
-            <span className="font-bold">Moderate</span>
           </div>
         </div>
       </div>
