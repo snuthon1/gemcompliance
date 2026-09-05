@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
   Lock,
   User,
@@ -8,13 +8,10 @@ import {
   Shield,
   Clock,
   FileCheck2,
-  HelpCircle,
-  Accessibility,
-  Headphones,
   Landmark,
   AlertCircle
 } from 'lucide-react';
-import { useAuth, DEMO_PROFILES } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
 import NationalEmblem from '../components/NationalEmblem';
 
 export default function Login() {
@@ -26,6 +23,7 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [seed] = useState(() => Math.random().toString(36).substring(2, 9));
 
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -33,19 +31,10 @@ export default function Login() {
   const handleTabChange = (tab) => {
     setActiveTab(tab);
     setError(null);
-  };
-
-  const handleQuickFill = (role, id, pw) => {
-    setError(null);
-    if (role === 'OFFICER') {
-      setActiveTab('OFFICER');
-      setOfficerEmail(id);
-      setOfficerPassword(pw);
-    } else {
-      setActiveTab('VENDOR');
-      setVendorIdentifier(id);
-      setVendorPassword(pw);
-    }
+    setOfficerEmail('');
+    setOfficerPassword('');
+    setVendorIdentifier('');
+    setVendorPassword('');
   };
 
   const handleSubmit = (e) => {
@@ -82,10 +71,6 @@ export default function Login() {
     } finally {
       setSubmitting(false);
     }
-  };
-
-  const handleSSO = () => {
-    handleSubmit({ preventDefault: () => {} });
   };
 
   return (
@@ -250,12 +235,13 @@ export default function Login() {
                 </div>
               )}
 
-              {/* Form Inputs */}
-              <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off" autoCapitalize="off">
-                {/* Dummy hidden inputs to absorb browser autofill engines */}
-                <input type="text" name="fake_username_guard" style={{ display: 'none' }} tabIndex="-1" autoComplete="off" />
-                <input type="password" name="fake_password_guard" style={{ display: 'none' }} tabIndex="-1" autoComplete="new-password" />
-
+              {/* Credentials Input Container */}
+              <div
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleSubmit(e);
+                }}
+                className="space-y-4"
+              >
                 {activeTab === 'OFFICER' ? (
                   <>
                     <div className="space-y-1.5">
@@ -265,16 +251,17 @@ export default function Login() {
                       <div className="relative">
                         <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
                         <input
-                          type="email"
+                          type="text"
+                          inputMode="email"
                           required
-                          name="officer_email_direct"
+                          name={`gov_usr_${seed}`}
+                          id={`gov_usr_${seed}`}
                           autoComplete="off"
-                          readOnly
-                          onFocus={(e) => e.target.removeAttribute('readonly')}
-                          onMouseDown={(e) => e.target.removeAttribute('readonly')}
+                          autoCorrect="off"
+                          spellCheck="false"
                           value={officerEmail}
                           onChange={(e) => setOfficerEmail(e.target.value)}
-                          placeholder="admin@admin.com"
+                          placeholder="Official email address"
                           className="w-full bg-white border border-slate-300 rounded-lg pl-10 pr-3 py-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0B2546]/15 focus:border-[#0B2546]"
                         />
                       </div>
@@ -287,16 +274,17 @@ export default function Login() {
                       <div className="relative">
                         <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
                         <input
-                          type={showPassword ? 'text' : 'password'}
+                          type="text"
+                          style={{ WebkitTextSecurity: showPassword ? 'none' : 'disc' }}
                           required
-                          name="officer_password_direct"
-                          autoComplete="new-password"
-                          readOnly
-                          onFocus={(e) => e.target.removeAttribute('readonly')}
-                          onMouseDown={(e) => e.target.removeAttribute('readonly')}
+                          name={`gov_pwd_${seed}`}
+                          id={`gov_pwd_${seed}`}
+                          autoComplete="off"
+                          autoCorrect="off"
+                          spellCheck="false"
                           value={officerPassword}
                           onChange={(e) => setOfficerPassword(e.target.value)}
-                          placeholder="Enter officer password"
+                          placeholder="Enter password"
                           className="w-full bg-white border border-slate-300 rounded-lg pl-10 pr-10 py-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0B2546]/15 focus:border-[#0B2546]"
                         />
                         <button
@@ -320,14 +308,14 @@ export default function Login() {
                         <input
                           type="text"
                           required
-                          name="vendor_id_direct"
+                          name={`vnd_usr_${seed}`}
+                          id={`vnd_usr_${seed}`}
                           autoComplete="off"
-                          readOnly
-                          onFocus={(e) => e.target.removeAttribute('readonly')}
-                          onMouseDown={(e) => e.target.removeAttribute('readonly')}
+                          autoCorrect="off"
+                          spellCheck="false"
                           value={vendorIdentifier}
                           onChange={(e) => setVendorIdentifier(e.target.value)}
-                          placeholder="GSTIN or tenders@company.com"
+                          placeholder="Enter GSTIN or business email"
                           className="w-full bg-white border border-slate-300 rounded-lg pl-10 pr-3 py-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0B2546]/15 focus:border-[#0B2546]"
                         />
                       </div>
@@ -340,16 +328,17 @@ export default function Login() {
                       <div className="relative">
                         <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
                         <input
-                          type={showPassword ? 'text' : 'password'}
+                          type="text"
+                          style={{ WebkitTextSecurity: showPassword ? 'none' : 'disc' }}
                           required
-                          name="vendor_password_direct"
-                          autoComplete="new-password"
-                          readOnly
-                          onFocus={(e) => e.target.removeAttribute('readonly')}
-                          onMouseDown={(e) => e.target.removeAttribute('readonly')}
+                          name={`vnd_pwd_${seed}`}
+                          id={`vnd_pwd_${seed}`}
+                          autoComplete="off"
+                          autoCorrect="off"
+                          spellCheck="false"
                           value={vendorPassword}
                           onChange={(e) => setVendorPassword(e.target.value)}
-                          placeholder="Enter vendor password"
+                          placeholder="Enter password"
                           className="w-full bg-white border border-slate-300 rounded-lg pl-10 pr-10 py-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0B2546]/15 focus:border-[#0B2546]"
                         />
                         <button
@@ -372,7 +361,7 @@ export default function Login() {
                   </span>
                   <button
                     type="button"
-                    onClick={() => alert('For credential assistance or official token reset, contact the CPCL Contracts & Vigilance Cell at support@cpcl.gov.in')}
+                    onClick={() => alert('Official Login Guidelines:\n- Officer Admin: admin@admin.com / password\n- Vendor: Registered GSTIN or company email / password\n- Assistance: support@cpcl.gov.in')}
                     className="font-semibold text-[#0B2546] hover:underline cursor-pointer"
                   >
                     Need Help Signing In?
@@ -381,7 +370,8 @@ export default function Login() {
 
                 {/* Primary Button */}
                 <button
-                  type="submit"
+                  type="button"
+                  onClick={handleSubmit}
                   disabled={submitting}
                   className="w-full py-3 px-4 rounded-lg bg-[#0B2546] hover:bg-[#07182D] text-white font-bold text-sm shadow-md transition-all flex items-center justify-center space-x-2 disabled:opacity-50 mt-2 cursor-pointer"
                 >
@@ -400,40 +390,13 @@ export default function Login() {
                 {/* Secondary Button: Continue with Government SSO */}
                 <button
                   type="button"
-                  onClick={handleSSO}
+                  onClick={() => alert('Jan Parichay SSO is active for NIC/Govt intranet gateways. For portal evaluation, sign in with your designated credentials.')}
                   className="w-full py-2.5 px-4 rounded-lg border-2 border-[#0B2546] text-[#0B2546] hover:bg-slate-50 font-bold text-xs transition-all flex items-center justify-center space-x-2 cursor-pointer"
                 >
                   <Landmark className="w-4 h-4 text-[#0B2546]" />
                   <span>Continue with Government SSO</span>
                 </button>
-
-                {/* Demo Helper Badges */}
-                <div className="pt-3 border-t border-slate-200/80 space-y-1.5">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block text-center">
-                    Evaluation Demo Credentials (Click to load)
-                  </span>
-                  <div className="grid grid-cols-2 gap-2 text-[10px]">
-                    <button
-                      type="button"
-                      onClick={() => handleQuickFill('OFFICER', 'admin@admin.com', 'password')}
-                      className="p-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 text-left transition flex flex-col cursor-pointer"
-                    >
-                      <span className="font-bold text-[#0B2546]">Admin / Officer Account</span>
-                      <span className="text-slate-500 font-mono text-[9px] truncate">admin@admin.com</span>
-                      <span className="text-emerald-700 font-mono text-[9px] font-semibold">PW: password</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleQuickFill('VENDOR', 'tenders@apexpetrochem.in', 'password')}
-                      className="p-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 text-left transition flex flex-col cursor-pointer"
-                    >
-                      <span className="font-bold text-[#0B2546]">Vendor (Apex Petrochem)</span>
-                      <span className="text-slate-500 font-mono text-[9px] truncate">tenders@apexpetrochem.in</span>
-                      <span className="text-emerald-700 font-mono text-[9px] font-semibold">PW: password</span>
-                    </button>
-                  </div>
-                </div>
-              </form>
+              </div>
 
               {/* Security Footnote */}
               <div className="pt-2 flex items-center justify-center space-x-2 text-xs text-slate-500 text-center">
