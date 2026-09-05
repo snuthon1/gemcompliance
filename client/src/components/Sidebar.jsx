@@ -76,24 +76,28 @@ export default function Sidebar() {
           name: 'Cartel & Collusion Watch',
           path: '/cartel-watch',
           icon: Network,
+          badge: 'AI Monitor',
           active: location.pathname === '/cartel-watch'
         },
         {
           name: 'Document Tamper Inspector',
           path: '/document-forensics',
           icon: FileSearch,
+          badge: 'Forensics',
           active: location.pathname === '/document-forensics'
         },
         {
           name: 'National Debarment',
           path: '/blacklist',
           icon: ShieldAlert,
+          badge: 'CVC Sync',
           active: location.pathname === '/blacklist'
         },
         {
           name: 'Forensic Audit Ledger',
           path: '/audit-trail',
           icon: Fingerprint,
+          badge: 'Immutable',
           active: location.pathname === '/audit-trail'
         }
       ]
@@ -198,7 +202,7 @@ export default function Sidebar() {
         <div className="flex items-center space-x-2.5">
           <NationalEmblem className="w-8 h-9 shrink-0" />
           <div>
-            <span className="font-bold text-[#0B2546] text-sm">GeM-CPCL &bull; BidShield</span>
+            <span className="font-bold text-[#0B2546] text-sm">GeM-CPCL • BidShield</span>
             <span className="block text-[10px] text-slate-500 font-medium">Ministry of Petroleum &amp; Natural Gas</span>
           </div>
         </div>
@@ -268,40 +272,152 @@ export default function Sidebar() {
               {isOfficer ? 'OFFICER COMMITTEE' : 'VENDOR DESK'}
             </span>
             <span className="font-mono text-slate-500 text-[9px] bg-white border border-slate-200 px-1.5 py-0.5 rounded font-bold">
-              {isOfficer ? 'GFR 2017 &bull; CVC' : 'GeM Registered'}
+              {isOfficer ? 'GFR 2017 • CVC' : 'GeM Registered'}
             </span>
           </div>
         </div>
 
         {/* Middle Scrollable Navigation Section */}
-        <div className="flex-1 overflow-y-auto px-3 py-3 space-y-4">
-          {activeSections.map((section, sIdx) => (
-            <div key={sIdx} className="space-y-1">
-              <div className="px-2 text-[9px] font-bold uppercase tracking-wider text-slate-400 font-mono">
-                {section.heading}
+        <div className="flex-1 overflow-y-auto px-3 py-3 flex flex-col justify-between">
+          <div className="space-y-4">
+            {activeSections.map((section, sIdx) => (
+              <div key={sIdx} className="space-y-1">
+                <div className="px-2 text-[9px] font-bold uppercase tracking-wider text-slate-400 font-mono">
+                  {section.heading}
+                </div>
+                <nav className="space-y-0.5">
+                  {section.items.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <Link
+                        key={item.path}
+                        to={item.path}
+                        onClick={() => setMobileOpen(false)}
+                        className={`flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                          item.active
+                            ? 'bg-[#0B2546] text-white shadow-xs'
+                            : 'text-slate-600 hover:text-[#0B2546] hover:bg-slate-100'
+                        }`}
+                      >
+                        <div className="flex items-center space-x-2.5 min-w-0">
+                          <Icon className={`w-4 h-4 shrink-0 ${item.active ? 'text-white' : 'text-slate-500'}`} />
+                          <span className="truncate text-xs">{item.name}</span>
+                        </div>
+                        {item.badge && (
+                          <span
+                            className={`text-[9px] font-mono px-1.5 py-0.5 rounded font-bold shrink-0 ${
+                              item.active
+                                ? 'bg-white/20 text-white'
+                                : 'bg-slate-100 text-slate-500 border border-slate-200'
+                            }`}
+                          >
+                            {item.badge}
+                          </span>
+                        )}
+                      </Link>
+                    );
+                  })}
+                </nav>
               </div>
-              <nav className="space-y-0.5">
-                {section.items.map((item) => {
-                  const Icon = item.icon;
-                  return (
-                    <Link
-                      key={item.path}
-                      to={item.path}
-                      onClick={() => setMobileOpen(false)}
-                      className={`flex items-center space-x-2.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
-                        item.active
-                          ? 'bg-[#0B2546] text-white shadow-sm'
-                          : 'text-slate-600 hover:text-[#0B2546] hover:bg-slate-100'
-                      }`}
-                    >
-                      <Icon className={`w-4 h-4 shrink-0 ${item.active ? 'text-white' : 'text-slate-500'}`} />
-                      <span className="truncate text-xs">{item.name}</span>
-                    </Link>
-                  );
-                })}
-              </nav>
-            </div>
-          ))}
+            ))}
+          </div>
+
+          {/* Statutory Engine Telemetry / Compliance Status Card */}
+          <div className="pt-4 mt-4 border-t border-slate-200">
+            {isOfficer ? (
+              <div className="rounded-lg border border-slate-200 bg-slate-50/90 p-2.5 shadow-2xs">
+                <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-200">
+                  <div className="flex items-center gap-1.5">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    </span>
+                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#0B2546] font-mono">
+                      Statutory Gateways
+                    </span>
+                  </div>
+                  <span className="text-[9px] font-bold text-emerald-700 bg-emerald-100 border border-emerald-200 px-1.5 py-0.5 rounded font-mono">
+                    100% LIVE
+                  </span>
+                </div>
+
+                <div className="space-y-1.5 text-[10px]">
+                  <div className="flex items-center justify-between font-mono">
+                    <span className="text-slate-600 flex items-center gap-1">
+                      <span className="text-emerald-600 font-bold">●</span> GSTN Master
+                    </span>
+                    <span className="text-slate-500 font-semibold text-[9px]">24ms</span>
+                  </div>
+                  <div className="flex items-center justify-between font-mono">
+                    <span className="text-slate-600 flex items-center gap-1">
+                      <span className="text-emerald-600 font-bold">●</span> CBDT PAN API
+                    </span>
+                    <span className="text-emerald-700 font-bold text-[9px]">SYNC</span>
+                  </div>
+                  <div className="flex items-center justify-between font-mono">
+                    <span className="text-slate-600 flex items-center gap-1">
+                      <span className="text-emerald-600 font-bold">●</span> MCA-21 DIN
+                    </span>
+                    <span className="text-emerald-700 font-bold text-[9px]">ACTIVE</span>
+                  </div>
+                  <div className="flex items-center justify-between font-mono">
+                    <span className="text-slate-600 flex items-center gap-1">
+                      <span className="text-blue-600 font-bold">●</span> CVC Debarment
+                    </span>
+                    <span className="text-[#0B2546] font-bold text-[9px]">LOCKED</span>
+                  </div>
+                </div>
+
+                <div className="mt-2 pt-1.5 border-t border-slate-200/80 flex items-center justify-between text-[9px] text-slate-500 font-mono">
+                  <span>GFR Rule 144(xi)</span>
+                  <span className="text-slate-400 font-semibold">SHA-256</span>
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-lg border border-slate-200 bg-slate-50/90 p-2.5 shadow-2xs">
+                <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-200">
+                  <div className="flex items-center gap-1.5">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    </span>
+                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#0B2546] font-mono">
+                      Vendor Compliance
+                    </span>
+                  </div>
+                  <span className="text-[9px] font-bold text-emerald-700 bg-emerald-100 border border-emerald-200 px-1.5 py-0.5 rounded font-mono">
+                    VERIFIED
+                  </span>
+                </div>
+
+                <div className="space-y-1.5 text-[10px]">
+                  <div className="flex items-center justify-between font-mono">
+                    <span className="text-slate-600 flex items-center gap-1">
+                      <span className="text-emerald-600 font-bold">●</span> GeM Registry
+                    </span>
+                    <span className="text-emerald-700 font-bold text-[9px]">ENROLLED</span>
+                  </div>
+                  <div className="flex items-center justify-between font-mono">
+                    <span className="text-slate-600 flex items-center gap-1">
+                      <span className="text-emerald-600 font-bold">●</span> CVC Debarment
+                    </span>
+                    <span className="text-emerald-700 font-bold text-[9px]">CLEARED</span>
+                  </div>
+                  <div className="flex items-center justify-between font-mono">
+                    <span className="text-slate-600 flex items-center gap-1">
+                      <span className="text-emerald-600 font-bold">●</span> Document Vault
+                    </span>
+                    <span className="text-blue-700 font-bold text-[9px]">ENCRYPTED</span>
+                  </div>
+                </div>
+
+                <div className="mt-2 pt-1.5 border-t border-slate-200/80 flex items-center justify-between text-[9px] text-slate-500 font-mono">
+                  <span>CPCL e-Procure</span>
+                  <span className="text-slate-400 font-semibold">SSL 256-bit</span>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Bottom Section: User Profile & Logout */}
