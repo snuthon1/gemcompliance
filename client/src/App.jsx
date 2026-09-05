@@ -8,6 +8,7 @@ import BidderDetail from './pages/BidderDetail';
 import TendersList from './pages/TendersList';
 import TenderDetail from './pages/TenderDetail';
 import UserDashboard from './pages/UserDashboard';
+import { Landmark, ShieldCheck } from 'lucide-react';
 
 function ProtectedRoute({ children }) {
   const { user } = useAuth();
@@ -38,7 +39,7 @@ function AppLayout() {
   // If user is not logged in or is on /login, render only Login screen without sidebar
   if (!user || isLoginPage) {
     return (
-      <main className="min-h-screen bg-slate-950">
+      <main className="min-h-screen bg-gov-slateBg">
         <Routes>
           <Route path="/login" element={<LoginRoute />} />
           <Route path="*" element={<Navigate to="/login" replace />} />
@@ -48,12 +49,37 @@ function AppLayout() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 selection:bg-indigo-500 selection:text-white antialiased flex flex-col md:flex-row">
-      {/* Left Sidebar Navigation */}
+    <div className="min-h-screen bg-gov-slateBg text-slate-900 selection:bg-gov-saffron selection:text-white antialiased flex flex-col md:flex-row">
+      {/* Left Sidebar Navigation (Govt Deep Navy) */}
       <Sidebar />
 
       {/* Main Content Area */}
       <div className="flex-1 md:pl-64 flex flex-col min-h-screen w-full min-w-0">
+        {/* Top Government Portal Masthead Strip */}
+        <header className="bg-white border-b border-slate-200">
+          {/* Micro Tricolor Accent Line */}
+          <div className="h-1 w-full flex">
+            <div className="h-full w-1/3 bg-gov-saffron"></div>
+            <div className="h-full w-1/3 bg-white"></div>
+            <div className="h-full w-1/3 bg-gov-green"></div>
+          </div>
+
+          <div className="px-4 sm:px-6 lg:px-8 py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+            <div className="flex items-center space-x-2">
+              <span className="font-bold text-slate-700">भारत सरकार &bull; Government of India</span>
+              <span className="text-slate-300">|</span>
+              <span className="text-slate-600 font-medium">Ministry of Petroleum & Natural Gas &bull; CPCL</span>
+            </div>
+
+            <div className="flex items-center space-x-3 text-[11px] font-mono text-slate-500">
+              <span className="bg-slate-100 text-gov-navy px-2 py-0.5 rounded border border-slate-200 font-bold">
+                GeM SIH26100
+              </span>
+              <span>IST (UTC+5:30)</span>
+            </div>
+          </div>
+        </header>
+
         <main className="flex-1 pb-12">
           <Routes>
             <Route
@@ -116,18 +142,18 @@ function AppLayout() {
           </Routes>
         </main>
 
-        <footer className="border-t border-slate-200/80 bg-white/70 backdrop-blur-sm py-6 text-xs text-slate-500 px-4 sm:px-6 lg:px-8">
-          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+        <footer className="border-t border-slate-200 bg-white py-4 text-xs text-slate-600 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
             <div className="flex items-center space-x-2">
-              <span className="font-bold text-slate-700 tracking-tight">BidShield</span>
+              <span className="font-bold text-gov-navy">BidShield</span>
               <span className="text-slate-300">&bull;</span>
-              <span>GeM Statutory Bid Compliance Platform</span>
-              <span className="bg-indigo-50 text-indigo-700 font-mono text-[10px] font-semibold px-2 py-0.5 rounded-full border border-indigo-200/60">
-                SIH26100
+              <span>GeM Pre-Qualification & Statutory Verification Engine</span>
+              <span className="bg-gov-saffronLight text-gov-saffronDark font-mono text-[10px] font-bold px-2 py-0.5 rounded border border-gov-saffron/30">
+                GFR 2017
               </span>
             </div>
-            <div className="text-slate-400 text-[11px] font-medium">
-              Chennai Petroleum Corporation Limited (CPCL) &bull; Ministry of Petroleum & Natural Gas
+            <div className="text-slate-500 text-[11px] font-mono">
+              Chennai Petroleum Corporation Limited (CPCL) &bull; National Informatics Guidelines
             </div>
           </div>
         </footer>
