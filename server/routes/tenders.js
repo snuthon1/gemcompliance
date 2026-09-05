@@ -225,4 +225,70 @@ router.post('/:tender_id/award', async (req, res) => {
   }
 });
 
+// POST /api/tenders/:tender_id/bids - Bidder submits a commercial quotation
+router.post('/:tender_id/bids', async (req, res) => {
+  try {
+    const { tender_id } = req.params;
+    const { bidder_id, bid_amount } = req.body;
+
+    if (!bidder_id || !bid_amount) {
+      return res.status(400).json({ success: false, message: 'bidder_id and bid_amount are required' });
+    }
+
+    const tender = await prisma.tender.findUnique({ where: { tender_id } });
+    if (!tender) {
+      return res.status(404).json({ success: false, message: 'Tender not found' });
+    }
+
+    if (tender.status === 'Awarded' || tender.status === 'Closed') {
+      return res.status(400).json({ success: false, message: 'This tender is closed for bidding.' });
+    }
+
+    const numericAmount = parseFloat(bid_amount);
+    if (isNaN(numericAmount) || numericAmount <= 0) {
+      return res.status(400).json({ success: false, message: 'Valid positive bid_amount is required.' });
+    }
+
+    // Check if bidder already submitted a bid for this tender
+    const existing = await prisma.bid.findFirst({ where: { tender_id, bidder_id } });
+    if (existing) {
+      const updated = await prisma.bid.update({
+        where: { bid_id: existing.bid_id },
+        data: { bid_amount: numericAmount, submitted_at: new Date() }
+      });
+      await prisma.auditLog.create({
+        data: {
+          bidder_id,
+          action: 'BID_REVISED',
+          performed_by: 'Bidder',
+          details: `Revised quotation to ₹${numericAmount.toLocaleString('en-IN')} for tender "${tender.title}"`
+        }
+      });
+      return res.json({ success: true, message: 'Bid quotation updated successfully', bid: updated });
+    }
+
+    const bid = await prisma.bid.create({
+      data: {
+        tender_id,
+        bidder_id,
+        bid_amount: numericAmount,
+        status: 'Submitted'
+      }
+    });
+
+    await prisma.auditLog.create({
+      data: {
+        bidder_id,
+        action: 'BID_SUBMITTED',
+        performed_by: 'Bidder',
+        details: `Submitted bid of ₹${numericAmount.toLocaleString('en-IN')} for tender "${tender.title}"`
+      }
+    });
+
+    res.json({ success: true, message: 'Bid submitted successfully', bid });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 module.exports = router;
