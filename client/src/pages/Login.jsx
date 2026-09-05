@@ -188,19 +188,6 @@ export default function Login() {
         <main className="relative z-10 max-w-lg mx-auto w-full px-4 sm:px-6 my-auto">
           {/* Official Government Sign-In Form - Centered */}
           <div className="bg-white rounded-xl border border-slate-300 shadow-2xl overflow-hidden">
-              {/* Card Header */}
-              <div className="bg-[#0B2546] text-white px-5 py-3 flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <Lock className="w-4 h-4 text-amber-400" />
-                  <h3 className="text-xs font-bold uppercase tracking-wider">
-                    Authorized User Sign-In
-                  </h3>
-                </div>
-                <span className="text-[10px] font-mono text-emerald-300 bg-[#07182D] px-2 py-0.5 rounded border border-emerald-500/30">
-                  Secure Gateway
-                </span>
-              </div>
-
               <div className="p-6 space-y-5">
                 {/* Role Tabs */}
                 <div className="grid grid-cols-2 p-1 bg-slate-100 rounded-lg border border-slate-200">
