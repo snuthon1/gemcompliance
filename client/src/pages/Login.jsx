@@ -19,10 +19,10 @@ import NationalEmblem from '../components/NationalEmblem';
 
 export default function Login() {
   const [activeTab, setActiveTab] = useState('OFFICER'); // 'OFFICER' or 'VENDOR'
-  const [officerEmail, setOfficerEmail] = useState('admin@admin.com');
-  const [officerPassword, setOfficerPassword] = useState('password');
-  const [vendorIdentifier, setVendorIdentifier] = useState('tenders@apexpetrochem.in');
-  const [vendorPassword, setVendorPassword] = useState('password');
+  const [officerEmail, setOfficerEmail] = useState('');
+  const [officerPassword, setOfficerPassword] = useState('');
+  const [vendorIdentifier, setVendorIdentifier] = useState('');
+  const [vendorPassword, setVendorPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
