@@ -7,7 +7,7 @@ const TURSO_TOKEN = 'eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOj
 async function executeSql(sql, args = []) {
   const formattedArgs = args.map(arg => {
     if (arg === null || arg === undefined) return { type: 'null' };
-    if (typeof arg === 'number') return { type: Number.isInteger(arg) ? 'integer' : 'float', value: arg };
+    if (typeof arg === 'number') return { type: Number.isInteger(arg) ? 'integer' : 'float', value: String(arg) };
     return { type: 'text', value: String(arg) };
   });
 
@@ -38,7 +38,7 @@ async function executeSql(sql, args = []) {
     });
     return { rows, affected: result.affected_row_count };
   }
-  const msg = (data.results && data.results[0] && data.results[0].response && data.results[0].response.message) || 'Database query failed';
+  const msg = (data.results && data.results[0] && (data.results[0].error?.message || (data.results[0].response && data.results[0].response.message))) || 'Database query failed';
   throw new Error(msg);
 }
 
@@ -393,28 +393,75 @@ export async function onRequest(context) {
       if (method === 'POST') {
         let docType = 'GST_CERT';
         let fileName = 'statutory_document.pdf';
+        let base64Content = null;
+        let mimeType = 'application/pdf';
 
         const contentType = request.headers.get('content-type') || '';
         if (contentType.includes('application/json')) {
           const body = await request.json();
           docType = body.doc_type || docType;
           fileName = body.file_name || fileName;
+          base64Content = body.file_content || null;
         } else if (contentType.includes('multipart/form-data')) {
           const formData = await request.formData();
           docType = formData.get('doc_type') || docType;
           const file = formData.get('file');
-          if (file && file.name) fileName = file.name;
+          if (file && file.name) {
+            fileName = file.name;
+            mimeType = file.type || 'application/octet-stream';
+            try {
+              const arrayBuf = await file.arrayBuffer();
+              const bytes = new Uint8Array(arrayBuf);
+              let binary = '';
+              const chunkSize = 8192;
+              for (let i = 0; i < bytes.length; i += chunkSize) {
+                binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize));
+              }
+              base64Content = btoa(binary);
+            } catch (e) {
+              console.error('Failed to convert file to base64', e);
+            }
+          }
         }
 
         const bRes = await executeSql('SELECT * FROM Bidder WHERE bidder_id = ?', [bidderId]);
         const bidder = bRes.rows[0] || {};
+
+        // Perform automated cross-check against registries
+        let flagged = 0;
+        let flagReason = null;
+
+        if (docType === 'GST_CERT') {
+          const gRes = await executeSql('SELECT * FROM GstnRegistry WHERE gstin = ?', [bidder.gstin]);
+          const gst = gRes.rows[0];
+          if (!gst || gst.status !== 'Active') {
+            flagged = 1;
+            flagReason = 'GST registration is inactive or suspended on GSTN portal';
+          }
+        } else if (docType === 'UDYAM_CERT') {
+          const uRes = await executeSql('SELECT * FROM UdyamRegistry WHERE udyam_number = ?', [bidder.udyam_number]);
+          const udyam = uRes.rows[0];
+          if (!udyam || udyam.status !== 'Active') {
+            flagged = 1;
+            flagReason = 'Udyam certificate is inactive or de-registered on MSME Databank';
+          }
+        } else if (docType === 'PAN_CARD') {
+          const pRes = await executeSql('SELECT * FROM PanRegistry WHERE pan_number = ?', [bidder.pan_number]);
+          const pan = pRes.rows[0];
+          if (!pan || !(pan.itr_filed_last_year === 1 || pan.itr_filed_last_year === '1')) {
+            flagged = 1;
+            flagReason = 'Income Tax Return (ITR) not filed for the preceding assessment year';
+          }
+        }
 
         const extracted = {
           pan: bidder.pan_number || 'AAACA1234A',
           gstin: bidder.gstin || '33AAACA1234A1Z5',
           company_name: bidder.company_name || 'Verified Entity',
           udyam: bidder.udyam_number || 'UDYAM-TN-02-0012345',
-          extraction_method: 'live_ai'
+          file_name: fileName,
+          extraction_method: 'live_ai',
+          verified_against_registry: flagged === 0 ? 'Compliant & Verified' : 'Discrepancy Detected'
         };
 
         const docId = crypto.randomUUID();
@@ -422,27 +469,27 @@ export async function onRequest(context) {
         const fileUrl = `/uploads/${fileName}`;
 
         await executeSql(
-          'INSERT INTO Document (doc_id, bidder_id, doc_type, file_url, extracted_data, flagged, flag_reason, uploaded_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-          [docId, bidderId, docType, fileUrl, JSON.stringify(extracted), 0, null, now]
+          'INSERT INTO Document (doc_id, bidder_id, doc_type, file_url, extracted_data, flagged, flag_reason, uploaded_at, file_content) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+          [docId, bidderId, docType, fileUrl, JSON.stringify(extracted), flagged, flagReason, now, base64Content]
         );
 
         const logId = crypto.randomUUID();
         await executeSql(
           'INSERT INTO AuditLog (log_id, bidder_id, action, performed_by, details, timestamp) VALUES (?, ?, ?, ?, ?, ?)',
-          [logId, bidderId, 'DOCUMENT_UPLOADED', 'System', `Uploaded ${docType} document: ${fileName}`, now]
+          [logId, bidderId, 'DOCUMENT_UPLOADED', 'Admin / Procurement Officer', `Uploaded ${docType} (${fileName}). Statutory check: ${flagged === 1 ? 'FLAGGED: ' + flagReason : 'Passed Clean'}`, now]
         );
 
         return jsonResponse({
           success: true,
-          message: 'Document uploaded and verified',
+          message: 'Document uploaded and verified against statutory ledgers',
           document: {
             doc_id: docId,
             bidder_id: bidderId,
             doc_type: docType,
             file_url: fileUrl,
             extracted_data: extracted,
-            flagged: false,
-            flag_reason: null,
+            flagged: Boolean(flagged),
+            flag_reason: flagReason,
             uploaded_at: now
           }
         });
@@ -598,6 +645,8 @@ export async function onRequest(context) {
       if (rows.length === 0) return jsonResponse({ success: false, message: 'Tender not found' }, 404);
       return jsonResponse({ success: true, tender: rows[0] });
     }
+
+
 
     return jsonResponse({ success: false, message: `Route ${path} not found` }, 404);
 
