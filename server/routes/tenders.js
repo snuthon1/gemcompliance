@@ -35,7 +35,11 @@ async function getBidderCompliance(bidder_id) {
       }
     }
 
-    const evaluation = calculateScore(results);
+    const documents = await prisma.document.findMany({
+      where: { bidder_id }
+    });
+
+    const evaluation = calculateScore(results, documents);
     return {
       score: evaluation.score,
       risk: evaluation.risk,
