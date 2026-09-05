@@ -449,8 +449,12 @@ STATUS:            ${doc.flagged ? 'FLAGGED: ' + doc.flag_reason : 'VERIFIED COM
       maximumFractionDigits: 0
     }).format(val || 0);
 
-  const formatDate = (iso) =>
-    iso ? new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
+  const formatDate = (val) => {
+    if (!val) return '—';
+    const num = Number(val);
+    const d = !isNaN(num) && num > 1000000000 ? new Date(num) : new Date(val);
+    return isNaN(d.getTime()) ? '—' : d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  };
 
   const isLowRisk = compliance?.risk === 'Low';
   const isMediumRisk = compliance?.risk === 'Medium';
@@ -949,40 +953,96 @@ STATUS:            ${doc.flagged ? 'FLAGGED: ' + doc.flag_reason : 'VERIFIED COM
                   </div>
 
                   <div className="space-y-2.5">
-                    {openTenders.slice(0, 3).map((tender) => (
-                      <div
-                        key={tender.tender_id}
-                        className="rounded-lg border border-slate-200 p-3 hover:border-slate-300 transition flex flex-col sm:flex-row sm:items-center justify-between gap-2.5"
-                      >
-                        <div className="min-w-0">
-                          <div className="flex items-center space-x-2">
-                            <span className="text-[10px] font-mono font-bold bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded border border-slate-200">
-                              {tender.tender_ref_number || 'CPCL-2026'}
-                            </span>
-                            <span className="text-xs font-bold text-slate-800 truncate">
-                              {tender.title}
-                            </span>
+                    {openTenders.slice(0, 4).map((tender) => {
+                      const existingBid = bids.find((b) => b.tender_id === tender.tender_id);
+                      const isTenderOpen = (tender.status || '').toLowerCase() === 'open';
+                      const deadlineNum = Number(tender.submission_deadline);
+                      const deadlineDate = !isNaN(deadlineNum) && deadlineNum > 1000000000 ? new Date(deadlineNum) : new Date(tender.submission_deadline);
+                      const isExpired = deadlineDate && !isNaN(deadlineDate.getTime()) ? deadlineDate.getTime() < Date.now() : false;
+                      const tenderValue = tender.estimated_value || tender.estimated_value_inr || tender.budget || 0;
+
+                      return (
+                        <div
+                          key={tender.tender_id}
+                          className="rounded-lg border border-slate-200 p-3 hover:border-slate-300 transition flex flex-col sm:flex-row sm:items-center justify-between gap-2.5"
+                        >
+                          <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              <span className="text-[10px] font-mono font-bold bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded border border-slate-200">
+                                {tender.tender_ref_number || tender.tender_id.substring(0, 8).toUpperCase()}
+                              </span>
+                              {existingBid ? (
+                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                                  existingBid.status === 'Awarded'
+                                    ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
+                                    : 'bg-blue-100 text-blue-800 border-blue-200'
+                                }`}>
+                                  {existingBid.status === 'Awarded' ? '🏆 Awarded' : '✓ Bid Submitted'}
+                                </span>
+                              ) : isTenderOpen && !isExpired ? (
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                  Open
+                                </span>
+                              ) : (
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200">
+                                  {tender.status === 'Awarded' ? 'Awarded' : 'Closed'}
+                                </span>
+                              )}
+                              <span className="text-xs font-bold text-slate-800 truncate block">
+                                {tender.title}
+                              </span>
+                            </div>
+                            <div className="flex items-center space-x-3 text-[11px] text-slate-500 mt-1">
+                              <span>Est: <strong className="text-slate-700">{formatINR(tenderValue)}</strong></span>
+                              <span>&bull;</span>
+                              <span>Due: {formatDate(tender.submission_deadline)}</span>
+                            </div>
                           </div>
-                          <div className="flex items-center space-x-3 text-[11px] text-slate-500 mt-1">
-                            <span>Est: <strong>{formatINR(tender.estimated_value_inr)}</strong></span>
-                            <span>&bull;</span>
-                            <span>Due: {formatDate(tender.submission_deadline)}</span>
+
+                          <div className="shrink-0">
+                            {existingBid ? (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setSelectedTenderForBid(tender.tender_id);
+                                  handleTabChange('apply');
+                                }}
+                                className="inline-flex items-center space-x-1 px-3 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold transition border border-blue-200 cursor-pointer"
+                              >
+                                <span>View Bid ({formatINR(existingBid.bid_amount)})</span>
+                                <ChevronRight className="w-3.5 h-3.5" />
+                              </button>
+                            ) : !isTenderOpen || isExpired ? (
+                              <span className="inline-flex items-center px-2.5 py-1 rounded bg-slate-100 text-slate-400 text-xs font-semibold">
+                                Bidding Closed
+                              </span>
+                            ) : !hasAllMandatoryDocs ? (
+                              <button
+                                type="button"
+                                onClick={() => handleTabChange('docs')}
+                                className="inline-flex items-center space-x-1 px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold transition border border-amber-200 cursor-pointer"
+                              >
+                                <span>Upload Docs to Bid</span>
+                                <ArrowUpRight className="w-3.5 h-3.5" />
+                              </button>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setSelectedTenderForBid(tender.tender_id);
+                                  handleTabChange('apply');
+                                }}
+                                className="inline-flex items-center space-x-1 px-3 py-1.5 rounded-lg bg-[#0B2546] hover:bg-[#07182D] text-white text-xs font-bold transition shadow-xs cursor-pointer"
+                              >
+                                <span>Apply Bid</span>
+                                <ArrowUpRight className="w-3.5 h-3.5" />
+                              </button>
+                            )}
                           </div>
                         </div>
-
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setSelectedTenderForBid(tender.tender_id);
-                            handleTabChange('apply');
-                          }}
-                          className="inline-flex items-center space-x-1 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-[#0B2546] hover:text-white text-slate-800 text-xs font-bold transition shrink-0 cursor-pointer"
-                        >
-                          <span>Apply Bid</span>
-                          <ArrowUpRight className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
 
@@ -1621,8 +1681,13 @@ STATUS:            ${doc.flagged ? 'FLAGGED: ' + doc.flag_reason : 'VERIFIED COM
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {openTenders.map((tender) => {
                     const existingBid = bids.find((b) => b.tender_id === tender.tender_id);
-                    const isAwarded = tender.status === 'Awarded';
-                    const isClosed = isAwarded || tender.status === 'Closed';
+                    const isOpen = (tender.status || '').toLowerCase() === 'open';
+                    const isAwarded = (tender.status || '').toLowerCase() === 'awarded';
+                    const deadlineNum = Number(tender.submission_deadline);
+                    const deadlineDate = !isNaN(deadlineNum) && deadlineNum > 1000000000 ? new Date(deadlineNum) : new Date(tender.submission_deadline);
+                    const isExpired = deadlineDate && !isNaN(deadlineDate.getTime()) ? deadlineDate.getTime() < Date.now() : false;
+                    const isClosed = !isOpen || isAwarded || isExpired;
+                    const tenderValue = tender.estimated_value || tender.estimated_value_inr || tender.budget || 0;
 
                     return (
                       <div
@@ -1632,16 +1697,20 @@ STATUS:            ${doc.flagged ? 'FLAGGED: ' + doc.flag_reason : 'VERIFIED COM
                         <div className="space-y-2">
                           <div className="flex items-center justify-between gap-2">
                             <span className="text-[10px] font-mono font-bold uppercase bg-slate-100 text-slate-700 px-2 py-0.5 rounded border border-slate-200">
-                              Ref: {tender.tender_id.substring(0, 8).toUpperCase()}
+                              Ref: {tender.tender_ref_number || tender.tender_id.substring(0, 8).toUpperCase()}
                             </span>
                             <span
                               className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${
-                                tender.status === 'Active'
+                                existingBid
+                                  ? 'bg-blue-100 text-blue-800'
+                                  : isOpen && !isExpired
                                   ? 'bg-emerald-100 text-emerald-800'
+                                  : isAwarded
+                                  ? 'bg-amber-100 text-amber-800'
                                   : 'bg-slate-100 text-slate-600'
                               }`}
                             >
-                              {tender.status}
+                              {existingBid ? 'Bid Submitted' : isOpen && !isExpired ? 'Open for Bidding' : tender.status}
                             </span>
                           </div>
 
@@ -1656,13 +1725,13 @@ STATUS:            ${doc.flagged ? 'FLAGGED: ' + doc.flag_reason : 'VERIFIED COM
                             <div className="p-2 bg-slate-50 rounded-lg border border-slate-100">
                               <span className="text-[10px] text-slate-400 block uppercase font-bold">Estimated Value</span>
                               <span className="font-mono font-extrabold text-slate-900 text-sm">
-                                {formatINR(tender.budget)}
+                                {formatINR(tenderValue)}
                               </span>
                             </div>
                             <div className="p-2 bg-slate-50 rounded-lg border border-slate-100">
-                              <span className="text-[10px] text-slate-400 block uppercase font-bold">Published</span>
+                              <span className="text-[10px] text-slate-400 block uppercase font-bold">Submission Deadline</span>
                               <span className="font-semibold text-slate-700 text-xs">
-                                {formatDate(tender.created_at)}
+                                {formatDate(tender.submission_deadline)}
                               </span>
                             </div>
                           </div>
@@ -1687,9 +1756,18 @@ STATUS:            ${doc.flagged ? 'FLAGGED: ' + doc.flag_reason : 'VERIFIED COM
                               </span>
                             </div>
                           ) : isClosed ? (
-                            <span className="text-xs text-slate-400 font-semibold italic">
-                              Bidding closed for this tender
-                            </span>
+                            <div className="w-full py-2 text-center text-xs text-slate-400 bg-slate-50 border border-slate-200 rounded-xl font-semibold">
+                              Bidding closed for this tender ({isAwarded ? 'Contract Awarded' : 'Closed'})
+                            </div>
+                          ) : !hasAllMandatoryDocs ? (
+                            <button
+                              type="button"
+                              onClick={() => handleTabChange('docs')}
+                              className="w-full inline-flex items-center justify-center space-x-1.5 bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-900 text-xs font-bold py-2.5 rounded-xl transition cursor-pointer"
+                            >
+                              <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
+                              <span>Upload Mandatory Docs to Unlock Bidding</span>
+                            </button>
                           ) : (
                             <button
                               type="button"
@@ -1911,6 +1989,7 @@ STATUS:            ${doc.flagged ? 'FLAGGED: ' + doc.flag_reason : 'VERIFIED COM
               {/* Selected Tender Overview */}
               {(() => {
                 const tender = openTenders.find((t) => t.tender_id === selectedTenderForBid);
+                const tenderVal = tender?.estimated_value || tender?.estimated_value_inr || tender?.budget || 0;
                 return (
                   <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
                     <span className="text-[10px] uppercase font-bold text-slate-400 block font-mono">
@@ -1920,8 +1999,8 @@ STATUS:            ${doc.flagged ? 'FLAGGED: ' + doc.flag_reason : 'VERIFIED COM
                       {tender?.title || 'Commercial Tender'}
                     </h4>
                     <div className="flex items-center justify-between pt-1 text-slate-500 font-mono text-[11px]">
-                      <span>Estimated Value: <strong>{formatINR(tender?.budget)}</strong></span>
-                      <span>Ref: {tender?.tender_id.substring(0, 8).toUpperCase()}</span>
+                      <span>Estimated Value: <strong>{formatINR(tenderVal)}</strong></span>
+                      <span>Ref: {tender?.tender_ref_number || tender?.tender_id.substring(0, 8).toUpperCase()}</span>
                     </div>
                   </div>
                 );
@@ -1947,9 +2026,10 @@ STATUS:            ${doc.flagged ? 'FLAGGED: ' + doc.flag_reason : 'VERIFIED COM
                 </div>
                 {bidQuoteAmount && (() => {
                   const tender = openTenders.find((t) => t.tender_id === selectedTenderForBid);
-                  if (!tender || !tender.budget) return null;
-                  const diff = parseFloat(bidQuoteAmount) - tender.budget;
-                  const pct = ((diff / tender.budget) * 100).toFixed(1);
+                  const tenderVal = tender?.estimated_value || tender?.estimated_value_inr || tender?.budget || 0;
+                  if (!tender || !tenderVal) return null;
+                  const diff = parseFloat(bidQuoteAmount) - tenderVal;
+                  const pct = ((diff / tenderVal) * 100).toFixed(1);
                   return (
                     <div className="mt-1 text-[11px] font-mono">
                       {diff <= 0 ? (
