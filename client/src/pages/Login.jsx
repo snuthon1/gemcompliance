@@ -19,68 +19,66 @@ import NationalEmblem from '../components/NationalEmblem';
 
 export default function Login() {
   const [activeTab, setActiveTab] = useState('OFFICER'); // 'OFFICER' or 'VENDOR'
-  const [email, setEmail] = useState('officer.demo@cpcl.gov.in');
-  const [password, setPassword] = useState('••••••••••••');
-  const [selectedVendorKey, setSelectedVendorKey] = useState('apex');
+  const [officerEmail, setOfficerEmail] = useState('officer@cpcl.gov.in');
+  const [officerPassword, setOfficerPassword] = useState('Officer@2026');
+  const [vendorIdentifier, setVendorIdentifier] = useState('tenders@apexpetrochem.in');
+  const [vendorPassword, setVendorPassword] = useState('Vendor@2026');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
   const { login } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
-
-  const from = location.state?.from?.pathname || (activeTab === 'OFFICER' ? '/' : '/vendor');
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
     setError(null);
-    if (tab === 'OFFICER') {
-      setEmail('officer.demo@cpcl.gov.in');
-      setPassword('••••••••••••');
-    } else {
-      const vendor = DEMO_PROFILES[selectedVendorKey];
-      setEmail(vendor?.email || 'tenders@apexpetrochem.in');
-      setPassword('••••••••••••');
-    }
   };
 
-  const handleVendorSelect = (key) => {
-    setSelectedVendorKey(key);
-    const vendor = DEMO_PROFILES[key];
-    if (vendor) {
-      setEmail(vendor.email);
+  const handleQuickFill = (role, id, pw) => {
+    setError(null);
+    if (role === 'OFFICER') {
+      setActiveTab('OFFICER');
+      setOfficerEmail(id);
+      setOfficerPassword(pw);
+    } else {
+      setActiveTab('VENDOR');
+      setVendorIdentifier(id);
+      setVendorPassword(pw);
     }
   };
 
   const handleSubmit = (e) => {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
     setError(null);
     setSubmitting(true);
 
     try {
       if (activeTab === 'OFFICER') {
         const res = login({
-          email: email || 'officer.demo@cpcl.gov.in',
+          identifier: officerEmail,
+          password: officerPassword,
           role: 'OFFICER'
         });
         if (res.success) {
-          navigate(from === '/login' ? '/' : from, { replace: true });
+          navigate('/tenders', { replace: true });
+        } else {
+          setError(res.error || 'Authentication failed. Please verify officer credentials.');
         }
       } else {
-        const profile = DEMO_PROFILES[selectedVendorKey] || DEMO_PROFILES.apex;
         const res = login({
-          email: email || profile.email,
-          role: 'VENDOR',
-          bidder_id: profile.bidder_id,
-          company_name: profile.company_name
+          identifier: vendorIdentifier,
+          password: vendorPassword,
+          role: 'VENDOR'
         });
         if (res.success) {
-          navigate(from === '/login' ? '/vendor' : from, { replace: true });
+          navigate('/vendor', { replace: true });
+        } else {
+          setError(res.error || 'Authentication failed. Please check registered GSTIN / Email and password.');
         }
       }
     } catch (err) {
-      setError('Authentication failed. Please verify credentials.');
+      setError('An unexpected error occurred during authentication.');
     } finally {
       setSubmitting(false);
     }
@@ -258,16 +256,16 @@ export default function Login() {
                   <>
                     <div className="space-y-1.5">
                       <label className="block text-xs font-semibold text-slate-700">
-                        Official email address
+                        Official designated email
                       </label>
                       <div className="relative">
                         <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
                         <input
                           type="email"
                           required
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                          placeholder="name@department.gov.in"
+                          value={officerEmail}
+                          onChange={(e) => setOfficerEmail(e.target.value)}
+                          placeholder="officer@cpcl.gov.in"
                           className="w-full bg-white border border-slate-300 rounded-lg pl-10 pr-3 py-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0B2546]/15 focus:border-[#0B2546]"
                         />
                       </div>
@@ -275,22 +273,22 @@ export default function Login() {
 
                     <div className="space-y-1.5">
                       <label className="block text-xs font-semibold text-slate-700">
-                        Password
+                        Officer security password
                       </label>
                       <div className="relative">
                         <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
                         <input
                           type={showPassword ? 'text' : 'password'}
                           required
-                          value={password}
-                          onChange={(e) => setPassword(e.target.value)}
+                          value={officerPassword}
+                          onChange={(e) => setOfficerPassword(e.target.value)}
                           placeholder="••••••••••••"
                           className="w-full bg-white border border-slate-300 rounded-lg pl-10 pr-10 py-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0B2546]/15 focus:border-[#0B2546]"
                         />
                         <button
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-3 top-3 text-slate-400 hover:text-slate-600"
+                          className="absolute right-3 top-3 text-slate-400 hover:text-slate-600 cursor-pointer"
                         >
                           {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                         </button>
@@ -301,31 +299,16 @@ export default function Login() {
                   <>
                     <div className="space-y-1.5">
                       <label className="block text-xs font-semibold text-slate-700">
-                        Registered Bidder Enterprise
-                      </label>
-                      <select
-                        value={selectedVendorKey}
-                        onChange={(e) => handleVendorSelect(e.target.value)}
-                        className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2.5 text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0B2546]/15 focus:border-[#0B2546] cursor-pointer"
-                      >
-                        <option value="apex">Apex Petrochem Engineering Pvt Ltd (33AAACA1234A1Z5)</option>
-                        <option value="coromandel">Coromandel Heavy Valves Ltd (33BBBCB5678B1Z2)</option>
-                        <option value="kaveri">Kaveri Refining Spares Ltd (33DDDCD4321D1Z4)</option>
-                      </select>
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <label className="block text-xs font-semibold text-slate-700">
-                        Authorized email address
+                        Registered GSTIN or Corporate Email
                       </label>
                       <div className="relative">
                         <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
                         <input
-                          type="email"
+                          type="text"
                           required
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                          placeholder="tenders@company.com"
+                          value={vendorIdentifier}
+                          onChange={(e) => setVendorIdentifier(e.target.value)}
+                          placeholder="33AAACA1234A1Z5 or tenders@company.com"
                           className="w-full bg-white border border-slate-300 rounded-lg pl-10 pr-3 py-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0B2546]/15 focus:border-[#0B2546]"
                         />
                       </div>
@@ -333,22 +316,22 @@ export default function Login() {
 
                     <div className="space-y-1.5">
                       <label className="block text-xs font-semibold text-slate-700">
-                        Portal access password
+                        Vendor portal password
                       </label>
                       <div className="relative">
                         <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
                         <input
                           type={showPassword ? 'text' : 'password'}
                           required
-                          value={password}
-                          onChange={(e) => setPassword(e.target.value)}
+                          value={vendorPassword}
+                          onChange={(e) => setVendorPassword(e.target.value)}
                           placeholder="••••••••••••"
                           className="w-full bg-white border border-slate-300 rounded-lg pl-10 pr-10 py-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0B2546]/15 focus:border-[#0B2546]"
                         />
                         <button
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-3 top-3 text-slate-400 hover:text-slate-600"
+                          className="absolute right-3 top-3 text-slate-400 hover:text-slate-600 cursor-pointer"
                         >
                           {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                         </button>
@@ -399,6 +382,33 @@ export default function Login() {
                   <Landmark className="w-4 h-4 text-[#0B2546]" />
                   <span>Continue with Government SSO</span>
                 </button>
+
+                {/* Demo Helper Badges */}
+                <div className="pt-3 border-t border-slate-200/80 space-y-1.5">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block text-center">
+                    Evaluation Demo Credentials (Click to load)
+                  </span>
+                  <div className="grid grid-cols-2 gap-2 text-[10px]">
+                    <button
+                      type="button"
+                      onClick={() => handleQuickFill('OFFICER', 'officer@cpcl.gov.in', 'Officer@2026')}
+                      className="p-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 text-left transition flex flex-col cursor-pointer"
+                    >
+                      <span className="font-bold text-[#0B2546]">Officer Account</span>
+                      <span className="text-slate-500 font-mono text-[9px] truncate">officer@cpcl.gov.in</span>
+                      <span className="text-emerald-700 font-mono text-[9px] font-semibold">PW: Officer@2026</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleQuickFill('VENDOR', 'tenders@apexpetrochem.in', 'Vendor@2026')}
+                      className="p-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 text-left transition flex flex-col cursor-pointer"
+                    >
+                      <span className="font-bold text-[#0B2546]">Vendor (Apex)</span>
+                      <span className="text-slate-500 font-mono text-[9px] truncate">tenders@apexpetrochem.in</span>
+                      <span className="text-emerald-700 font-mono text-[9px] font-semibold">PW: Vendor@2026</span>
+                    </button>
+                  </div>
+                </div>
               </form>
 
               {/* Security Footnote */}
