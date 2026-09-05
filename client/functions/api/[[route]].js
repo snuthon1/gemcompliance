@@ -287,59 +287,59 @@ export async function onRequest(context) {
       });
 
       // 3. GST_RETURNS
-      const retMatch = gst && (gst.returns_filed === true || gst.returns_filed === 1);
+      const retMatch = gst && (Number(gst.returns_pending) === 0);
       checks.push({
         check_id: crypto.randomUUID(),
         bidder_id: bidderId,
         check_type: 'GST_RETURNS',
-        document_value: 'Filed',
-        portal_value: retMatch ? 'Filed' : 'Pending',
+        document_value: '0 Pending Returns Expected',
+        portal_value: gst ? `${gst.returns_pending} Pending Returns` : 'Not Found',
         match_status: retMatch ? 'Match' : 'Mismatch',
-        severity: retMatch ? 'Low' : 'Medium',
+        severity: 'Major',
         checked_at: now
       });
 
       // 4. PAN_COMPLIANCE
       const pRes = await executeSql('SELECT * FROM PanRegistry WHERE pan_number = ?', [bidder.pan_number]);
       const pan = pRes.rows[0];
-      const panMatch = pan && pan.status === 'Active' && (pan.itr_filed === true || pan.itr_filed === 1);
+      const panMatch = pan && (pan.itr_filed_last_year === 1 || pan.itr_filed_last_year === '1' || pan.itr_filed_last_year === true);
       checks.push({
         check_id: crypto.randomUUID(),
         bidder_id: bidderId,
         check_type: 'PAN_COMPLIANCE',
-        document_value: 'Compliant',
-        portal_value: panMatch ? 'Compliant' : 'Non-Compliant',
+        document_value: bidder.pan_number,
+        portal_value: pan ? `ITR Filed: ${pan.itr_filed_last_year} (Compliance: ${pan.compliance_status})` : 'Not Found',
         match_status: panMatch ? 'Match' : 'Mismatch',
-        severity: panMatch ? 'Low' : 'Medium',
+        severity: 'Minor',
         checked_at: now
       });
 
       // 5. BLACKLIST_CHECK
-      const blRes = await executeSql('SELECT * FROM BlacklistRegistry WHERE pan_number = ?', [bidder.pan_number]);
+      const blRes = await executeSql('SELECT * FROM BlacklistRegistry WHERE (pan_or_gstin = ? OR pan_or_gstin = ?) AND (blacklisted = 1 OR blacklisted = true)', [bidder.gstin, bidder.pan_number]);
       const bl = blRes.rows[0];
       const blMatch = !bl; // match if NOT blacklisted
       checks.push({
         check_id: crypto.randomUUID(),
         bidder_id: bidderId,
         check_type: 'BLACKLIST_CHECK',
-        document_value: 'Clean',
-        portal_value: bl ? `Blacklisted: ${bl.reason}` : 'Clean',
+        document_value: bidder.company_name,
+        portal_value: bl ? `Debarred: ${bl.reason}` : 'Clean (Not Blacklisted)',
         match_status: blMatch ? 'Match' : 'Mismatch',
-        severity: blMatch ? 'Low' : 'High',
+        severity: 'Critical',
         checked_at: now
       });
 
       // 6. NAME_MATCH
       const norm = (s) => (s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-      const nameMatch = gst && norm(bidder.company_name) === norm(gst.company_name);
+      const nameMatch = gst && norm(bidder.company_name) === norm(gst.legal_name);
       checks.push({
         check_id: crypto.randomUUID(),
         bidder_id: bidderId,
         check_type: 'NAME_MATCH',
         document_value: bidder.company_name,
-        portal_value: gst ? gst.company_name : 'Not Found',
+        portal_value: gst ? gst.legal_name : 'Not Found',
         match_status: nameMatch ? 'Match' : 'Mismatch',
-        severity: nameMatch ? 'Low' : 'High',
+        severity: 'Major',
         checked_at: now
       });
 
