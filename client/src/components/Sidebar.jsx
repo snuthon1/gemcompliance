@@ -293,27 +293,14 @@ export default function Sidebar() {
                         key={item.path}
                         to={item.path}
                         onClick={() => setMobileOpen(false)}
-                        className={`flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                        className={`flex items-center space-x-2.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
                           item.active
                             ? 'bg-[#0B2546] text-white shadow-xs'
                             : 'text-slate-600 hover:text-[#0B2546] hover:bg-slate-100'
                         }`}
                       >
-                        <div className="flex items-center space-x-2.5 min-w-0">
-                          <Icon className={`w-4 h-4 shrink-0 ${item.active ? 'text-white' : 'text-slate-500'}`} />
-                          <span className="truncate text-xs">{item.name}</span>
-                        </div>
-                        {item.badge && (
-                          <span
-                            className={`text-[9px] font-mono px-1.5 py-0.5 rounded font-bold shrink-0 ${
-                              item.active
-                                ? 'bg-white/20 text-white'
-                                : 'bg-slate-100 text-slate-500 border border-slate-200'
-                            }`}
-                          >
-                            {item.badge}
-                          </span>
-                        )}
+                        <Icon className={`w-4 h-4 shrink-0 ${item.active ? 'text-white' : 'text-slate-500'}`} />
+                        <span className="truncate text-xs">{item.name}</span>
                       </Link>
                     );
                   })}
