@@ -33,7 +33,10 @@ async function runVerification(bidder_id) {
     }),
     prisma.blacklistRegistry.findFirst({
       where: {
-        pan_or_gstin: bidder.gstin.trim(),
+        OR: [
+          { pan_or_gstin: bidder.gstin.trim() },
+          { pan_or_gstin: bidder.pan_number.trim() }
+        ],
         blacklisted: true
       }
     })
