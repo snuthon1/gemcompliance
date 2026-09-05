@@ -123,10 +123,10 @@ export default function Login() {
               <NationalEmblem className="w-10 h-12 shrink-0" />
               <div className="flex flex-col">
                 <h1 className="text-xl sm:text-2xl font-extrabold text-[#0B2546] tracking-tight">
-                  National Procurement Compliance Portal
+                  GeM-CPCL Bid Compliance Portal
                 </h1>
                 <p className="text-xs sm:text-sm text-slate-500 font-semibold tracking-wide">
-                  Government of India &bull; Ministry of Petroleum & Natural Gas (CPCL)
+                  Automated Bidder Verification System &bull; Ministry of Petroleum &amp; Natural Gas
                 </p>
               </div>
             </div>
