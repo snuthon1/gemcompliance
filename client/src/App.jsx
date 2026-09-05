@@ -71,14 +71,14 @@ function AppLayout() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 selection:bg-amber-500 selection:text-white antialiased flex flex-col md:flex-row font-sans">
-      {/* Clean White Left Sidebar Navigation */}
+    <div className="min-h-screen bg-[#EEF2F6] text-slate-900 selection:bg-amber-500 selection:text-white antialiased flex flex-col md:flex-row font-sans">
+      {/* Executive Government Navy Sidebar Navigation */}
       <Sidebar />
 
       {/* Main Content Area */}
       <div className="flex-1 md:pl-64 flex flex-col min-h-screen w-full min-w-0">
         {/* Top Government Portal Masthead Strip */}
-        <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
+        <header className="bg-white border-b border-slate-200/90 sticky top-0 z-30 shadow-xs">
           {/* National Tricolor Accent Line */}
           <div className="h-1 w-full flex">
             <div className="h-full w-1/3 bg-[#FF671F]"></div>
@@ -88,16 +88,25 @@ function AppLayout() {
 
           <div className="px-4 sm:px-8 py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
             <div className="flex items-center space-x-2.5">
-              <span className="font-bold text-[#0B2546]">GeM-CPCL Bid Compliance Portal</span>
-              <span className="text-slate-300">|</span>
-              <span className="text-slate-500 font-medium">Automated Bidder Verification &bull; Ministry of Petroleum &amp; Natural Gas</span>
+              <span className="font-extrabold text-[#0B2546] tracking-tight flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-[#0B2546]"></span>
+                GeM-CPCL Bid Compliance Portal
+              </span>
+              <span className="text-slate-300 hidden sm:inline">|</span>
+              <span className="text-slate-600 font-medium hidden sm:inline">
+                Automated Credential Verification • Ministry of Petroleum &amp; Natural Gas
+              </span>
             </div>
 
-            <div className="flex items-center space-x-3 text-[11px] font-mono text-slate-500">
-              <span className="bg-slate-100 text-[#0B2546] font-bold px-2 py-0.5 rounded border border-slate-200">
-                BidShield &bull; SIH26100
+            <div className="flex items-center space-x-3 text-[11px] font-mono text-slate-600">
+              <span className="bg-emerald-50 text-emerald-800 font-bold px-2 py-0.5 rounded border border-emerald-200 flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                SIH26100 Mandate
               </span>
-              <span>IST (UTC+5:30)</span>
+              <span className="bg-slate-100 text-slate-700 font-bold px-2 py-0.5 rounded border border-slate-200">
+                BidShield
+              </span>
+              <span className="text-slate-400 hidden lg:inline">IST (UTC+5:30)</span>
             </div>
           </div>
         </header>
