@@ -11,7 +11,10 @@ import {
   FileCheck,
   Shield,
   Fingerprint,
-  AlertCircle
+  AlertCircle,
+  Landmark,
+  KeyRound,
+  FileText
 } from 'lucide-react';
 import { useAuth, DEMO_PROFILES } from '../context/AuthContext';
 
@@ -77,288 +80,314 @@ export default function Login() {
         }
       }
     } catch (err) {
-      setError('Authentication failed. Please check your credentials.');
+      setError('Authentication failed. Please verify credentials or security token.');
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-center relative overflow-hidden selection:bg-indigo-500 selection:text-white">
-      {/* Ambient background glow effects */}
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-indigo-600/15 rounded-full blur-3xl pointer-events-none"></div>
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-violet-600/10 rounded-full blur-3xl pointer-events-none"></div>
+    <div className="min-h-screen bg-gov-slateBg flex flex-col justify-between text-slate-800 selection:bg-gov-saffron selection:text-white">
+      {/* 1. Official Government of India Top Strip */}
+      <div>
+        {/* National Tricolor Line */}
+        <div className="h-1.5 w-full flex">
+          <div className="h-full w-1/3 bg-gov-saffron"></div>
+          <div className="h-full w-1/3 bg-white"></div>
+          <div className="h-full w-1/3 bg-gov-green"></div>
+        </div>
 
-      <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-12 relative z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-          {/* Left Column: Hero branding & value propositions */}
-          <div className="lg:col-span-7 space-y-8">
-            {/* Header Badge */}
-            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-indigo-950/80 border border-indigo-500/30 text-indigo-300 text-xs font-semibold">
-              <span className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse"></span>
-              <span>GeM SIH26100 Statutory Compliance Engine</span>
-            </div>
-
-            {/* Brand & Headline */}
-            <div className="space-y-4">
-              <div className="flex items-center space-x-3">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center shadow-lg shadow-indigo-500/25">
-                  <ShieldCheck className="w-7 h-7 text-white" />
+        {/* Official Masthead */}
+        <header className="bg-white border-b border-slate-200 py-3 shadow-xs">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+            <div className="flex items-center space-x-3.5">
+              <div className="w-11 h-11 rounded-lg bg-gov-navy text-white flex items-center justify-center font-bold shadow-sm">
+                <Landmark className="w-6 h-6" />
+              </div>
+              <div className="flex flex-col">
+                <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider font-mono">
+                  भारत सरकार &bull; Government of India
                 </div>
-                <div>
-                  <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white">
-                    BidShield
-                  </h1>
-                  <p className="text-xs font-mono text-indigo-300 uppercase tracking-wider">
-                    Government e-Marketplace Pre-Qualification
-                  </p>
+                <div className="text-base font-extrabold text-gov-navy tracking-tight">
+                  Chennai Petroleum Corporation Limited (CPCL)
+                </div>
+                <div className="text-[11px] text-slate-600 font-medium">
+                  Ministry of Petroleum & Natural Gas &bull; GeM Pre-Qualification Portal
                 </div>
               </div>
+            </div>
 
-              <p className="text-base sm:text-lg text-slate-300 font-normal leading-relaxed max-w-xl">
-                Autonomous statutory pre-qualification and vendor compliance verification platform designed for public sector undertakings and government procurement committees.
+            {/* Accessibility and Language Bar */}
+            <div className="hidden md:flex items-center space-x-4 text-xs text-slate-600 font-medium">
+              <span className="bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
+                English | हिंदी
+              </span>
+              <span className="text-slate-400">|</span>
+              <span className="font-mono text-xs">SIH26100</span>
+            </div>
+          </div>
+        </header>
+      </div>
+
+      {/* 2. Main Login Body */}
+      <main className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-10 my-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch max-w-5xl mx-auto">
+          {/* Left Column: Official Tender & Compliance Notice */}
+          <div className="lg:col-span-6 bg-gov-navy text-white rounded-xl p-8 flex flex-col justify-between shadow-lg border-t-4 border-gov-saffron">
+            <div className="space-y-6">
+              <div className="inline-flex items-center space-x-2 bg-gov-navyLight/80 px-3 py-1 rounded text-xs font-mono text-gov-saffron font-bold uppercase border border-slate-700">
+                <span>Official e-Procurement Portal</span>
+              </div>
+
+              <div>
+                <h1 className="text-2xl font-black tracking-tight text-white">
+                  BidShield &bull; GeM Edition
+                </h1>
+                <p className="text-xs text-slate-300 mt-1 font-mono uppercase tracking-wide">
+                  Statutory Pre-Qualification & Verification System
+                </p>
+              </div>
+
+              <p className="text-xs text-slate-200 leading-relaxed">
+                Automated multi-portal cross-verification engine for commercial bidders participating in CPCL tenders. Designed to eliminate manual vetting delays under GFR 2017.
               </p>
-            </div>
 
-            {/* Feature Cards Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl pt-2">
-              <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800/80 backdrop-blur-sm space-y-2">
-                <div className="w-8 h-8 rounded-lg bg-indigo-950 flex items-center justify-center border border-indigo-800/50">
-                  <Layers className="w-4 h-4 text-indigo-400" />
+              {/* 4 Pillars in Government Card */}
+              <div className="space-y-3 pt-2">
+                <div className="flex items-start space-x-3 text-xs">
+                  <span className="w-5 h-5 rounded bg-gov-green/20 text-gov-green flex items-center justify-center font-bold shrink-0 border border-gov-green/40">
+                    &check;
+                  </span>
+                  <div>
+                    <strong className="text-white">6-Pillar Statutory Reconciliation:</strong>
+                    <p className="text-slate-300 text-[11px]">Direct integration with GSTN, MSME Udyam, CBDT PAN & MoPNG Debarment.</p>
+                  </div>
                 </div>
-                <h3 className="text-sm font-semibold text-white">6-Pillar Statutory Engine</h3>
-                <p className="text-xs text-slate-400 leading-relaxed">
-                  Real-time live cross-reconciliation against GSTN, Udyam MSME, Income Tax PAN, and MoPNG Debarment portals.
-                </p>
-              </div>
 
-              <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800/80 backdrop-blur-sm space-y-2">
-                <div className="w-8 h-8 rounded-lg bg-emerald-950 flex items-center justify-center border border-emerald-800/50">
-                  <FileCheck className="w-4 h-4 text-emerald-400" />
+                <div className="flex items-start space-x-3 text-xs">
+                  <span className="w-5 h-5 rounded bg-gov-green/20 text-gov-green flex items-center justify-center font-bold shrink-0 border border-gov-green/40">
+                    &check;
+                  </span>
+                  <div>
+                    <strong className="text-white">Multimodal Vision Document AI:</strong>
+                    <p className="text-slate-300 text-[11px]">Field extraction of GST REG-06, PAN cards, and Udyam registrations.</p>
+                  </div>
                 </div>
-                <h3 className="text-sm font-semibold text-white">Vision AI Document Extraction</h3>
-                <p className="text-xs text-slate-400 leading-relaxed">
-                  Multimodal field parsing of GST REG-06, PAN cards, and MSME registrations with automated mismatch alerts.
-                </p>
-              </div>
 
-              <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800/80 backdrop-blur-sm space-y-2">
-                <div className="w-8 h-8 rounded-lg bg-violet-950 flex items-center justify-center border border-violet-800/50">
-                  <Shield className="w-4 h-4 text-violet-400" />
+                <div className="flex items-start space-x-3 text-xs">
+                  <span className="w-5 h-5 rounded bg-gov-green/20 text-gov-green flex items-center justify-center font-bold shrink-0 border border-gov-green/40">
+                    &check;
+                  </span>
+                  <div>
+                    <strong className="text-white">Cryptographic Audit Trail:</strong>
+                    <p className="text-slate-300 text-[11px]">Tamper-evident logging for vigilance audits and tender committee reviews.</p>
+                  </div>
                 </div>
-                <h3 className="text-sm font-semibold text-white">GFR 2017 Audit Trails</h3>
-                <p className="text-xs text-slate-400 leading-relaxed">
-                  Cryptographically stamped audit logs safeguarding procurement officer determinations and vigilance compliance.
-                </p>
-              </div>
-
-              <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800/80 backdrop-blur-sm space-y-2">
-                <div className="w-8 h-8 rounded-lg bg-amber-950 flex items-center justify-center border border-amber-800/50">
-                  <Fingerprint className="w-4 h-4 text-amber-400" />
-                </div>
-                <h3 className="text-sm font-semibold text-white">Human-in-the-Loop</h3>
-                <p className="text-xs text-slate-400 leading-relaxed">
-                  AI advisory scoring with ultimate commercial award and override jurisdiction retained by the Tender Committee.
-                </p>
               </div>
             </div>
 
-            {/* PSU Trust Marks */}
-            <div className="pt-2 border-t border-slate-800/80 flex items-center space-x-3 text-xs text-slate-500 font-medium">
-              <span>Deployed for:</span>
-              <strong className="text-slate-300">Chennai Petroleum Corporation Limited (CPCL)</strong>
-              <span>&bull;</span>
-              <span>Ministry of Petroleum & Natural Gas</span>
+            <div className="pt-6 border-t border-slate-700/80 mt-6 text-[11px] text-slate-400 font-mono">
+              Certified compliant with GFR 2017 & CVC Vigilance Guidelines
             </div>
           </div>
 
-          {/* Right Column: Modern Authentication Card */}
-          <div className="lg:col-span-5">
-            <div className="bg-white rounded-2xl shadow-2xl p-8 border border-slate-100 text-slate-900 relative">
-              {/* Segmented Role Selector */}
-              <div className="grid grid-cols-2 p-1 bg-slate-100 rounded-xl mb-6 border border-slate-200">
+          {/* Right Column: Official Sign In Box */}
+          <div className="lg:col-span-6 bg-white rounded-xl shadow-md border border-slate-200 p-8 flex flex-col justify-between">
+            <div>
+              {/* Dual Tab Navigation */}
+              <div className="grid grid-cols-2 p-1 bg-slate-100 rounded-lg mb-6 border border-slate-200">
                 <button
                   type="button"
                   onClick={() => handleTabChange('OFFICER')}
-                  className={`flex items-center justify-center space-x-2 py-2.5 px-3 rounded-lg text-xs font-bold transition-all ${
+                  className={`flex items-center justify-center space-x-2 py-2.5 px-3 rounded text-xs font-bold transition-all ${
                     activeTab === 'OFFICER'
-                      ? 'bg-white text-slate-900 shadow-sm'
-                      : 'text-slate-500 hover:text-slate-900'
+                      ? 'bg-gov-navy text-white shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
-                  <ShieldCheck className={`w-4 h-4 ${activeTab === 'OFFICER' ? 'text-indigo-600' : 'text-slate-400'}`} />
-                  <span>Govt / PSU Officer</span>
+                  <ShieldCheck className="w-4 h-4 text-gov-saffron" />
+                  <span>PSU / Govt Officer</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => handleTabChange('VENDOR')}
-                  className={`flex items-center justify-center space-x-2 py-2.5 px-3 rounded-lg text-xs font-bold transition-all ${
+                  className={`flex items-center justify-center space-x-2 py-2.5 px-3 rounded text-xs font-bold transition-all ${
                     activeTab === 'VENDOR'
-                      ? 'bg-white text-slate-900 shadow-sm'
-                      : 'text-slate-500 hover:text-slate-900'
+                      ? 'bg-gov-navy text-white shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
-                  <Building2 className={`w-4 h-4 ${activeTab === 'VENDOR' ? 'text-indigo-600' : 'text-slate-400'}`} />
+                  <Building2 className="w-4 h-4 text-gov-saffron" />
                   <span>Tender Bidder</span>
                 </button>
               </div>
 
-              {/* Form Context Header */}
-              <div className="mb-6 space-y-1">
-                <h2 className="text-lg font-bold text-slate-900 tracking-tight">
+              {/* Header Details */}
+              <div className="mb-5 space-y-1">
+                <h2 className="text-base font-extrabold text-gov-navy tracking-tight">
                   {activeTab === 'OFFICER'
-                    ? 'Procurement Committee Sign In'
-                    : 'Vendor Commercial Workspace Sign In'}
+                    ? 'Tender Evaluation Committee Sign In'
+                    : 'Registered Vendor Commercial Desk'}
                 </h2>
-                <p className="text-xs text-slate-500 leading-relaxed">
+                <p className="text-xs text-slate-500">
                   {activeTab === 'OFFICER'
-                    ? 'Enter your designated PSU officer credentials to access bidder risk dossiers and award evaluation consoles.'
-                    : 'Select your registered tender enterprise to manage compliance certifications and submit bids.'}
+                    ? 'Enter authorized CPCL credentials with Digital Signature Certificate (DSC).'
+                    : 'Select your registered enterprise to inspect compliance scores and submit bids.'}
                 </p>
               </div>
 
               {error && (
-                <div className="mb-5 p-3 rounded-lg bg-rose-50 border border-rose-200 flex items-center space-x-2 text-xs text-rose-700 font-semibold">
+                <div className="mb-4 p-3 rounded bg-rose-50 border border-rose-200 flex items-center space-x-2 text-xs text-rose-700 font-semibold">
                   <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
                   <span>{error}</span>
                 </div>
               )}
 
-              {/* Authentication Form */}
+              {/* Standard Form */}
               <form onSubmit={handleSubmit} className="space-y-4">
                 {activeTab === 'OFFICER' ? (
                   <>
-                    <div className="space-y-1.5">
-                      <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider">
-                        Official Government Email
+                    <div className="space-y-1">
+                      <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+                        Official Government Email ID
                       </label>
                       <div className="relative">
-                        <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+                        <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
                         <input
                           type="email"
                           required
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
                           placeholder="officer.sharma@cpcl.gov.in"
-                          className="w-full bg-slate-50/80 border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-xs font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition"
+                          className="w-full bg-slate-50 border border-slate-300 rounded-lg pl-9 pr-3 py-2.5 text-xs font-mono text-slate-900 focus:outline-none focus:ring-1 focus:ring-gov-navy focus:border-gov-navy"
                         />
                       </div>
                     </div>
 
-                    <div className="space-y-1.5">
+                    <div className="space-y-1">
                       <div className="flex items-center justify-between">
-                        <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider">
-                          Security Token / Password
+                        <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+                          DSC Passcode / Security PIN
                         </label>
-                        <span className="text-[11px] text-indigo-600 font-medium">e-Token / DSC Active</span>
+                        <span className="text-[10px] text-gov-green font-bold flex items-center">
+                          <CheckCircle2 className="w-3 h-3 mr-1" />
+                          Class-3 DSC Connected
+                        </span>
                       </div>
                       <div className="relative">
-                        <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+                        <KeyRound className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
                         <input
                           type="password"
                           required
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
                           placeholder="••••••••••••"
-                          className="w-full bg-slate-50/80 border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-xs font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition"
+                          className="w-full bg-slate-50 border border-slate-300 rounded-lg pl-9 pr-3 py-2.5 text-xs font-mono text-slate-900 focus:outline-none focus:ring-1 focus:ring-gov-navy focus:border-gov-navy"
                         />
                       </div>
                     </div>
                   </>
                 ) : (
                   <>
-                    <div className="space-y-1.5">
-                      <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider">
-                        Participating Tender Enterprise
+                    <div className="space-y-1">
+                      <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+                        Select Participating Company
                       </label>
                       <div className="relative">
-                        <Building2 className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+                        <Building2 className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
                         <select
                           value={selectedVendorKey}
                           onChange={(e) => handleVendorSelect(e.target.value)}
-                          className="w-full bg-slate-50/80 border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition cursor-pointer"
+                          className="w-full bg-slate-50 border border-slate-300 rounded-lg pl-9 pr-3 py-2.5 text-xs font-semibold text-slate-800 focus:outline-none focus:ring-1 focus:ring-gov-navy cursor-pointer"
                         >
-                          <option value="apex">Apex Petrochem Engineering Pvt Ltd (GSTIN: 33AAACA1234A1Z5)</option>
-                          <option value="coromandel">Coromandel Heavy Valves & Alloy Works Ltd (GSTIN: 33BBBCB5678B1Z2)</option>
-                          <option value="kaveri">Kaveri Refining Spares & Services Ltd (GSTIN: 33DDDCD4321D1Z4)</option>
+                          <option value="apex">Apex Petrochem Engineering Pvt Ltd (33AAACA1234A1Z5)</option>
+                          <option value="coromandel">Coromandel Heavy Valves Ltd (33BBBCB5678B1Z2)</option>
+                          <option value="kaveri">Kaveri Refining Spares Ltd (33DDDCD4321D1Z4)</option>
                         </select>
                       </div>
                     </div>
 
-                    <div className="space-y-1.5">
-                      <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider">
-                        Signatory Email Address
+                    <div className="space-y-1">
+                      <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+                        Authorized Signatory Email
                       </label>
                       <div className="relative">
-                        <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+                        <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
                         <input
                           type="email"
                           required
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
                           placeholder="tenders@company.com"
-                          className="w-full bg-slate-50/80 border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-xs font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition"
+                          className="w-full bg-slate-50 border border-slate-300 rounded-lg pl-9 pr-3 py-2.5 text-xs font-mono text-slate-900 focus:outline-none focus:ring-1 focus:ring-gov-navy focus:border-gov-navy"
                         />
                       </div>
                     </div>
 
-                    <div className="space-y-1.5">
-                      <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider">
-                        Portal Access Passcode
+                    <div className="space-y-1">
+                      <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+                        Vendor Access Password
                       </label>
                       <div className="relative">
-                        <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+                        <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
                         <input
                           type="password"
                           required
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
                           placeholder="••••••••••••"
-                          className="w-full bg-slate-50/80 border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-xs font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition"
+                          className="w-full bg-slate-50 border border-slate-300 rounded-lg pl-9 pr-3 py-2.5 text-xs font-mono text-slate-900 focus:outline-none focus:ring-1 focus:ring-gov-navy focus:border-gov-navy"
                         />
                       </div>
                     </div>
                   </>
                 )}
 
-                {/* Remember and DSC Token indicator */}
                 <div className="flex items-center justify-between text-xs text-slate-500 pt-1">
                   <label className="flex items-center space-x-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      defaultChecked
-                      className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-                    />
-                    <span>Remember this device</span>
+                    <input type="checkbox" defaultChecked className="rounded border-slate-300 text-gov-navy focus:ring-gov-navy" />
+                    <span>Remember session</span>
                   </label>
-                  <span className="font-mono text-[11px] text-slate-400">TLS 1.3 256-Bit</span>
+                  <span className="font-mono text-[10px] text-slate-400">NIC-SSO 256-Bit TLS</span>
                 </div>
 
-                {/* Submit Action Button */}
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="w-full py-3 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-md shadow-indigo-500/20 transition-all flex items-center justify-center space-x-2 disabled:opacity-50 mt-2"
+                  className="w-full py-3 px-4 rounded-lg bg-gov-navy hover:bg-gov-navyLight text-white text-xs font-bold shadow transition-all flex items-center justify-center space-x-2 disabled:opacity-50 mt-3 cursor-pointer"
                 >
                   <span>
                     {activeTab === 'OFFICER'
-                      ? 'Sign in to Officer Console'
-                      : 'Sign in to Vendor Workspace'}
+                      ? 'Authenticate Officer via DSC / Token'
+                      : 'Authenticate & Access Vendor Desk'}
                   </span>
-                  <ArrowRight className="w-4 h-4" />
+                  <ArrowRight className="w-4 h-4 text-gov-saffron" />
                 </button>
               </form>
+            </div>
 
-              {/* Security & Confidentiality Notice */}
-              <div className="mt-6 pt-5 border-t border-slate-100 flex items-center justify-center space-x-2 text-[11px] text-slate-400 text-center">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                <span>Restricted to authorized GeM & PSU procurement personnel</span>
-              </div>
+            {/* Official Security Disclaimer */}
+            <div className="mt-6 pt-4 border-t border-slate-200 text-[10px] text-slate-500 text-center font-mono">
+              Protected by Section 43/66 IT Act 2000. Monitored by Chief Vigilance Officer (CVO).
             </div>
           </div>
         </div>
-      </div>
+      </main>
+
+      {/* 3. Official Government Footer */}
+      <footer className="bg-white border-t border-slate-200 py-4 text-xs text-slate-600">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-2">
+          <div className="flex items-center space-x-2">
+            <span className="font-bold text-gov-navy">BidShield</span>
+            <span>&bull;</span>
+            <span>Government e-Marketplace (GeM) Statutory Verification Platform</span>
+          </div>
+          <div className="text-[11px] text-slate-500 font-mono">
+            NIC / CPCL SIH26100 &bull; UX4G Compliant &bull; All Rights Reserved
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
