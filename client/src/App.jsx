@@ -8,6 +8,8 @@ import BidderDetail from './pages/BidderDetail';
 import TendersList from './pages/TendersList';
 import TenderDetail from './pages/TenderDetail';
 import UserDashboard from './pages/UserDashboard';
+import BlacklistDirectory from './pages/BlacklistDirectory';
+import Analytics from './pages/Analytics';
 import NationalEmblem from './components/NationalEmblem';
 import { Accessibility, Shield, Headphones } from 'lucide-react';
 
@@ -117,6 +119,22 @@ function AppLayout() {
               element={
                 <OfficerRoute>
                   <BidderDetail />
+                </OfficerRoute>
+              }
+            />
+            <Route
+              path="/blacklist"
+              element={
+                <OfficerRoute>
+                  <BlacklistDirectory />
+                </OfficerRoute>
+              }
+            />
+            <Route
+              path="/analytics"
+              element={
+                <OfficerRoute>
+                  <Analytics />
                 </OfficerRoute>
               }
             />
