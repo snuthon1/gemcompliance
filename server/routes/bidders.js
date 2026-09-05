@@ -228,7 +228,8 @@ router.post('/:bidder_id/verify', async (req, res) => {
     }
 
     const verificationResults = await runVerification(bidder_id);
-    const evaluation = calculateScore(verificationResults);
+    const documents = await prisma.document.findMany({ where: { bidder_id } });
+    const evaluation = calculateScore(verificationResults, documents);
 
     // Write SCORE_CALCULATED audit entry
     await prisma.auditLog.create({
@@ -247,7 +248,8 @@ router.post('/:bidder_id/verify', async (req, res) => {
       score: evaluation.score,
       risk: evaluation.risk,
       recommendation: evaluation.recommendation,
-      flags: evaluation.flags
+      flags: evaluation.flags,
+      flagged_documents: evaluation.flaggedDocuments || []
     });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
@@ -286,7 +288,8 @@ router.get('/:bidder_id/compliance', async (req, res) => {
       }
     });
 
-    const evaluation = calculateScore(latestResults);
+    const documents = await prisma.document.findMany({ where: { bidder_id } });
+    const evaluation = calculateScore(latestResults, documents);
 
     res.json({
       success: true,
@@ -296,7 +299,8 @@ router.get('/:bidder_id/compliance', async (req, res) => {
       score: evaluation.score,
       risk: evaluation.risk,
       recommendation: evaluation.recommendation,
-      flags: evaluation.flags
+      flags: evaluation.flags,
+      flagged_documents: evaluation.flaggedDocuments || []
     });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
