@@ -478,18 +478,42 @@ STATUS:            ${doc.flagged ? 'FLAGGED: ' + doc.flag_reason : 'VERIFIED COM
   const hasAllMandatoryDocs = missingMandatoryDocs.length === 0;
   const hasFlaggedDocs = (documents || []).some((d) => d.flagged === 1 || d.flagged === '1' || d.flagged === true);
 
-  // Compute realistic profile & onboarding completion percentage (50% profile fields + 50% mandatory documents)
+  // Strict Statutory Clean Document Tracking
+  const cleanMandatoryDocs = MANDATORY_DOCS.filter((m) => {
+    const doc = uploadedDocMap[m.type];
+    return doc && !(doc.flagged === 1 || doc.flagged === '1' || doc.flagged === true);
+  });
+  const mandatoryCleanCount = cleanMandatoryDocs.length;
+  const flaggedMandatoryCount = MANDATORY_DOCS.filter((m) => {
+    const doc = uploadedDocMap[m.type];
+    return doc && (doc.flagged === 1 || doc.flagged === '1' || doc.flagged === true);
+  }).length;
+  const isClearedToBid = hasAllMandatoryDocs && !hasFlaggedDocs && (compliance?.risk !== 'High');
+
+  // Compute realistic public procurement readiness (GFR 2017 & GeM Rules)
+  // 40% Profile KYC + 40% Clean Statutory Certificates + 20% Central Registry Standing
   const calculateProfileCompletion = () => {
     let score = 0;
-    if (currentBidder?.company_name) score += 10;
-    if (currentBidder?.gstin) score += 10;
-    if (currentBidder?.pan_number) score += 10;
-    if (profileForm.email && profileForm.phone) score += 10;
-    if (profileForm.bank_account && profileForm.bank_ifsc) score += 10;
+    if (currentBidder?.company_name) score += 8;
+    if (currentBidder?.gstin) score += 8;
+    if (currentBidder?.pan_number) score += 8;
+    if (profileForm.email && profileForm.phone) score += 8;
+    if (profileForm.bank_account && profileForm.bank_ifsc) score += 8;
 
-    // 50% tied directly to mandatory statutory document submission
-    const docScore = Math.round((mandatoryUploadedCount / MANDATORY_DOCS.length) * 50);
+    // ONLY clean, verified statutory documents award readiness points!
+    const docScore = Math.round((mandatoryCleanCount / MANDATORY_DOCS.length) * 40);
     score += docScore;
+
+    // Central Registry compliance contribution
+    const compScore = Math.round(((compliance?.score || 0) / 100) * 20);
+    score += compScore;
+
+    // HARD STATUTORY DISQUALIFICATION CAP:
+    // If ANY mandatory document has a discrepancy or compliance is High Risk,
+    // procurement clearance is BLOCKED and readiness is capped at max 40% (Profile only).
+    if (hasFlaggedDocs || compliance?.risk === 'High') {
+      return Math.min(score, 40);
+    }
 
     return Math.min(score, 100);
   };
@@ -737,22 +761,28 @@ STATUS:            ${doc.flagged ? 'FLAGGED: ' + doc.flag_reason : 'VERIFIED COM
                       <FileCheck2 className="w-4 h-4 text-[#0B2546]" />
                     </div>
                     <div className="mt-2 flex items-baseline space-x-1.5">
-                      <span className="text-2xl font-black font-mono text-slate-900">
-                        {mandatoryUploadedCount} / {MANDATORY_DOCS.length}
+                      <span className={`text-2xl font-black font-mono ${flaggedMandatoryCount > 0 ? 'text-rose-600' : 'text-slate-900'}`}>
+                        {mandatoryCleanCount} / {MANDATORY_DOCS.length}
                       </span>
-                      <span className="text-xs text-slate-500 font-medium">Uploaded</span>
+                      <span className="text-xs text-slate-500 font-medium">Verified Clean</span>
                     </div>
                   </div>
                   <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs">
                     <span className="font-semibold text-slate-500">Vault Health:</span>
                     <span
                       className={`font-bold px-2 py-0.5 rounded text-[10px] ${
-                        hasAllMandatoryDocs
+                        flaggedMandatoryCount > 0
+                          ? 'bg-rose-50 text-rose-800 border border-rose-200'
+                          : hasAllMandatoryDocs
                           ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
                           : 'bg-amber-50 text-amber-800 border border-amber-200'
                       }`}
                     >
-                      {hasAllMandatoryDocs ? 'Complete (3/3)' : `${missingMandatoryDocs.length} Missing`}
+                      {flaggedMandatoryCount > 0
+                        ? `⚠️ ${flaggedMandatoryCount} Discrepanc${flaggedMandatoryCount > 1 ? 'ies' : 'y'}`
+                        : hasAllMandatoryDocs
+                        ? 'Complete (3/3 Clean)'
+                        : `${missingMandatoryDocs.length} Missing`}
                     </span>
                   </div>
                 </div>
@@ -791,22 +821,28 @@ STATUS:            ${doc.flagged ? 'FLAGGED: ' + doc.flag_reason : 'VERIFIED COM
                       <UserCheck className="w-4 h-4 text-sky-600" />
                     </div>
                     <div className="mt-2 flex items-baseline space-x-1.5">
-                      <span className="text-2xl font-black font-mono text-[#0B2546]">
+                      <span className={`text-2xl font-black font-mono ${!isClearedToBid ? 'text-rose-600' : 'text-[#0B2546]'}`}>
                         {completionPct}%
                       </span>
-                      <span className="text-xs text-slate-500 font-medium">Readiness</span>
+                      <span className="text-xs text-slate-500 font-medium">{!isClearedToBid ? 'Readiness (Blocked)' : 'Readiness'}</span>
                     </div>
                   </div>
                   <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs">
                     <span className="font-semibold text-slate-500">Mandate Status:</span>
                     <span
                       className={`font-bold px-2 py-0.5 rounded text-[10px] font-mono ${
-                        hasAllMandatoryDocs && !hasFlaggedDocs
+                        isClearedToBid
                           ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                          : flaggedMandatoryCount > 0
+                          ? 'bg-rose-50 text-rose-800 border border-rose-200'
                           : 'bg-amber-50 text-amber-800 border border-amber-200'
                       }`}
                     >
-                      {hasAllMandatoryDocs && !hasFlaggedDocs ? '✅ Cleared to Bid' : '⚠️ Action Needed'}
+                      {isClearedToBid
+                        ? '✅ Cleared to Bid'
+                        : flaggedMandatoryCount > 0
+                        ? '❌ Clearance Blocked'
+                        : '⚠️ Action Needed'}
                     </span>
                   </div>
                 </div>
@@ -827,12 +863,18 @@ STATUS:            ${doc.flagged ? 'FLAGGED: ' + doc.flag_reason : 'VERIFIED COM
                   <div className="shrink-0">
                     <span
                       className={`text-xs font-bold px-2.5 py-1 rounded-md border ${
-                        hasAllMandatoryDocs
-                          ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                          : 'bg-amber-50 text-amber-800 border-amber-200'
+                        flaggedMandatoryCount > 0
+                          ? 'bg-rose-50 text-rose-800 border border-rose-200'
+                          : hasAllMandatoryDocs
+                          ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                          : 'bg-amber-50 text-amber-800 border border-amber-200'
                       }`}
                     >
-                      {mandatoryUploadedCount} of {MANDATORY_DOCS.length} Mandatory Certificates Uploaded
+                      {flaggedMandatoryCount > 0
+                        ? `⚠️ ${flaggedMandatoryCount} of ${MANDATORY_DOCS.length} Certificates Have Discrepancies`
+                        : hasAllMandatoryDocs
+                        ? '✓ All 3 Mandatory Certificates Verified Clean'
+                        : `${mandatoryCleanCount} of ${MANDATORY_DOCS.length} Mandatory Certificates Verified`}
                     </span>
                   </div>
                 </div>
@@ -1018,13 +1060,13 @@ STATUS:            ${doc.flagged ? 'FLAGGED: ' + doc.flag_reason : 'VERIFIED COM
                               <span className="inline-flex items-center px-2.5 py-1 rounded bg-slate-100 text-slate-400 text-xs font-semibold">
                                 Bidding Closed
                               </span>
-                            ) : !hasAllMandatoryDocs ? (
+                            ) : !isClearedToBid ? (
                               <button
                                 type="button"
                                 onClick={() => handleTabChange('docs')}
-                                className="inline-flex items-center space-x-1 px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold transition border border-amber-200 cursor-pointer"
+                                className="inline-flex items-center space-x-1 px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-800 text-xs font-bold transition border border-rose-200 cursor-pointer"
                               >
-                                <span>Upload Docs to Bid</span>
+                                <span>{hasFlaggedDocs ? '⚠️ Resolve Discrepancy to Bid' : 'Upload Docs to Bid'}</span>
                                 <ArrowUpRight className="w-3.5 h-3.5" />
                               </button>
                             ) : (
@@ -1762,14 +1804,14 @@ STATUS:            ${doc.flagged ? 'FLAGGED: ' + doc.flag_reason : 'VERIFIED COM
                             <div className="w-full py-2 text-center text-xs text-slate-400 bg-slate-50 border border-slate-200 rounded-xl font-semibold">
                               Bidding closed for this tender ({isAwarded ? 'Contract Awarded' : 'Closed'})
                             </div>
-                          ) : !hasAllMandatoryDocs ? (
+                          ) : !isClearedToBid ? (
                             <button
                               type="button"
                               onClick={() => handleTabChange('docs')}
-                              className="w-full inline-flex items-center justify-center space-x-1.5 bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-900 text-xs font-bold py-2.5 rounded-xl transition cursor-pointer"
+                              className="w-full inline-flex items-center justify-center space-x-1.5 bg-rose-50 hover:bg-rose-100 border border-rose-300 text-rose-900 text-xs font-bold py-2.5 rounded-xl transition cursor-pointer"
                             >
-                              <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
-                              <span>Upload Mandatory Docs to Unlock Bidding</span>
+                              <AlertTriangle className="w-3.5 h-3.5 text-rose-600" />
+                              <span>{hasFlaggedDocs ? '⚠️ Resolve Document Discrepancies to Bid' : 'Upload Mandatory Docs to Unlock Bidding'}</span>
                             </button>
                           ) : (
                             <button
