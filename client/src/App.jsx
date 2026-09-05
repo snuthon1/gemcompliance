@@ -82,9 +82,9 @@ function AppLayout() {
 
           <div className="px-4 sm:px-8 py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
             <div className="flex items-center space-x-2.5">
-              <span className="font-bold text-[#0B2546]">National Procurement Compliance Portal</span>
+              <span className="font-bold text-[#0B2546]">GeM-CPCL Bid Compliance Portal</span>
               <span className="text-slate-300">|</span>
-              <span className="text-slate-500 font-medium">Government of India &bull; CPCL</span>
+              <span className="text-slate-500 font-medium">Automated Bidder Verification &bull; Ministry of Petroleum &amp; Natural Gas</span>
             </div>
 
             <div className="flex items-center space-x-3 text-[11px] font-mono text-slate-500">
