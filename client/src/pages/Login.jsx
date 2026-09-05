@@ -282,18 +282,7 @@ export default function Login() {
               </div>
             </div>
 
-            {/* Helpdesk & Support Strip */}
-            <div className="bg-white rounded-lg border border-slate-200 p-3.5 flex items-center justify-between text-xs text-slate-600">
-              <div className="flex items-center space-x-2">
-                <Headphones className="w-4 h-4 text-[#0B2546]" />
-                <span>
-                  Technical Helpdesk: <strong className="text-slate-900 font-mono">044-2594 4000</strong> / <span className="text-[#0B2546]">eproc-support@cpcl.co.in</span>
-                </span>
-              </div>
-              <span className="text-[10px] text-slate-400 font-mono hidden sm:inline">
-                Mon - Fri (09:30 - 17:30 IST)
-              </span>
-            </div>
+
           </div>
 
           {/* RIGHT COLUMN (5 cols): Official Government Sign-In Form */}
