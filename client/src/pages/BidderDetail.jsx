@@ -26,6 +26,7 @@ import {
   FileCode2,
   AlertCircle
 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 const HUMAN_CHECK_NAMES = {
   UDYAM_STATUS: 'MSME Udyam Registration Status',
@@ -38,6 +39,7 @@ const HUMAN_CHECK_NAMES = {
 
 export default function BidderDetail() {
   const { bidder_id } = useParams();
+  const { user } = useAuth();
   const [bidder, setBidder] = useState(null);
   const [compliance, setCompliance] = useState(null);
   const [auditLogs, setAuditLogs] = useState([]);
@@ -801,7 +803,7 @@ export default function BidderDetail() {
             </h3>
           </div>
           <span className="text-xs text-slate-300">
-            Authenticated as: <strong className="text-white">Officer R. K. Sharma</strong>
+            Authenticated as: <strong className="text-white">{user?.name || 'Demo Procurement Officer'}</strong>
           </span>
         </div>
 
