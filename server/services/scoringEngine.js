@@ -27,12 +27,13 @@ const CHECK_WEIGHTS = {
  * @param {Array} verificationResults Array of VerificationResult records
  * @returns {Object} { score, risk, recommendation, flags }
  */
-function calculateScore(verificationResults) {
+function calculateScore(verificationResults, documents = []) {
   const flags = [];
   let failedWeightsSum = 0;
   let isBlacklisted = false;
   let isNameMismatch = false;
 
+  // 1. Process 6-point statutory checks from central registries
   for (const check of verificationResults) {
     if (check.match_status === 'Mismatch') {
       const weight = CHECK_WEIGHTS[check.check_type] || 0;
@@ -71,18 +72,35 @@ function calculateScore(verificationResults) {
     }
   }
 
+  // 2. Process uploaded statutory documents discrepancies from the vault
+  const flaggedDocs = (documents || []).filter(
+    d => d && (d.flagged === 1 || d.flagged === '1' || d.flagged === true || (d.flag_reason && d.flag_reason.trim().length > 0))
+  );
+
+  for (const doc of flaggedDocs) {
+    const reason = doc.flag_reason || `Discrepancy detected in uploaded ${doc.doc_type || 'statutory'} certificate`;
+    flags.push(`Statutory Document Discrepancy (${doc.doc_type || 'Document'}): ${reason}`);
+    failedWeightsSum += 25; // Significant penalty per flagged document
+  }
+
   // 1. Hard Override: If BLACKLIST_CHECK is Mismatch -> score = 0, High, Non-Compliant
   if (isBlacklisted) {
     return {
       score: 0,
       risk: 'High',
       recommendation: 'Non-Compliant',
-      flags
+      flags,
+      flaggedDocuments: flaggedDocs
     };
   }
 
-  // 2. Calculate score normally
-  const score = Math.max(0, 100 - failedWeightsSum);
+  // 2. Calculate score
+  let score = Math.max(0, 100 - failedWeightsSum);
+
+  // If ANY document is flagged, score cannot exceed 75 and risk CANNOT be Low!
+  if (flaggedDocs.length > 0) {
+    score = Math.min(score, 75);
+  }
 
   // Normal risk & recommendation mapping
   let risk = 'Low';
@@ -99,18 +117,31 @@ function calculateScore(verificationResults) {
     recommendation = 'Non-Compliant';
   }
 
-  // 3. Rule: If NAME_MATCH mismatch AND resulting risk would be "Low"
-  // Downgrade to "Medium" / "Needs Clarification" regardless of score
+  // Rule: If NAME_MATCH mismatch AND resulting risk would be "Low" -> downgrade to "Medium"
   if (isNameMismatch && risk === 'Low') {
     risk = 'Medium';
     recommendation = 'Needs Clarification';
+  }
+
+  // Rule: If ANY document has a discrepancy, risk CANNOT be Low
+  if (flaggedDocs.length > 0 && risk === 'Low') {
+    risk = 'Medium';
+    recommendation = 'Needs Clarification';
+  }
+
+  // Rule: If 2 or more documents are flagged, escalate to High Risk
+  if (flaggedDocs.length >= 2) {
+    risk = 'High';
+    recommendation = 'Non-Compliant';
+    score = Math.min(score, 50);
   }
 
   return {
     score,
     risk,
     recommendation,
-    flags
+    flags,
+    flaggedDocuments: flaggedDocs
   };
 }
 
