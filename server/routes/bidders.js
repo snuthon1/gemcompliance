@@ -154,6 +154,66 @@ router.get('/:bidder_id/documents', async (req, res) => {
   }
 });
 
+// DELETE /api/bidders/:bidder_id/documents/:doc_id
+router.delete('/:bidder_id/documents/:doc_id', async (req, res) => {
+  const { bidder_id, doc_id } = req.params;
+  try {
+    const doc = await prisma.document.findFirst({
+      where: { doc_id, bidder_id }
+    });
+    if (!doc) {
+      return res.status(404).json({ success: false, message: 'Document not found' });
+    }
+
+    await prisma.document.delete({
+      where: { doc_id }
+    });
+
+    await prisma.auditLog.create({
+      data: {
+        bidder_id,
+        action: 'DOCUMENT_DELETED',
+        performed_by: 'Vendor / Officer',
+        details: `Deleted statutory certificate "${doc.doc_type}" (${doc.file_url || doc_id})`
+      }
+    });
+
+    res.json({ success: true, message: 'Document deleted successfully', doc_id });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// PUT /api/bidders/:bidder_id
+router.put('/:bidder_id', async (req, res) => {
+  const { bidder_id } = req.params;
+  const { phone, email, registered_address } = req.body;
+  try {
+    const data = {};
+    if (phone !== undefined) data.phone = phone;
+    if (email !== undefined) data.email = email;
+    if (registered_address !== undefined) data.registered_address = registered_address;
+
+    const updated = await prisma.bidder.update({
+      where: { bidder_id },
+      data
+    });
+
+    await prisma.auditLog.create({
+      data: {
+        bidder_id,
+        action: 'PROFILE_UPDATED',
+        performed_by: 'Vendor',
+        details: 'Updated corporate profile contact and registered details'
+      }
+    });
+
+    res.json({ success: true, message: 'Profile updated successfully', bidder: updated });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // POST /api/bidders/:bidder_id/verify
 // Runs 6 verification checks, calculates score, logs audit entry, returns full results
 router.post('/:bidder_id/verify', async (req, res) => {
