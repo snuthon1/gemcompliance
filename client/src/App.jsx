@@ -61,12 +61,12 @@ function AppLayout() {
   // If user is not logged in or is on /login, render only Login screen without sidebar
   if (!user || isLoginPage) {
     return (
-      <main className="min-h-screen bg-[#F8FAFC]">
+      <div className="min-h-screen flex flex-col bg-[#F8FAFC]">
         <Routes>
           <Route path="/login" element={<LoginRoute />} />
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
-      </main>
+      </div>
     );
   }
 
