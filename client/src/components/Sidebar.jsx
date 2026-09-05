@@ -222,9 +222,9 @@ export default function Sidebar() {
         />
       )}
 
-      {/* Clean White Sidebar Container */}
+      {/* Executive Government Navy Sidebar Container */}
       <aside
-        className={`fixed top-0 bottom-0 left-0 z-50 w-64 bg-white text-slate-800 border-r border-slate-200 flex flex-col justify-between transition-transform duration-200 ease-in-out md:translate-x-0 shadow-xs ${
+        className={`fixed top-0 bottom-0 left-0 z-50 w-64 bg-[#07182D] text-slate-100 border-r border-slate-800 flex flex-col justify-between transition-transform duration-200 ease-in-out md:translate-x-0 shadow-xl ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         }`}
       >
@@ -233,25 +233,25 @@ export default function Sidebar() {
           {/* National Tricolor Line */}
           <div className="h-1.5 w-full flex">
             <div className="h-full w-1/3 bg-[#FF671F]"></div>
-            <div className="h-full w-1/3 bg-white border-y border-slate-100"></div>
+            <div className="h-full w-1/3 bg-white"></div>
             <div className="h-full w-1/3 bg-[#046A38]"></div>
           </div>
 
-          <div className="p-3.5 border-b border-slate-200 bg-white flex items-center justify-between">
+          <div className="p-3.5 border-b border-slate-800/80 bg-[#0B2546]/80 flex items-center justify-between">
             <Link
               to={isOfficer ? '/tenders' : '/vendor'}
               onClick={() => setMobileOpen(false)}
               className="flex items-center space-x-2.5 group"
             >
-              <NationalEmblem className="w-9 h-11 shrink-0" />
+              <NationalEmblem className="w-9 h-11 shrink-0" color="#FCD34D" />
               <div className="flex flex-col min-w-0">
-                <span className="text-[9px] font-bold text-slate-500 tracking-wider uppercase font-mono">
+                <span className="text-[9px] font-bold text-amber-400 tracking-wider uppercase font-mono">
                   भारत सरकार
                 </span>
-                <span className="text-xs font-extrabold text-[#0B2546] tracking-tight leading-tight">
+                <span className="text-xs font-extrabold text-white tracking-tight leading-tight">
                   GeM-CPCL Bid Compliance
                 </span>
-                <span className="text-[9px] text-slate-500 font-semibold mt-0.5">
+                <span className="text-[9px] text-slate-300 font-medium mt-0.5">
                   Ministry of Petroleum &amp; Natural Gas
                 </span>
               </div>
@@ -259,19 +259,19 @@ export default function Sidebar() {
 
             <button
               onClick={() => setMobileOpen(false)}
-              className="md:hidden text-slate-400 hover:text-slate-600 p-1"
+              className="md:hidden text-slate-400 hover:text-white p-1"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
 
           {/* Subheader Role Pillar Badge */}
-          <div className="px-3.5 py-1.5 bg-slate-50 border-b border-slate-200/80 text-[10px] text-slate-600 font-medium flex items-center justify-between">
-            <span className="font-bold text-[#0B2546] flex items-center gap-1 text-[10px]">
-              <span className={`w-1.5 h-1.5 rounded-full ${isOfficer ? 'bg-[#0B2546]' : 'bg-emerald-500'}`}></span>
+          <div className="px-3.5 py-1.5 bg-[#051324] border-b border-slate-800 text-[10px] text-slate-300 font-medium flex items-center justify-between">
+            <span className="font-bold text-emerald-400 flex items-center gap-1.5 text-[10px]">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
               {isOfficer ? 'OFFICER COMMITTEE' : 'VENDOR DESK'}
             </span>
-            <span className="font-mono text-slate-500 text-[9px] bg-white border border-slate-200 px-1.5 py-0.5 rounded font-bold">
+            <span className="font-mono text-amber-300 text-[9px] bg-amber-500/10 border border-amber-500/30 px-1.5 py-0.5 rounded font-bold">
               {isOfficer ? 'GFR 2017 • CVC' : 'GeM Registered'}
             </span>
           </div>
@@ -294,11 +294,11 @@ export default function Sidebar() {
                       onClick={() => setMobileOpen(false)}
                       className={`flex items-center space-x-2.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
                         item.active
-                          ? 'bg-[#0B2546] text-white shadow-xs'
-                          : 'text-slate-600 hover:text-[#0B2546] hover:bg-slate-100'
+                          ? 'bg-blue-600/30 text-white font-bold border-l-4 border-amber-400 shadow-xs'
+                          : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
                       }`}
                     >
-                      <Icon className={`w-4 h-4 shrink-0 ${item.active ? 'text-white' : 'text-slate-500'}`} />
+                      <Icon className={`w-4 h-4 shrink-0 ${item.active ? 'text-amber-400' : 'text-slate-400'}`} />
                       <span className="truncate text-xs">{item.name}</span>
                     </Link>
                   );
@@ -309,18 +309,18 @@ export default function Sidebar() {
         </div>
 
         {/* Bottom Section: User Profile & Logout */}
-        <div className="shrink-0 p-2.5 border-t border-slate-200 bg-slate-50">
+        <div className="shrink-0 p-2.5 border-t border-slate-800 bg-[#051324]">
           {user && (
-            <div className="p-2 rounded-lg bg-white border border-slate-200 flex items-center justify-between gap-2 shadow-2xs">
+            <div className="p-2 rounded-lg bg-[#0B2546]/80 border border-slate-700/80 flex items-center justify-between gap-2 shadow-sm">
               <div className="flex items-center space-x-2 min-w-0">
-                <div className="w-7 h-7 rounded-md bg-slate-100 text-[#0B2546] flex items-center justify-center font-bold text-xs shrink-0 border border-slate-300">
+                <div className="w-7 h-7 rounded-md bg-amber-400 text-[#07182D] flex items-center justify-center font-black text-xs shrink-0 shadow-2xs">
                   {getInitials(user.name || user.company_name)}
                 </div>
                 <div className="min-w-0 flex flex-col">
-                  <span className="text-xs font-bold text-slate-900 truncate">
+                  <span className="text-xs font-bold text-white truncate">
                     {user.name || user.company_name}
                   </span>
-                  <span className="text-[9px] text-[#0B2546] font-semibold truncate font-mono">
+                  <span className="text-[9px] text-amber-300/90 font-medium truncate font-mono">
                     {isOfficer ? 'Procurement Officer (Admin)' : `GST: ${user.gstin || 'Enrolled'}`}
                   </span>
                 </div>
@@ -328,7 +328,7 @@ export default function Sidebar() {
 
               <button
                 onClick={handleLogout}
-                className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded transition shrink-0 cursor-pointer"
+                className="p-1 text-slate-400 hover:text-rose-400 hover:bg-slate-800 rounded transition shrink-0 cursor-pointer"
                 title="Sign Out"
               >
                 <LogOut className="w-3.5 h-3.5" />
