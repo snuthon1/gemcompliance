@@ -1,25 +1,28 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
-  ShieldCheck,
-  Building2,
   Lock,
-  Mail,
-  ArrowRight,
-  CheckCircle2,
-  AlertCircle,
+  User,
+  Eye,
+  EyeOff,
+  Shield,
+  Clock,
+  FileCheck2,
+  HelpCircle,
+  Accessibility,
+  Headphones,
   Landmark,
-  KeyRound,
-  Search,
-  ExternalLink
+  AlertCircle
 } from 'lucide-react';
 import { useAuth, DEMO_PROFILES } from '../context/AuthContext';
+import NationalEmblem from '../components/NationalEmblem';
 
 export default function Login() {
   const [activeTab, setActiveTab] = useState('OFFICER'); // 'OFFICER' or 'VENDOR'
   const [email, setEmail] = useState('officer.sharma@cpcl.gov.in');
   const [password, setPassword] = useState('••••••••••••');
   const [selectedVendorKey, setSelectedVendorKey] = useState('apex');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -77,259 +80,363 @@ export default function Login() {
         }
       }
     } catch (err) {
-      setError('Authentication failed. Please verify credentials or security token.');
+      setError('Authentication failed. Please verify credentials.');
     } finally {
       setSubmitting(false);
     }
   };
 
-  return (
-    <div
-      className="min-h-screen w-full bg-slate-900 bg-cover bg-top bg-no-repeat relative flex flex-col justify-between selection:bg-gov-saffron selection:text-white"
-      style={{ backgroundImage: "url('/gem_portal_bg.png')" }}
-    >
-      {/* Semi-transparent dark overlay to keep the GeM portal background visible while making the auth card high-contrast */}
-      <div className="absolute inset-0 bg-slate-950/55 backdrop-blur-[1.5px]"></div>
+  const handleSSO = () => {
+    handleSubmit({ preventDefault: () => {} });
+  };
 
-      {/* Interactive GeM Header Bar overlay */}
-      <div className="relative z-20">
+  return (
+    <div className="min-h-screen bg-[#F8FAFC] flex flex-col justify-between text-slate-800 selection:bg-amber-500 selection:text-white relative overflow-hidden font-sans">
+      {/* Background Ashoka Chakra Watermark & Architectural Sky */}
+      <div className="absolute inset-0 pointer-events-none flex items-center justify-center overflow-hidden z-0">
+        {/* Soft radial blue-tint gradient */}
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-sky-100/40 rounded-full blur-3xl -mr-48 -mt-48"></div>
+        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-slate-200/40 rounded-full blur-3xl -ml-48 -mb-48"></div>
+
+        {/* Ashoka Chakra 24-Spoke Geometric Watermark */}
+        <svg
+          viewBox="0 0 200 200"
+          className="w-[750px] h-[750px] text-slate-300 opacity-[0.09] absolute select-none"
+          fill="none"
+          stroke="currentColor"
+        >
+          <circle cx="100" cy="100" r="92" strokeWidth="3" />
+          <circle cx="100" cy="100" r="84" strokeWidth="1.5" strokeDasharray="3 3" />
+          <circle cx="100" cy="100" r="16" strokeWidth="3" />
+          <circle cx="100" cy="100" r="6" fill="currentColor" />
+          {Array.from({ length: 24 }).map((_, i) => (
+            <line
+              key={i}
+              x1="100"
+              y1="100"
+              x2={100 + 92 * Math.cos((i * 15 * Math.PI) / 180)}
+              y2={100 + 92 * Math.sin((i * 15 * Math.PI) / 180)}
+              strokeWidth="1.8"
+            />
+          ))}
+        </svg>
+      </div>
+
+      {/* Top Section: Tricolor Line & Header */}
+      <div className="relative z-10">
         {/* National Tricolor Line */}
-        <div className="h-1 w-full flex">
-          <div className="h-full w-1/3 bg-gov-saffron"></div>
+        <div className="h-1.5 w-full flex">
+          <div className="h-full w-1/3 bg-[#FF671F]"></div>
           <div className="h-full w-1/3 bg-white"></div>
-          <div className="h-full w-1/3 bg-gov-green"></div>
+          <div className="h-full w-1/3 bg-[#046A38]"></div>
         </div>
 
-        <header className="bg-gov-navyDark/90 backdrop-blur-md border-b border-slate-700/80 px-4 sm:px-8 py-2.5 flex items-center justify-between text-white shadow-md">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 rounded bg-white text-gov-navy flex items-center justify-center font-bold shadow-sm">
-              <Landmark className="w-5 h-5 text-gov-navy" />
-            </div>
-            <div>
-              <div className="flex items-center space-x-2">
-                <span className="font-extrabold text-sm tracking-tight text-white">
-                  Government e-Marketplace &bull; GeM
-                </span>
-                <span className="bg-gov-saffron text-white font-mono text-[9px] font-extrabold px-1.5 py-0.5 rounded uppercase">
-                  BidShield
-                </span>
+        {/* Clean Official White Masthead */}
+        <header className="bg-white border-b border-slate-200 py-4 px-6 sm:px-12 shadow-xs">
+          <div className="max-w-7xl mx-auto flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <NationalEmblem className="w-10 h-12 shrink-0" />
+              <div className="flex flex-col">
+                <h1 className="text-xl sm:text-2xl font-extrabold text-[#0B2546] tracking-tight">
+                  National Procurement Compliance Portal
+                </h1>
+                <p className="text-xs sm:text-sm text-slate-500 font-semibold tracking-wide">
+                  Government of India &bull; Ministry of Petroleum & Natural Gas (CPCL)
+                </p>
               </div>
-              <span className="text-[10px] text-slate-300 font-mono">
-                Ministry of Petroleum & Natural Gas &bull; CPCL SIH26100
-              </span>
             </div>
-          </div>
 
-          <div className="hidden md:flex items-center space-x-4 text-xs">
-            <span className="text-slate-300 font-medium">GFR 2017 Compliance Engine</span>
-            <span className="text-slate-500">|</span>
-            <span className="bg-gov-navyLight text-gov-saffron font-mono text-[10px] font-bold px-2 py-0.5 rounded border border-slate-700">
-              Official Single Sign-On (SSO)
-            </span>
+            <div className="hidden md:flex items-center space-x-2 text-xs font-mono text-slate-500 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span>BidShield &bull; SIH26100</span>
+            </div>
           </div>
         </header>
       </div>
 
-      {/* Center GeM SSO Modal / Card */}
-      <div className="relative z-20 max-w-md w-full mx-auto px-4 py-8 my-auto">
-        <div className="bg-white rounded-2xl shadow-2xl border-2 border-slate-200 overflow-hidden">
-          {/* Card Top Banner */}
-          <div className="bg-gov-navy text-white px-6 py-4 border-b border-slate-800 flex items-center justify-between">
-            <div className="flex items-center space-x-2.5">
-              <div className="w-8 h-8 rounded-lg bg-white/10 border border-white/20 flex items-center justify-center">
-                <ShieldCheck className="w-5 h-5 text-gov-saffron" />
+      {/* Main Content Area */}
+      <main className="relative z-10 max-w-7xl mx-auto w-full px-6 sm:px-12 py-10 my-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+          {/* Left Column: Hero Typography & Feature Cards */}
+          <div className="lg:col-span-7 space-y-8">
+            <div className="space-y-4">
+              <h1 className="text-4xl sm:text-5xl font-extrabold text-[#0B2546] tracking-tight leading-[1.15]">
+                Transparent procurement. <br />
+                Trusted outcomes.
+              </h1>
+              <p className="text-sm sm:text-base text-slate-600 leading-relaxed max-w-xl">
+                AI-assisted bid compliance verification that helps government officers ensure fairness, reduce risk, and deliver accountable public procurement.
+              </p>
+            </div>
+
+            {/* 3 Clean Modern Feature Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+              <div className="bg-white/80 backdrop-blur-xs rounded-xl p-4 border border-slate-200 shadow-xs space-y-2">
+                <div className="w-10 h-10 rounded-lg border border-slate-200 bg-white flex items-center justify-center text-[#0B2546] shadow-2xs">
+                  <Shield className="w-5 h-5 stroke-[1.75]" />
+                </div>
+                <h3 className="text-xs font-bold text-[#0B2546] tracking-tight">Secure verification</h3>
+                <p className="text-[11px] text-slate-500 leading-relaxed">
+                  Verify bids with confidence using AI-assisted checks and data protection.
+                </p>
               </div>
-              <div>
-                <h2 className="text-sm font-bold tracking-tight text-white">
-                  GeM BidShield Authentication
-                </h2>
-                <p className="text-[10px] text-slate-300 font-mono">
-                  CPCL Statutory Pre-Qualification Portal
+
+              <div className="bg-white/80 backdrop-blur-xs rounded-xl p-4 border border-slate-200 shadow-xs space-y-2">
+                <div className="w-10 h-10 rounded-lg border border-slate-200 bg-white flex items-center justify-center text-[#0B2546] shadow-2xs">
+                  <Clock className="w-5 h-5 stroke-[1.75]" />
+                </div>
+                <h3 className="text-xs font-bold text-[#0B2546] tracking-tight">Faster review</h3>
+                <p className="text-[11px] text-slate-500 leading-relaxed">
+                  Automate compliance checks to reduce review time and speed decisions.
+                </p>
+              </div>
+
+              <div className="bg-white/80 backdrop-blur-xs rounded-xl p-4 border border-slate-200 shadow-xs space-y-2">
+                <div className="w-10 h-10 rounded-lg border border-slate-200 bg-white flex items-center justify-center text-[#0B2546] shadow-2xs">
+                  <FileCheck2 className="w-5 h-5 stroke-[1.75]" />
+                </div>
+                <h3 className="text-xs font-bold text-[#0B2546] tracking-tight">Complete audit trail</h3>
+                <p className="text-[11px] text-slate-500 leading-relaxed">
+                  Maintain an immutable record of actions for full transparency and oversight.
                 </p>
               </div>
             </div>
-            <span className="text-[9px] bg-gov-saffron text-white font-mono font-bold px-2 py-0.5 rounded uppercase">
-              Secure SSO
-            </span>
           </div>
 
-          <div className="p-6">
-            {/* Dual Persona Tab Selector */}
-            <div className="grid grid-cols-2 p-1 bg-slate-100 rounded-lg mb-5 border border-slate-200">
-              <button
-                type="button"
-                onClick={() => handleTabChange('OFFICER')}
-                className={`flex items-center justify-center space-x-1.5 py-2 px-3 rounded text-xs font-bold transition-all ${
-                  activeTab === 'OFFICER'
-                    ? 'bg-gov-navy text-white shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                <ShieldCheck className="w-3.5 h-3.5 text-gov-saffron" />
-                <span>PSU / Govt Officer</span>
-              </button>
+          {/* Right Column: Floating White Sign-In Card */}
+          <div className="lg:col-span-5 max-w-md w-full mx-auto">
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-xl shadow-slate-200/60 p-8 space-y-6">
+              {/* Officer / Vendor Selector Pills */}
+              <div className="grid grid-cols-2 p-1 bg-slate-100 rounded-xl border border-slate-200">
+                <button
+                  type="button"
+                  onClick={() => handleTabChange('OFFICER')}
+                  className={`py-2 px-3 rounded-lg text-xs font-bold transition-all ${
+                    activeTab === 'OFFICER'
+                      ? 'bg-white text-[#0B2546] shadow-sm'
+                      : 'text-slate-500 hover:text-slate-900'
+                  }`}
+                >
+                  Officer Sign In
+                </button>
 
-              <button
-                type="button"
-                onClick={() => handleTabChange('VENDOR')}
-                className={`flex items-center justify-center space-x-1.5 py-2 px-3 rounded text-xs font-bold transition-all ${
-                  activeTab === 'VENDOR'
-                    ? 'bg-gov-navy text-white shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                <Building2 className="w-3.5 h-3.5 text-gov-saffron" />
-                <span>Tender Bidder</span>
-              </button>
-            </div>
-
-            {error && (
-              <div className="mb-4 p-2.5 rounded bg-rose-50 border border-rose-200 flex items-center space-x-2 text-xs text-rose-700 font-semibold">
-                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
-                <span>{error}</span>
+                <button
+                  type="button"
+                  onClick={() => handleTabChange('VENDOR')}
+                  className={`py-2 px-3 rounded-lg text-xs font-bold transition-all ${
+                    activeTab === 'VENDOR'
+                      ? 'bg-white text-[#0B2546] shadow-sm'
+                      : 'text-slate-500 hover:text-slate-900'
+                  }`}
+                >
+                  Vendor Sign In
+                </button>
               </div>
-            )}
 
-            {/* Authentication Form */}
-            <form onSubmit={handleSubmit} className="space-y-3.5">
-              {activeTab === 'OFFICER' ? (
-                <>
-                  <div className="space-y-1">
-                    <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider">
-                      Government Email ID
-                    </label>
-                    <div className="relative">
-                      <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
-                      <input
-                        type="email"
-                        required
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder="officer.sharma@cpcl.gov.in"
-                        className="w-full bg-slate-50 border border-slate-300 rounded-lg pl-9 pr-3 py-2 text-xs font-mono text-slate-900 focus:outline-none focus:ring-1 focus:ring-gov-navy focus:border-gov-navy"
-                      />
-                    </div>
-                  </div>
+              {/* Title & Subtitle */}
+              <div className="space-y-1">
+                <h2 className="text-2xl font-extrabold text-[#0B2546] tracking-tight">
+                  {activeTab === 'OFFICER' ? 'Officer Sign In' : 'Vendor Sign In'}
+                </h2>
+                <p className="text-xs text-slate-500">
+                  {activeTab === 'OFFICER'
+                    ? 'Sign in to access your departmental dashboard.'
+                    : 'Sign in to access your enterprise vendor portal.'}
+                </p>
+              </div>
 
-                  <div className="space-y-1">
-                    <div className="flex items-center justify-between">
-                      <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider">
-                        DSC Token Passcode
+              {error && (
+                <div className="p-3 rounded-lg bg-rose-50 border border-rose-200 flex items-center space-x-2 text-xs text-rose-700 font-semibold">
+                  <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                  <span>{error}</span>
+                </div>
+              )}
+
+              {/* Form Inputs */}
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {activeTab === 'OFFICER' ? (
+                  <>
+                    <div className="space-y-1.5">
+                      <label className="block text-xs font-semibold text-slate-700">
+                        Official email address
                       </label>
-                      <span className="text-[10px] text-gov-green font-bold flex items-center">
-                        <CheckCircle2 className="w-3 h-3 mr-1" />
-                        Class-3 DSC Token Active
-                      </span>
+                      <div className="relative">
+                        <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+                        <input
+                          type="email"
+                          required
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          placeholder="name@department.gov.in"
+                          className="w-full bg-white border border-slate-300 rounded-lg pl-10 pr-3 py-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0B2546]/15 focus:border-[#0B2546]"
+                        />
+                      </div>
                     </div>
-                    <div className="relative">
-                      <KeyRound className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
-                      <input
-                        type="password"
-                        required
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        placeholder="••••••••••••"
-                        className="w-full bg-slate-50 border border-slate-300 rounded-lg pl-9 pr-3 py-2 text-xs font-mono text-slate-900 focus:outline-none focus:ring-1 focus:ring-gov-navy focus:border-gov-navy"
-                      />
+
+                    <div className="space-y-1.5">
+                      <label className="block text-xs font-semibold text-slate-700">
+                        Password
+                      </label>
+                      <div className="relative">
+                        <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+                        <input
+                          type={showPassword ? 'text' : 'password'}
+                          required
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          placeholder="••••••••••••"
+                          className="w-full bg-white border border-slate-300 rounded-lg pl-10 pr-10 py-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0B2546]/15 focus:border-[#0B2546]"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-3 text-slate-400 hover:text-slate-600"
+                        >
+                          {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="space-y-1">
-                    <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider">
-                      Select Participating Bidder
-                    </label>
-                    <div className="relative">
-                      <Building2 className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+                  </>
+                ) : (
+                  <>
+                    <div className="space-y-1.5">
+                      <label className="block text-xs font-semibold text-slate-700">
+                        Registered Bidder Enterprise
+                      </label>
                       <select
                         value={selectedVendorKey}
                         onChange={(e) => handleVendorSelect(e.target.value)}
-                        className="w-full bg-slate-50 border border-slate-300 rounded-lg pl-9 pr-3 py-2 text-xs font-semibold text-slate-800 focus:outline-none focus:ring-1 focus:ring-gov-navy cursor-pointer"
+                        className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2.5 text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0B2546]/15 focus:border-[#0B2546] cursor-pointer"
                       >
-                        <option value="apex">Apex Petrochem Engineering (33AAACA1234A1Z5)</option>
+                        <option value="apex">Apex Petrochem Engineering Pvt Ltd (33AAACA1234A1Z5)</option>
                         <option value="coromandel">Coromandel Heavy Valves Ltd (33BBBCB5678B1Z2)</option>
                         <option value="kaveri">Kaveri Refining Spares Ltd (33DDDCD4321D1Z4)</option>
                       </select>
                     </div>
-                  </div>
 
-                  <div className="space-y-1">
-                    <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider">
-                      Authorized Signatory Email
-                    </label>
-                    <div className="relative">
-                      <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
-                      <input
-                        type="email"
-                        required
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder="tenders@company.com"
-                        className="w-full bg-slate-50 border border-slate-300 rounded-lg pl-9 pr-3 py-2 text-xs font-mono text-slate-900 focus:outline-none focus:ring-1 focus:ring-gov-navy focus:border-gov-navy"
-                      />
+                    <div className="space-y-1.5">
+                      <label className="block text-xs font-semibold text-slate-700">
+                        Authorized email address
+                      </label>
+                      <div className="relative">
+                        <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+                        <input
+                          type="email"
+                          required
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          placeholder="tenders@company.com"
+                          className="w-full bg-white border border-slate-300 rounded-lg pl-10 pr-3 py-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0B2546]/15 focus:border-[#0B2546]"
+                        />
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="space-y-1">
-                    <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider">
-                      Commercial Access PIN
-                    </label>
-                    <div className="relative">
-                      <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
-                      <input
-                        type="password"
-                        required
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        placeholder="••••••••••••"
-                        className="w-full bg-slate-50 border border-slate-300 rounded-lg pl-9 pr-3 py-2 text-xs font-mono text-slate-900 focus:outline-none focus:ring-1 focus:ring-gov-navy focus:border-gov-navy"
-                      />
+                    <div className="space-y-1.5">
+                      <label className="block text-xs font-semibold text-slate-700">
+                        Portal access password
+                      </label>
+                      <div className="relative">
+                        <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+                        <input
+                          type={showPassword ? 'text' : 'password'}
+                          required
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          placeholder="••••••••••••"
+                          className="w-full bg-white border border-slate-300 rounded-lg pl-10 pr-10 py-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0B2546]/15 focus:border-[#0B2546]"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-3 text-slate-400 hover:text-slate-600"
+                        >
+                          {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                </>
-              )}
+                  </>
+                )}
 
-              <div className="flex items-center justify-between text-xs text-slate-500 pt-1">
-                <label className="flex items-center space-x-2 cursor-pointer text-[11px]">
-                  <input type="checkbox" defaultChecked className="rounded border-slate-300 text-gov-navy focus:ring-gov-navy" />
-                  <span>Remember session</span>
-                </label>
-                <span className="font-mono text-[10px] text-slate-400">NIC-SSO 256-Bit TLS</span>
+                {/* Remember Me & Forgot Password */}
+                <div className="flex items-center justify-between text-xs text-slate-600 pt-0.5">
+                  <label className="flex items-center space-x-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      defaultChecked
+                      className="rounded border-slate-300 text-[#0B2546] focus:ring-[#0B2546]"
+                    />
+                    <span>Remember this device</span>
+                  </label>
+                  <a href="#" className="text-xs font-semibold text-[#0B2546] hover:underline">
+                    Forgot password?
+                  </a>
+                </div>
+
+                {/* Primary Button */}
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="w-full py-3 px-4 rounded-lg bg-[#0B2546] hover:bg-[#07182D] text-white font-bold text-sm shadow-md transition-all flex items-center justify-center space-x-2 disabled:opacity-50 mt-2 cursor-pointer"
+                >
+                  <span>Sign in securely</span>
+                </button>
+
+                {/* Divider */}
+                <div className="relative flex items-center justify-center my-3">
+                  <div className="border-t border-slate-200 w-full"></div>
+                  <span className="bg-white px-3 text-xs text-slate-400 font-semibold uppercase tracking-wider">
+                    OR
+                  </span>
+                  <div className="border-t border-slate-200 w-full"></div>
+                </div>
+
+                {/* Secondary Button: Continue with Government SSO */}
+                <button
+                  type="button"
+                  onClick={handleSSO}
+                  className="w-full py-2.5 px-4 rounded-lg border-2 border-[#0B2546] text-[#0B2546] hover:bg-slate-50 font-bold text-xs transition-all flex items-center justify-center space-x-2 cursor-pointer"
+                >
+                  <Landmark className="w-4 h-4 text-[#0B2546]" />
+                  <span>Continue with Government SSO</span>
+                </button>
+              </form>
+
+              {/* Security Footnote */}
+              <div className="pt-2 flex items-center justify-center space-x-2 text-xs text-slate-500 text-center">
+                <Shield className="w-3.5 h-3.5 text-slate-400" />
+                <span>For authorized departmental officers only</span>
               </div>
-
-              <button
-                type="submit"
-                disabled={submitting}
-                className="w-full py-2.5 px-4 rounded-lg bg-gov-navy hover:bg-gov-navyLight text-white text-xs font-bold shadow transition-all flex items-center justify-center space-x-2 disabled:opacity-50 mt-2 cursor-pointer"
-              >
-                <span>
-                  {activeTab === 'OFFICER'
-                    ? 'Authenticate Officer via e-Token / DSC'
-                    : 'Access Vendor Commercial Desk'}
-                </span>
-                <ArrowRight className="w-4 h-4 text-gov-saffron" />
-              </button>
-            </form>
-
-            <div className="mt-4 pt-3 border-t border-slate-200 text-[10px] text-slate-500 text-center font-mono">
-              Protected by Section 43/66 IT Act 2000 & GFR 2017 Audit Protocol
             </div>
           </div>
         </div>
-      </div>
+      </main>
 
-      {/* Footer Strip */}
-      <div className="relative z-20 bg-gov-navyDark/95 border-t border-slate-800 px-4 py-2.5 text-[11px] text-slate-400 flex flex-col sm:flex-row items-center justify-between gap-1">
-        <div className="flex items-center space-x-2">
-          <span className="text-white font-bold">Government e-Marketplace (GeM)</span>
-          <span>&bull;</span>
-          <span>National Public Procurement Portal</span>
+      {/* Bottom Footer: Official Links & NIC Partner */}
+      <footer className="relative z-10 bg-white border-t border-slate-200 py-4 px-6 sm:px-12 text-xs text-slate-600">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center space-x-6">
+            <a href="#" className="flex items-center space-x-1.5 hover:text-[#0B2546] transition">
+              <Accessibility className="w-4 h-4 text-slate-500" />
+              <span className="font-semibold">Accessibility</span>
+            </a>
+            <span className="text-slate-300">|</span>
+            <a href="#" className="flex items-center space-x-1.5 hover:text-[#0B2546] transition">
+              <Shield className="w-4 h-4 text-slate-500" />
+              <span className="font-semibold">Privacy Policy</span>
+            </a>
+            <span className="text-slate-300">|</span>
+            <a href="#" className="flex items-center space-x-1.5 hover:text-[#0B2546] transition">
+              <Headphones className="w-4 h-4 text-slate-500" />
+              <span className="font-semibold">Helpdesk</span>
+            </a>
+          </div>
+
+          <div className="flex items-center space-x-2 text-slate-500">
+            <span className="text-[11px] font-medium">Digital Technology Partner</span>
+            <span className="text-base font-black tracking-tight text-[#0066CC]">NIC</span>
+          </div>
         </div>
-        <div className="font-mono text-[10px]">
-          Chennai Petroleum Corporation Limited (CPCL) &bull; SIH26100
-        </div>
-      </div>
+      </footer>
     </div>
   );
 }
