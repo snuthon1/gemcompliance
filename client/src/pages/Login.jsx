@@ -68,12 +68,12 @@ export default function Login() {
     <div className="min-h-[85vh] flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
         {/* Logo and branding */}
-        <div className="inline-flex items-center justify-center p-3 bg-cpcl-navy rounded-2xl shadow-lg border border-slate-700 mb-4">
-          <ShieldCheck className="w-9 h-9 text-cpcl-orange" />
+        <div className="inline-flex items-center justify-center p-3 bg-slate-900 rounded-2xl shadow-lg border border-slate-700 mb-4">
+          <ShieldCheck className="w-9 h-9 text-brand-400" />
         </div>
         <div className="flex items-center justify-center space-x-2">
           <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">BidShield</h1>
-          <span className="bg-cpcl-orange/10 border border-cpcl-orange/30 text-cpcl-orange text-xs font-bold px-2 py-0.5 rounded font-mono uppercase">
+          <span className="bg-brand-50 border border-brand-200 text-brand-700 text-xs font-bold px-2 py-0.5 rounded font-mono uppercase">
             GeM Edition
           </span>
         </div>
@@ -95,11 +95,11 @@ export default function Login() {
               }}
               className={`flex items-center justify-center space-x-2 py-2.5 px-3 rounded-lg text-xs font-bold transition ${
                 activeTab === 'OFFICER'
-                  ? 'bg-cpcl-navy text-white shadow-md'
+                  ? 'bg-slate-900 text-white shadow-md'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
               }`}
             >
-              <ShieldCheck className="w-4 h-4 text-cpcl-orange" />
+              <ShieldCheck className="w-4 h-4 text-brand-400" />
               <span>Government / PSU Officer</span>
             </button>
 
@@ -111,7 +111,7 @@ export default function Login() {
               }}
               className={`flex items-center justify-center space-x-2 py-2.5 px-3 rounded-lg text-xs font-bold transition ${
                 activeTab === 'VENDOR'
-                  ? 'bg-cpcl-orange text-white shadow-md'
+                  ? 'bg-brand-600 text-white shadow-md'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
               }`}
             >
@@ -161,7 +161,7 @@ export default function Login() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="officer.sharma@cpcl.gov.in"
-                      className="w-full bg-slate-50 border border-slate-300 rounded-lg pl-9 pr-3 py-2 text-xs font-mono text-slate-900 focus:outline-none focus:ring-1 focus:ring-cpcl-orange"
+                      className="w-full bg-slate-50 border border-slate-300 rounded-lg pl-9 pr-3 py-2 text-xs font-mono text-slate-900 focus:outline-none focus:ring-1 focus:ring-brand-500"
                     />
                   </div>
                 </div>
@@ -177,7 +177,7 @@ export default function Login() {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="••••••••••••"
-                      className="w-full bg-slate-50 border border-slate-300 rounded-lg pl-9 pr-3 py-2 text-xs font-mono text-slate-900 focus:outline-none focus:ring-1 focus:ring-cpcl-orange"
+                      className="w-full bg-slate-50 border border-slate-300 rounded-lg pl-9 pr-3 py-2 text-xs font-mono text-slate-900 focus:outline-none focus:ring-1 focus:ring-brand-500"
                     />
                   </div>
                 </div>
@@ -191,7 +191,7 @@ export default function Login() {
                   <select
                     value={selectedVendorKey}
                     onChange={(e) => setSelectedVendorKey(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-xs font-semibold text-slate-800 focus:outline-none focus:ring-1 focus:ring-cpcl-orange cursor-pointer"
+                    className="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-xs font-semibold text-slate-800 focus:outline-none focus:ring-1 focus:ring-brand-500 cursor-pointer"
                   >
                     <option value="apex">Apex Petrochem Engineering Pvt Ltd (GSTIN: 33AAACA1234A1Z5)</option>
                     <option value="coromandel">Coromandel Heavy Valves & Alloy Works Ltd (GSTIN: 33BBBCB5678B1Z2)</option>
@@ -210,7 +210,7 @@ export default function Login() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="tenders@apexpetrochem.in"
-                      className="w-full bg-slate-50 border border-slate-300 rounded-lg pl-9 pr-3 py-2 text-xs font-mono text-slate-900 focus:outline-none focus:ring-1 focus:ring-cpcl-orange"
+                      className="w-full bg-slate-50 border border-slate-300 rounded-lg pl-9 pr-3 py-2 text-xs font-mono text-slate-900 focus:outline-none focus:ring-1 focus:ring-brand-500"
                     />
                   </div>
                 </div>
@@ -221,8 +221,8 @@ export default function Login() {
               type="submit"
               className={`w-full text-white text-xs font-bold py-3 rounded-lg shadow-md transition flex items-center justify-center space-x-2 ${
                 activeTab === 'OFFICER'
-                  ? 'bg-cpcl-navy hover:bg-slate-800'
-                  : 'bg-cpcl-orange hover:bg-orange-600'
+                  ? 'bg-slate-900 hover:bg-slate-800'
+                  : 'bg-brand-600 hover:bg-brand-700'
               }`}
             >
               <span>{activeTab === 'OFFICER' ? 'Authenticate as Officer' : 'Access Vendor Workspace'}</span>
