@@ -19,7 +19,7 @@ import NationalEmblem from '../components/NationalEmblem';
 
 export default function Login() {
   const [activeTab, setActiveTab] = useState('OFFICER'); // 'OFFICER' or 'VENDOR'
-  const [email, setEmail] = useState('officer.sharma@cpcl.gov.in');
+  const [email, setEmail] = useState('officer.demo@cpcl.gov.in');
   const [password, setPassword] = useState('••••••••••••');
   const [selectedVendorKey, setSelectedVendorKey] = useState('apex');
   const [showPassword, setShowPassword] = useState(false);
@@ -36,7 +36,7 @@ export default function Login() {
     setActiveTab(tab);
     setError(null);
     if (tab === 'OFFICER') {
-      setEmail('officer.sharma@cpcl.gov.in');
+      setEmail('officer.demo@cpcl.gov.in');
       setPassword('••••••••••••');
     } else {
       const vendor = DEMO_PROFILES[selectedVendorKey];
@@ -61,7 +61,7 @@ export default function Login() {
     try {
       if (activeTab === 'OFFICER') {
         const res = login({
-          email: email || 'officer.sharma@cpcl.gov.in',
+          email: email || 'officer.demo@cpcl.gov.in',
           role: 'OFFICER'
         });
         if (res.success) {
