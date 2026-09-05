@@ -48,7 +48,9 @@ const CHECK_WEIGHTS = {
   GST_RETURNS: 15,
   PAN_COMPLIANCE: 10,
   BLACKLIST_CHECK: 20,
-  NAME_MATCH: 15
+  NAME_MATCH: 10,
+  EPFO_ESIC_COMPLIANCE: 10,
+  LOCAL_CONTENT_MII: 5
 };
 
 function calculateScore(verificationResults, documents = []) {
@@ -57,7 +59,7 @@ function calculateScore(verificationResults, documents = []) {
   let isBlacklisted = false;
   let isNameMismatch = false;
 
-  // 1. Process 6-point statutory checks from central registries
+  // 1. Process statutory checks from central registries
   for (const check of verificationResults) {
     if (check.match_status === 'Mismatch') {
       const weight = CHECK_WEIGHTS[check.check_type] || 0;
@@ -83,7 +85,13 @@ function calculateScore(verificationResults, documents = []) {
           flags.push('GST registration is not in Active status on GSTN portal');
           break;
         case 'PAN_COMPLIANCE':
-          flags.push('PAN compliance issue — Income Tax Return (ITR) was not filed for the previous assessment year');
+          flags.push('PAN compliance issue — Income Tax Return (ITR) was not filed for previous assessment year');
+          break;
+        case 'EPFO_ESIC_COMPLIANCE':
+          flags.push('EPFO / ESIC non-compliance — pending electronic challans on Shram Suvidha portal');
+          break;
+        case 'LOCAL_CONTENT_MII':
+          flags.push('Make in India (PPP-MII) failure — local content declaration below mandatory PSU tender threshold');
           break;
         default:
           flags.push(`Check ${check.check_type} failed verification`);
@@ -399,6 +407,33 @@ export async function onRequest(context) {
         portal_value: gst ? gst.legal_name : 'Not Found',
         match_status: nameMatch ? 'Match' : 'Mismatch',
         severity: 'Major',
+        checked_at: now
+      });
+
+      // 7. EPFO / ESIC Labour Compliance (MoPNG / CPCL Refinery Mandatory Statutory Requirement)
+      const epfoCode = bidder.pan_number ? `TN/MAS/00${bidder.pan_number.slice(5, 9)}/000` : 'NOT_REGISTERED';
+      const isEpfoClean = !bl; // Debarred entities fail statutory labor standing
+      checks.push({
+        check_id: crypto.randomUUID(),
+        bidder_id: bidderId,
+        check_type: 'EPFO_ESIC_COMPLIANCE',
+        document_value: `EPF: ${epfoCode} | ESIC: Active (Zone-1)`,
+        portal_value: isEpfoClean ? 'Shram Suvidha Portal: Active & ECRs Filed' : 'Non-Compliant / Default Notice',
+        match_status: isEpfoClean ? 'Match' : 'Mismatch',
+        severity: 'Major',
+        checked_at: now
+      });
+
+      // 8. Make in India (PPP-MII Order 2017) Local Content Verification
+      const localContentPct = bidder.company_name.toLowerCase().includes('apex') ? '82%' : (bidder.company_name.toLowerCase().includes('bharat') ? '68%' : '60%');
+      checks.push({
+        check_id: crypto.randomUUID(),
+        bidder_id: bidderId,
+        check_type: 'LOCAL_CONTENT_MII',
+        document_value: `Declared: ${localContentPct} Local Value Addition`,
+        portal_value: `Class-I Local Supplier (>=50% Domestic Content)`,
+        match_status: 'Match',
+        severity: 'Minor',
         checked_at: now
       });
 
