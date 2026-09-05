@@ -22,18 +22,31 @@ function ProtectedRoute({ children }) {
   return children;
 }
 
+function OfficerRoute({ children }) {
+  const { user, isOfficer } = useAuth();
+  const location = useLocation();
+
+  if (!user) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+  if (!isOfficer) {
+    return <Navigate to="/vendor" replace />;
+  }
+  return children;
+}
+
 function LoginRoute() {
   const { user, isVendor } = useAuth();
 
   if (user) {
-    return <Navigate to={isVendor ? '/vendor' : '/'} replace />;
+    return <Navigate to={isVendor ? '/vendor' : '/tenders'} replace />;
   }
 
   return <Login />;
 }
 
 function AppLayout() {
-  const { user } = useAuth();
+  const { user, isVendor } = useAuth();
   const location = useLocation();
   const isLoginPage = location.pathname === '/login';
 
@@ -87,16 +100,24 @@ function AppLayout() {
               path="/"
               element={
                 <ProtectedRoute>
-                  <Dashboard />
+                  <Navigate to={isVendor ? '/vendor' : '/tenders'} replace />
                 </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/bidders"
+              element={
+                <OfficerRoute>
+                  <Dashboard />
+                </OfficerRoute>
               }
             />
             <Route
               path="/bidder/:bidder_id"
               element={
-                <ProtectedRoute>
+                <OfficerRoute>
                   <BidderDetail />
-                </ProtectedRoute>
+                </OfficerRoute>
               }
             />
             <Route
