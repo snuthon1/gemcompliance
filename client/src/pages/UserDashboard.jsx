@@ -733,7 +733,7 @@ STATUS:            ${doc.flagged ? 'FLAGGED: ' + doc.flag_reason : 'VERIFIED COM
                       <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
                         Mandatory Certificates
                       </span>
-                      <FileCheck2 className="w-4 h-4 text-indigo-600" />
+                      <FileCheck2 className="w-4 h-4 text-[#0B2546]" />
                     </div>
                     <div className="mt-2 flex items-baseline space-x-1.5">
                       <span className="text-2xl font-black font-mono text-slate-900">
@@ -1050,7 +1050,7 @@ STATUS:            ${doc.flagged ? 'FLAGGED: ' + doc.flag_reason : 'VERIFIED COM
                 <div className="lg:col-span-5 bg-white rounded-xl border border-slate-200 shadow-2xs p-5 space-y-3.5">
                   <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                     <h3 className="text-xs font-bold uppercase tracking-wider text-[#0B2546] flex items-center space-x-1.5">
-                      <Clock className="w-4 h-4 text-indigo-600" />
+                      <Clock className="w-4 h-4 text-[#0B2546]" />
                       <span>Recent Compliance Activity</span>
                     </h3>
                     <span className="text-[11px] text-slate-400 font-mono">Audit Trail</span>
