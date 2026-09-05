@@ -721,171 +721,175 @@ STATUS:            ${doc.flagged ? 'FLAGGED: ' + doc.flag_reason : 'VERIFIED COM
           {/* TAB 1: OVERVIEW & ACTIONABLE WORKSPACE */}
           {activeTab === 'overview' && (
             <div className="space-y-5">
-              {/* Top 4 Compact Scorecard Metrics */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
-                {/* 1. Health Score */}
-                <div
-                  className={`p-4 rounded-xl border shadow-2xs flex flex-col justify-between transition ${
-                    !hasAllMandatoryDocs
-                      ? 'bg-amber-50/50 border-amber-200 text-amber-950'
-                      : isLowRisk
-                      ? 'bg-emerald-50/50 border-emerald-200 text-emerald-950'
-                      : isMediumRisk
-                      ? 'bg-amber-50/50 border-amber-200 text-amber-950'
-                      : 'bg-rose-50/50 border-rose-200 text-rose-950'
-                  }`}
-                >
-                  <div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600">
-                        Statutory Health Score
-                      </span>
-                      <ShieldCheck
-                        className={`w-4 h-4 ${
-                          !hasAllMandatoryDocs
-                            ? 'text-amber-600'
-                            : isLowRisk
-                            ? 'text-emerald-600'
-                            : isMediumRisk
-                            ? 'text-amber-600'
-                            : 'text-rose-600'
-                        }`}
-                      />
+              {/* Top Compact KPI Metric Ribbon */}
+              <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+                <div className="grid grid-cols-2 lg:grid-cols-4 divide-y lg:divide-y-0 lg:divide-x divide-slate-100">
+                  {/* Segment 1: Health Score */}
+                  <div className="p-3 sm:px-5 sm:py-3 text-left flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <div className="flex items-center space-x-1.5">
+                        <span
+                          className={`w-2 h-2 rounded-full ${
+                            !hasAllMandatoryDocs
+                              ? 'bg-amber-500'
+                              : isLowRisk
+                              ? 'bg-emerald-500'
+                              : isMediumRisk
+                              ? 'bg-amber-500'
+                              : 'bg-rose-500 animate-pulse'
+                          }`}
+                        ></span>
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                          Statutory Health
+                        </span>
+                      </div>
+                      <div className="flex items-baseline space-x-1.5">
+                        {!hasAllMandatoryDocs ? (
+                          <>
+                            <span className="text-2xl font-black font-mono tracking-tight text-amber-700">
+                              Pending
+                            </span>
+                            <span className="text-[11px] text-amber-600 font-medium">
+                              ({mandatoryUploadedCount}/3 docs)
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <span
+                              className={`text-2xl font-black font-mono tracking-tight ${
+                                isLowRisk
+                                  ? 'text-emerald-600'
+                                  : isMediumRisk
+                                  ? 'text-amber-600'
+                                  : 'text-rose-600'
+                              }`}
+                            >
+                              {compliance?.score ?? 100}
+                            </span>
+                            <span className="text-[11px] text-slate-400 font-medium">/ 100</span>
+                          </>
+                        )}
+                      </div>
                     </div>
-                    <div className="mt-2 flex items-baseline space-x-1.5">
-                      {!hasAllMandatoryDocs ? (
-                        <div className="flex items-baseline space-x-1.5">
-                          <span className="text-2xl font-black font-mono tracking-tight text-amber-800">
-                            Pending
-                          </span>
-                          <span className="text-xs text-amber-700 font-bold">
-                            ({mandatoryUploadedCount}/3 Docs)
-                          </span>
-                        </div>
-                      ) : (
-                        <div className="flex items-baseline space-x-1">
-                          <span className="text-2xl font-black font-mono tracking-tight">
-                            {compliance?.score ?? 100}
-                          </span>
-                          <span className="text-xs text-slate-500 font-bold">/ 100</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <div className="mt-3 pt-2.5 border-t border-slate-200/70 flex items-center justify-between text-xs">
-                    <span className="font-semibold text-slate-600">Status:</span>
                     <span
-                      className={`font-bold px-2 py-0.5 rounded text-[10px] ${
+                      className={`text-[10px] font-mono font-semibold px-2 py-0.5 rounded-md hidden sm:inline-block ${
                         !hasAllMandatoryDocs
-                          ? 'bg-amber-200/80 text-amber-900'
+                          ? 'bg-amber-50 text-amber-800 border border-amber-200'
                           : isLowRisk
-                          ? 'bg-emerald-200/80 text-emerald-900'
+                          ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
                           : isMediumRisk
-                          ? 'bg-amber-200/80 text-amber-900'
-                          : 'bg-rose-200/80 text-rose-900'
+                          ? 'bg-amber-50 text-amber-800 border border-amber-200'
+                          : 'bg-rose-50 text-rose-800 border border-rose-200'
                       }`}
                     >
                       {!hasAllMandatoryDocs
-                        ? 'Missing Documents'
+                        ? 'Pending'
                         : isLowRisk
-                        ? 'Low Risk (Verified)'
-                        : compliance?.risk || 'Discrepancy'}
+                        ? 'Low Risk'
+                        : compliance?.risk || 'Flagged'}
                     </span>
                   </div>
-                </div>
 
-                {/* 2. Mandatory Documents in Vault */}
-                <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs flex flex-col justify-between">
-                  <div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
-                        Mandatory Certificates
-                      </span>
-                      <FileCheck2 className="w-4 h-4 text-[#0B2546]" />
+                  {/* Segment 2: Mandatory Certificates */}
+                  <div className="p-3 sm:px-5 sm:py-3 text-left flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <div className="flex items-center space-x-1.5">
+                        <span className="w-2 h-2 rounded-full bg-[#0B2546]"></span>
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                          Certificates
+                        </span>
+                      </div>
+                      <div className="flex items-baseline space-x-1.5">
+                        <span
+                          className={`text-2xl font-black font-mono ${
+                            flaggedMandatoryCount > 0 ? 'text-rose-600' : 'text-slate-900'
+                          }`}
+                        >
+                          {mandatoryCleanCount}/{MANDATORY_DOCS.length}
+                        </span>
+                        <span className="text-[11px] text-slate-400 font-medium">Clean</span>
+                      </div>
                     </div>
-                    <div className="mt-2 flex items-baseline space-x-1.5">
-                      <span className={`text-2xl font-black font-mono ${flaggedMandatoryCount > 0 ? 'text-rose-600' : 'text-slate-900'}`}>
-                        {mandatoryCleanCount} / {MANDATORY_DOCS.length}
-                      </span>
-                      <span className="text-xs text-slate-500 font-medium">Verified Clean</span>
-                    </div>
-                  </div>
-                  <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs">
-                    <span className="font-semibold text-slate-500">Vault Health:</span>
                     <span
-                      className={`font-bold px-2 py-0.5 rounded text-[10px] ${
+                      className={`text-[10px] font-mono font-semibold px-2 py-0.5 rounded-md hidden sm:inline-block ${
                         flaggedMandatoryCount > 0
                           ? 'bg-rose-50 text-rose-800 border border-rose-200'
                           : hasAllMandatoryDocs
-                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+                          ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
                           : 'bg-amber-50 text-amber-800 border border-amber-200'
                       }`}
                     >
                       {flaggedMandatoryCount > 0
-                        ? `⚠️ ${flaggedMandatoryCount} Discrepanc${flaggedMandatoryCount > 1 ? 'ies' : 'y'}`
+                        ? `${flaggedMandatoryCount} Flagged`
                         : hasAllMandatoryDocs
-                        ? 'Complete (3/3 Clean)'
+                        ? '3/3 Verified'
                         : `${missingMandatoryDocs.length} Missing`}
                     </span>
                   </div>
-                </div>
 
-                {/* 3. Submitted Quotations */}
-                <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs flex flex-col justify-between">
-                  <div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
-                        Submitted Bids
-                      </span>
-                      <Layers className="w-4 h-4 text-blue-600" />
+                  {/* Segment 3: Submitted Bids */}
+                  <div className="p-3 sm:px-5 sm:py-3 text-left flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <div className="flex items-center space-x-1.5">
+                        <span className="w-2 h-2 rounded-full bg-blue-600"></span>
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                          Submitted Bids
+                        </span>
+                      </div>
+                      <div className="flex items-baseline space-x-1.5">
+                        <span className="text-2xl font-black font-mono text-[#0B2546]">
+                          {bids.length}
+                        </span>
+                        <span className="text-[11px] text-slate-400 font-medium">Quotations</span>
+                      </div>
                     </div>
-                    <div className="mt-2 flex items-baseline space-x-1.5">
-                      <span className="text-2xl font-black font-mono text-slate-900">
-                        {bids.length}
-                      </span>
-                      <span className="text-xs text-slate-500 font-medium">Active Quotations</span>
-                    </div>
-                  </div>
-                  <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs">
-                    <span className="font-semibold text-slate-500">Awarded Contracts:</span>
-                    <span className="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 text-[10px]">
-                      {bids.filter((b) => b.status === 'Awarded').length} Won
+                    <span className="text-[10px] font-mono font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md hidden sm:inline-block">
+                      {bids.filter((b) => b.status === 'Awarded').length} Awarded
                     </span>
                   </div>
-                </div>
 
-                {/* 4. Profile & Bidding Clearance */}
-                <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs flex flex-col justify-between">
-                  <div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
-                        Bidding Clearance
-                      </span>
-                      <UserCheck className="w-4 h-4 text-sky-600" />
+                  {/* Segment 4: Bidding Clearance */}
+                  <div className="p-3 sm:px-5 sm:py-3 text-left flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <div className="flex items-center space-x-1.5">
+                        <span
+                          className={`w-2 h-2 rounded-full ${
+                            isClearedToBid
+                              ? 'bg-emerald-500'
+                              : flaggedMandatoryCount > 0
+                              ? 'bg-rose-500 animate-pulse'
+                              : 'bg-amber-500'
+                          }`}
+                        ></span>
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                          Clearance
+                        </span>
+                      </div>
+                      <div className="flex items-baseline space-x-1.5">
+                        <span
+                          className={`text-2xl font-black font-mono ${
+                            !isClearedToBid ? 'text-rose-600' : 'text-[#0B2546]'
+                          }`}
+                        >
+                          {completionPct}%
+                        </span>
+                        <span className="text-[11px] text-slate-400 font-medium">Readiness</span>
+                      </div>
                     </div>
-                    <div className="mt-2 flex items-baseline space-x-1.5">
-                      <span className={`text-2xl font-black font-mono ${!isClearedToBid ? 'text-rose-600' : 'text-[#0B2546]'}`}>
-                        {completionPct}%
-                      </span>
-                      <span className="text-xs text-slate-500 font-medium">{!isClearedToBid ? 'Readiness (Blocked)' : 'Readiness'}</span>
-                    </div>
-                  </div>
-                  <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs">
-                    <span className="font-semibold text-slate-500">Mandate Status:</span>
                     <span
-                      className={`font-bold px-2 py-0.5 rounded text-[10px] font-mono ${
+                      className={`text-[10px] font-mono font-semibold px-2 py-0.5 rounded-md hidden sm:inline-block ${
                         isClearedToBid
-                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                          ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
                           : flaggedMandatoryCount > 0
                           ? 'bg-rose-50 text-rose-800 border border-rose-200'
                           : 'bg-amber-50 text-amber-800 border border-amber-200'
                       }`}
                     >
                       {isClearedToBid
-                        ? '✅ Cleared to Bid'
+                        ? 'Cleared'
                         : flaggedMandatoryCount > 0
-                        ? '❌ Clearance Blocked'
-                        : '⚠️ Action Needed'}
+                        ? 'Blocked'
+                        : 'Action Req.'}
                     </span>
                   </div>
                 </div>
