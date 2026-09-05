@@ -15,6 +15,7 @@ import GFRComplianceMatrix from './pages/GFRComplianceMatrix';
 import RegistryGateway from './pages/RegistryGateway';
 import AuditTrail from './pages/AuditTrail';
 import Representations from './pages/Representations';
+import DocumentForensics from './pages/DocumentForensics';
 import NationalEmblem from './components/NationalEmblem';
 import { Accessibility, Shield, Headphones } from 'lucide-react';
 
@@ -148,6 +149,14 @@ function AppLayout() {
               element={
                 <OfficerRoute>
                   <CartelDetection />
+                </OfficerRoute>
+              }
+            />
+            <Route
+              path="/document-forensics"
+              element={
+                <OfficerRoute>
+                  <DocumentForensics />
                 </OfficerRoute>
               }
             />
