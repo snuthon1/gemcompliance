@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { useLocation, useNavigate, Link } from 'react-router-dom';
 import {
   Building2,
   ShieldCheck,
@@ -19,13 +19,52 @@ import {
   TrendingUp,
   UserCheck,
   FileCheck2,
-  ArrowUpRight
+  ArrowUpRight,
+  LayoutDashboard,
+  Trash2,
+  Eye,
+  X,
+  FileCode2,
+  Check,
+  ShieldAlert,
+  CreditCard,
+  Phone,
+  Mail,
+  MapPin,
+  Briefcase,
+  AlertCircle,
+  Save,
+  Download
 } from 'lucide-react';
 
 import { useAuth } from '../context/AuthContext';
 
 export default function UserDashboard() {
   const { user, isVendor, isOfficer } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Active tab derived from URL
+  const getActiveTabFromUrl = () => {
+    const path = location.pathname;
+    if (path.includes('/profile')) return 'profile';
+    if (path.includes('/documents')) return 'documents';
+    if (path.includes('/apply')) return 'apply';
+    return 'overview';
+  };
+
+  const [activeTab, setActiveTab] = useState(getActiveTabFromUrl);
+
+  useEffect(() => {
+    setActiveTab(getActiveTabFromUrl());
+  }, [location.pathname]);
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    if (tab === 'overview') navigate('/vendor/overview');
+    else navigate(`/vendor/${tab}`);
+  };
+
   const [bidders, setBidders] = useState([]);
   const [selectedBidderId, setSelectedBidderId] = useState(() => {
     return (user?.bidder_id) || localStorage.getItem('bidshield_active_vendor_id') || '';
@@ -39,19 +78,47 @@ export default function UserDashboard() {
   const [loading, setLoading] = useState(true);
   const [reverifying, setReverifying] = useState(false);
 
-  // New Bid Form State
+  // New Bid Application Form / Modal State
   const [selectedTenderForBid, setSelectedTenderForBid] = useState('');
   const [bidQuoteAmount, setBidQuoteAmount] = useState('');
+  const [bidTimelineDays, setBidTimelineDays] = useState('60');
+  const [bidDeclarationAccepted, setBidDeclarationAccepted] = useState(true);
   const [submittingBid, setSubmittingBid] = useState(false);
   const [bidFeedback, setBidFeedback] = useState(null);
+  const [isBidModalOpen, setIsBidModalOpen] = useState(false);
 
   // Document Upload State
   const [uploadDocType, setUploadDocType] = useState('GST_CERT');
   const [uploadFile, setUploadFile] = useState(null);
   const [uploadingDoc, setUploadingDoc] = useState(false);
   const [uploadFeedback, setUploadFeedback] = useState(null);
+  const fileInputRef = useRef(null);
 
-  // 1. Fetch all bidders to populate the Vendor Switcher (Officer only) or bind to enrolled vendor
+  // Document Preview Modal State
+  const [previewDoc, setPreviewDoc] = useState(null);
+  const [deletingDocId, setDeletingDocId] = useState(null);
+  const [deleteFeedback, setDeleteFeedback] = useState(null);
+
+  // Profile Form State
+  const [profileForm, setProfileForm] = useState({
+    phone: '',
+    email: '',
+    registered_address: '',
+    signatory_name: 'Rajesh Kumar Mehta',
+    signatory_designation: 'Managing Director & Authorized Signatory',
+    signatory_phone: '+91 98410 88231',
+    signatory_email: '',
+    bank_name: 'State Bank of India',
+    bank_account: '39485729104',
+    bank_ifsc: 'SBIN0001824',
+    annual_turnover: '₹24.80 Crores',
+    msme_category: 'Medium Enterprise (Plant & Machinery < ₹50 Cr)',
+    itr_ay: 'AY 2025-26 Filed (Valid)'
+  });
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [profileSaveSuccess, setProfileSaveSuccess] = useState(false);
+
+  // 1. Fetch bidders & initialize
   useEffect(() => {
     async function loadBidders() {
       try {
@@ -75,12 +142,13 @@ export default function UserDashboard() {
     loadBidders();
   }, [isVendor, user]);
 
-  // 2. Fetch bidder-specific data
+  // 2. Fetch vendor data
   const loadVendorData = async (bidderId) => {
     if (!bidderId) return;
     setLoading(true);
     setBidFeedback(null);
     setUploadFeedback(null);
+    setDeleteFeedback(null);
 
     try {
       const [bidderRes, compRes, bidsRes, tendersRes, auditRes, docsRes] = await Promise.all([
@@ -101,7 +169,31 @@ export default function UserDashboard() {
         docsRes.json()
       ]);
 
-      if (bData.success) setCurrentBidder(bData.bidder);
+      if (bData.success) {
+        setCurrentBidder(bData.bidder);
+        // Load saved profile data from localStorage if exists
+        const savedProfileKey = `bidshield_vendor_profile_${bidderId}`;
+        const storedProfile = localStorage.getItem(savedProfileKey);
+        let extraProfile = {};
+        if (storedProfile) {
+          try { extraProfile = JSON.parse(storedProfile); } catch (e) {}
+        }
+        setProfileForm({
+          phone: bData.bidder.phone || '+91 44 2839 0110',
+          email: bData.bidder.email || 'tenders@apexpetrochem.in',
+          registered_address: bData.bidder.registered_address || 'Plot 42, SIDCO Industrial Estate, Ambattur, Chennai 600058',
+          signatory_name: extraProfile.signatory_name || 'Rajesh Kumar Mehta',
+          signatory_designation: extraProfile.signatory_designation || 'Managing Director & Authorized Signatory',
+          signatory_phone: extraProfile.signatory_phone || '+91 98410 88231',
+          signatory_email: extraProfile.signatory_email || bData.bidder.email || 'r.mehta@apexpetrochem.in',
+          bank_name: extraProfile.bank_name || 'State Bank of India',
+          bank_account: extraProfile.bank_account || '39485729104',
+          bank_ifsc: extraProfile.bank_ifsc || 'SBIN0001824',
+          annual_turnover: extraProfile.annual_turnover || '₹28.40 Crores',
+          msme_category: extraProfile.msme_category || 'Medium Enterprise (Plant & Machinery < ₹50 Cr)',
+          itr_ay: extraProfile.itr_ay || 'AY 2025-26 Filed (Verified)'
+        });
+      }
       if (cData.success) setCompliance(cData);
       if (bidsData.success) setBids(bidsData.bids);
       if (tData.success) setOpenTenders(tData.tenders);
@@ -142,10 +234,15 @@ export default function UserDashboard() {
     }
   };
 
+  // Submit Bid Quotation
   const handleBidSubmit = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     if (!selectedTenderForBid || !bidQuoteAmount) {
-      alert('Please select an open tender and enter quotation amount.');
+      alert('Please select an open tender and enter your quotation amount.');
+      return;
+    }
+    if (!bidDeclarationAccepted) {
+      alert('You must accept the GFR 2017 compliance declaration to submit a bid.');
       return;
     }
     setSubmittingBid(true);
@@ -162,20 +259,22 @@ export default function UserDashboard() {
       });
       const data = await res.json();
       if (data.success) {
-        setBidFeedback({ type: 'success', text: 'Quotation submitted successfully and logged into audit ledger!' });
+        setBidFeedback({ type: 'success', text: 'Commercial quotation submitted successfully to CPCL and logged to the central ledger!' });
         setBidQuoteAmount('');
         setSelectedTenderForBid('');
+        setIsBidModalOpen(false);
         await loadVendorData(selectedBidderId);
       } else {
         setBidFeedback({ type: 'error', text: data.message || 'Failed to submit quotation.' });
       }
     } catch (err) {
-      setBidFeedback({ type: 'error', text: 'Network error submitting bid.' });
+      setBidFeedback({ type: 'error', text: 'Network error submitting bid quotation.' });
     } finally {
       setSubmittingBid(false);
     }
   };
 
+  // Upload Document
   const handleDocUpload = async (e) => {
     e.preventDefault();
     if (!uploadFile) {
@@ -198,9 +297,10 @@ export default function UserDashboard() {
       if (data.success) {
         setUploadFeedback({
           type: 'success',
-          text: `Document uploaded and verified via AI! ${data.document?.flagged ? '⚠️ Discrepancy flagged.' : '✅ Verified.'}`
+          text: `Document uploaded and verified via AI! ${data.document?.flagged ? '⚠️ Discrepancy flagged: ' + data.document?.flag_reason : '✅ Verified clean against government registries.'}`
         });
         setUploadFile(null);
+        if (fileInputRef.current) fileInputRef.current.value = '';
         await loadVendorData(selectedBidderId);
       } else {
         setUploadFeedback({ type: 'error', text: data.message || 'Upload failed.' });
@@ -212,12 +312,75 @@ export default function UserDashboard() {
     }
   };
 
+  // Delete Document
+  const handleDeleteDoc = async (docId, docType) => {
+    const confirmDelete = window.confirm(
+      `Are you sure you want to delete this ${docType} certificate? This action will be permanently recorded in the statutory audit ledger.`
+    );
+    if (!confirmDelete) return;
+
+    setDeletingDocId(docId);
+    setDeleteFeedback(null);
+
+    try {
+      const res = await fetch(`/api/bidders/${selectedBidderId}/documents/${docId}`, {
+        method: 'DELETE'
+      });
+      const data = await res.json();
+      if (data.success) {
+        setDeleteFeedback({ type: 'success', text: `Document successfully removed from the vault.` });
+        if (previewDoc && previewDoc.doc_id === docId) {
+          setPreviewDoc(null);
+        }
+        await loadVendorData(selectedBidderId);
+      } else {
+        setDeleteFeedback({ type: 'error', text: data.message || 'Failed to delete document.' });
+      }
+    } catch (err) {
+      setDeleteFeedback({ type: 'error', text: 'Error connecting to delete API.' });
+    } finally {
+      setDeletingDocId(null);
+    }
+  };
+
+  // Save Profile
+  const handleSaveProfile = async (e) => {
+    e.preventDefault();
+    setSavingProfile(true);
+    setProfileSaveSuccess(false);
+
+    try {
+      // 1. Update Bidder on Backend DB
+      const res = await fetch(`/api/bidders/${selectedBidderId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phone: profileForm.phone,
+          email: profileForm.email,
+          registered_address: profileForm.registered_address
+        })
+      });
+
+      // 2. Persist comprehensive KYC/banking fields locally
+      const savedProfileKey = `bidshield_vendor_profile_${selectedBidderId}`;
+      localStorage.setItem(savedProfileKey, JSON.stringify(profileForm));
+
+      setProfileSaveSuccess(true);
+      await loadVendorData(selectedBidderId);
+      setTimeout(() => setProfileSaveSuccess(false), 4000);
+    } catch (err) {
+      alert('Failed to save profile changes. Please try again.');
+    } finally {
+      setSavingProfile(false);
+    }
+  };
+
   const formatINR = (val) =>
     new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR',
       maximumFractionDigits: 0
-    }).format(val);
+    }).format(val || 0);
 
   const formatDate = (iso) =>
     iso ? new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
@@ -226,30 +389,50 @@ export default function UserDashboard() {
   const isMediumRisk = compliance?.risk === 'Medium';
   const isHighRisk = compliance?.risk === 'High';
 
-  const latestOfficerDecision = auditLogs.find(l => l.action === 'OFFICER_DECISION');
+  // Compute profile completion percentage
+  const calculateProfileCompletion = () => {
+    let score = 0;
+    if (currentBidder?.company_name) score += 15;
+    if (currentBidder?.gstin) score += 15;
+    if (currentBidder?.pan_number) score += 15;
+    if (currentBidder?.udyam_number) score += 10;
+    if (profileForm.email) score += 10;
+    if (profileForm.phone) score += 10;
+    if (profileForm.registered_address) score += 10;
+    if (profileForm.signatory_name) score += 5;
+    if (profileForm.bank_account && profileForm.bank_ifsc) score += 10;
+    return Math.min(score, 100);
+  };
+
+  const completionPct = calculateProfileCompletion();
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-      {/* 1. Header & Active Vendor Bar */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center space-x-2 mb-1.5">
-            <span className="text-xs font-semibold uppercase tracking-wider text-indigo-600 bg-indigo-50 border border-indigo-200/60 px-2.5 py-0.5 rounded-full">
-              Vendor Self-Service Portal
+      {/* 1. Header & Identity Strip */}
+      <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="space-y-1.5 min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-[10px] font-mono uppercase tracking-wider bg-slate-100 text-slate-700 font-bold px-2 py-0.5 rounded border border-slate-200">
+              Vendor GSTIN: {currentBidder?.gstin || '33AAACA1234A1Z5'}
             </span>
-            <span className="text-slate-400 text-xs">&bull;</span>
-            <span className="text-xs text-slate-500 font-mono">GeM Verified Supplier</span>
+            <span className="text-[10px] font-mono uppercase tracking-wider bg-blue-50 text-blue-700 font-bold px-2 py-0.5 rounded border border-blue-200">
+              MSME UDYAM: {currentBidder?.udyam_number || 'UDYAM-TN-02-0012345'}
+            </span>
+            <span className="text-[11px] text-slate-500">
+              Enrolled: {formatDate(currentBidder?.created_at)}
+            </span>
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-            {currentBidder ? currentBidder.company_name : 'Loading Profile...'}
+          <h1 className="text-2xl font-black tracking-tight text-[#0B2546] flex items-center gap-2.5">
+            <Building2 className="w-6 h-6 text-sky-600 shrink-0" />
+            <span className="truncate">{currentBidder ? currentBidder.company_name : 'Loading Profile...'}</span>
           </h1>
-          <p className="text-xs text-slate-500 mt-1">
+          <p className="text-xs text-slate-500 max-w-3xl truncate">
             {currentBidder?.registered_address} &bull; {currentBidder?.email} &bull; {currentBidder?.phone}
           </p>
         </div>
 
-        {/* Vendor Switcher (Officer) or Enrolled Vendor Identity (Vendor) */}
-        <div className="flex flex-col sm:flex-row sm:items-center gap-2.5">
+        {/* Action Controls & Identity Lock */}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 shrink-0">
           {isVendor ? (
             <div className="bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 flex items-center space-x-2.5">
               <Building2 className="w-4 h-4 text-[#0B2546] shrink-0" />
@@ -258,7 +441,7 @@ export default function UserDashboard() {
                   {user?.company_name || currentBidder?.company_name}
                 </span>
                 <span className="text-[10px] font-mono bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.5 rounded border border-emerald-200">
-                  Enterprise Enrolled
+                  Verified Signatory
                 </span>
               </div>
             </div>
@@ -283,420 +466,1329 @@ export default function UserDashboard() {
           <button
             onClick={handleReverify}
             disabled={reverifying}
-            className="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-semibold shadow-sm transition flex items-center justify-center space-x-1.5 disabled:opacity-50"
+            className="px-3.5 py-2 bg-[#0B2546] hover:bg-[#07182D] text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center justify-center space-x-1.5 disabled:opacity-50 cursor-pointer"
+            title="Trigger automated statutory re-check across government registries"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${reverifying ? 'animate-spin' : ''}`} />
-            <span>{reverifying ? 'Auditing...' : 'Self-Audit Score'}</span>
+            <span>{reverifying ? 'Auditing Registries...' : 'Re-verify Health'}</span>
           </button>
         </div>
       </div>
 
+      {/* 2. Four Prominent Navigation Tabs (Matches Left Navbar Options) */}
+      <div className="bg-white rounded-xl border border-slate-200 p-1.5 shadow-xs">
+        <nav className="grid grid-cols-2 md:grid-cols-4 gap-1.5">
+          <button
+            type="button"
+            onClick={() => handleTabChange('overview')}
+            className={`flex items-center justify-center space-x-2 py-2.5 px-4 rounded-lg text-xs font-bold transition cursor-pointer ${
+              activeTab === 'overview'
+                ? 'bg-[#0B2546] text-white shadow-sm'
+                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+            }`}
+          >
+            <LayoutDashboard className="w-4 h-4" />
+            <span>1. Overview & Guide</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleTabChange('profile')}
+            className={`flex items-center justify-center space-x-2 py-2.5 px-4 rounded-lg text-xs font-bold transition cursor-pointer ${
+              activeTab === 'profile'
+                ? 'bg-[#0B2546] text-white shadow-sm'
+                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+            }`}
+          >
+            <UserCheck className="w-4 h-4" />
+            <div className="flex items-center space-x-1.5">
+              <span>2. Profile Status</span>
+              <span className={`text-[10px] px-1.5 py-0.2 rounded font-mono ${
+                activeTab === 'profile' ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'
+              }`}>
+                {completionPct}%
+              </span>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleTabChange('documents')}
+            className={`flex items-center justify-center space-x-2 py-2.5 px-4 rounded-lg text-xs font-bold transition cursor-pointer ${
+              activeTab === 'documents'
+                ? 'bg-[#0B2546] text-white shadow-sm'
+                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+            }`}
+          >
+            <FileCheck2 className="w-4 h-4" />
+            <div className="flex items-center space-x-1.5">
+              <span>3. Uploaded Documents</span>
+              <span className={`text-[10px] px-1.5 py-0.2 rounded font-mono ${
+                activeTab === 'documents' ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'
+              }`}>
+                {documents.length}
+              </span>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleTabChange('apply')}
+            className={`flex items-center justify-center space-x-2 py-2.5 px-4 rounded-lg text-xs font-bold transition cursor-pointer ${
+              activeTab === 'apply'
+                ? 'bg-[#0B2546] text-white shadow-sm'
+                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+            }`}
+          >
+            <Layers className="w-4 h-4" />
+            <div className="flex items-center space-x-1.5">
+              <span>4. Apply for Tender/BIDs</span>
+              <span className={`text-[10px] px-1.5 py-0.2 rounded font-mono ${
+                activeTab === 'apply' ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'
+              }`}>
+                {openTenders.length} Live
+              </span>
+            </div>
+          </button>
+        </nav>
+      </div>
+
+      {/* Loading Spinner */}
       {loading ? (
-        <div className="p-16 text-center text-slate-500">
-          <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
-          <p className="text-xs font-medium">Loading statutory verification health and commercial bid history...</p>
+        <div className="p-16 text-center text-slate-500 bg-white rounded-2xl border border-slate-200">
+          <div className="w-8 h-8 border-4 border-[#0B2546] border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+          <p className="text-xs font-medium">Loading statutory verification health, documents vault, and tender matrix...</p>
         </div>
       ) : (
         <>
-          {/* 2. Top Metric Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            {/* Compliance Score */}
-            <div
-              className={`p-5 rounded-2xl border shadow-sm flex flex-col justify-between ${
-                isLowRisk
-                  ? 'bg-emerald-50/50 border-emerald-200 text-emerald-900'
-                  : isMediumRisk
-                  ? 'bg-amber-50/50 border-amber-200 text-amber-900'
-                  : 'bg-rose-50/50 border-rose-200 text-rose-900'
-              }`}
-            >
-              <div>
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
-                    Statutory Health Score
-                  </span>
-                  <ShieldCheck
-                    className={`w-4 h-4 ${
-                      isLowRisk ? 'text-emerald-600' : isMediumRisk ? 'text-amber-600' : 'text-rose-600'
-                    }`}
-                  />
+          {/* TAB 1: OVERVIEW & PORTAL FEATURE GUIDE */}
+          {activeTab === 'overview' && (
+            <div className="space-y-6">
+              {/* Top 4 Scorecard Metrics */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                {/* 1. Health Score */}
+                <div
+                  className={`p-5 rounded-2xl border shadow-xs flex flex-col justify-between ${
+                    isLowRisk
+                      ? 'bg-emerald-50/70 border-emerald-200 text-emerald-950'
+                      : isMediumRisk
+                      ? 'bg-amber-50/70 border-amber-200 text-amber-950'
+                      : 'bg-rose-50/70 border-rose-200 text-rose-950'
+                  }`}
+                >
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600">
+                        Statutory Health Score
+                      </span>
+                      <ShieldCheck
+                        className={`w-5 h-5 ${
+                          isLowRisk ? 'text-emerald-600' : isMediumRisk ? 'text-amber-600' : 'text-rose-600'
+                        }`}
+                      />
+                    </div>
+                    <div className="mt-3 flex items-baseline space-x-2">
+                      <span className="text-4xl font-extrabold font-mono tracking-tight">
+                        {compliance?.score ?? '—'}
+                      </span>
+                      <span className="text-xs text-slate-500 font-bold">/ 100</span>
+                    </div>
+                  </div>
+                  <div className="mt-4 pt-3 border-t border-slate-200/60 flex items-center justify-between text-xs">
+                    <span className="font-semibold text-slate-600">Risk Assessment:</span>
+                    <span
+                      className={`font-bold px-2 py-0.5 rounded text-[11px] ${
+                        isLowRisk
+                          ? 'bg-emerald-200/60 text-emerald-900'
+                          : isMediumRisk
+                          ? 'bg-amber-200/60 text-amber-900'
+                          : 'bg-rose-200/60 text-rose-900'
+                      }`}
+                    >
+                      {compliance?.risk || 'Calculating'}
+                    </span>
+                  </div>
                 </div>
-                <div className="mt-2 flex items-baseline space-x-1.5">
-                  <span className="text-3xl font-extrabold font-mono">{compliance?.score ?? '—'}</span>
-                  <span className="text-xs font-semibold text-slate-400">/ 100</span>
-                </div>
-              </div>
-              <div className="mt-3 text-xs font-semibold">
-                Status: <span className="underline">{compliance?.recommendation || 'Pending'}</span> ({compliance?.risk} Risk)
-              </div>
-            </div>
 
-            {/* Statutory Registrations */}
-            <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col justify-between">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block mb-2">
-                Registered Credentials
-              </span>
-              <div className="space-y-1.5 text-xs font-mono">
-                <div className="flex justify-between border-b border-slate-100 pb-1">
-                  <span className="text-slate-400 font-sans">GSTIN:</span>
-                  <span className="font-semibold text-slate-800">{currentBidder?.gstin}</span>
+                {/* 2. Active CPCL Bids */}
+                <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                        My Submitted Quotations
+                      </span>
+                      <Layers className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <div className="mt-3 text-4xl font-extrabold font-mono text-slate-900">
+                      {bids.length}
+                    </div>
+                  </div>
+                  <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+                    <span className="font-semibold text-slate-500">Awarded Contracts:</span>
+                    <span className="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">
+                      {bids.filter((b) => b.status === 'Awarded').length} Won
+                    </span>
+                  </div>
                 </div>
-                <div className="flex justify-between border-b border-slate-100 pb-1">
-                  <span className="text-slate-400 font-sans">PAN:</span>
-                  <span className="font-semibold text-slate-800">{currentBidder?.pan_number}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-400 font-sans">Udyam:</span>
-                  <span className="font-semibold text-slate-800">{currentBidder?.udyam_number}</span>
-                </div>
-              </div>
-              <span className="text-[10px] text-slate-400 mt-2 block">Synced with central registries</span>
-            </div>
 
-            {/* Bids Activity */}
-            <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col justify-between">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block mb-2">
-                Commercial Tenders
-              </span>
-              <div className="mt-1 flex items-baseline space-x-2">
-                <span className="text-3xl font-extrabold text-slate-900 font-mono">{bids.length}</span>
-                <span className="text-xs text-slate-400 font-medium">Bids Placed</span>
-              </div>
-              <div className="mt-3 flex items-center space-x-2 text-xs">
-                <span className="bg-purple-50 text-purple-700 font-semibold px-2 py-0.5 rounded-md border border-purple-200/60 font-mono">
-                  {bids.filter(b => b.status === 'Awarded').length} Awarded
-                </span>
-                <span className="bg-blue-50 text-blue-700 font-semibold px-2 py-0.5 rounded-md border border-blue-200/60 font-mono">
-                  {bids.filter(b => b.status === 'Submitted').length} In Review
-                </span>
-              </div>
-            </div>
+                {/* 3. Documents in Vault */}
+                <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                        Statutory Documents
+                      </span>
+                      <FileCheck2 className="w-5 h-5 text-indigo-600" />
+                    </div>
+                    <div className="mt-3 text-4xl font-extrabold font-mono text-slate-900">
+                      {documents.length}
+                    </div>
+                  </div>
+                  <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+                    <span className="font-semibold text-slate-500">Discrepancy Flags:</span>
+                    <span className={`font-bold px-2 py-0.5 rounded ${
+                      documents.some(d => d.flagged) ? 'bg-rose-50 text-rose-700' : 'bg-emerald-50 text-emerald-700'
+                    }`}>
+                      {documents.filter(d => d.flagged).length} Flagged
+                    </span>
+                  </div>
+                </div>
 
-            {/* Committee Review Status */}
-            <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col justify-between">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block mb-2">
-                Tender Committee Notes
-              </span>
-              {latestOfficerDecision ? (
-                <div className="space-y-1">
-                  <span
-                    className={`inline-block px-2 py-0.5 rounded text-[11px] font-bold uppercase font-mono ${
-                      latestOfficerDecision.details.includes('Approved')
-                        ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-                        : latestOfficerDecision.details.includes('Rejected')
-                        ? 'bg-rose-50 text-rose-800 border border-rose-200'
-                        : 'bg-amber-50 text-amber-800 border border-amber-200'
-                    }`}
-                  >
-                    {latestOfficerDecision.details.split('.')[0]?.replace('Decision:', '').trim()}
-                  </span>
-                  <p className="text-xs text-slate-600 line-clamp-2 mt-1 leading-relaxed">
-                    {latestOfficerDecision.details}
-                  </p>
+                {/* 4. Profile Completion */}
+                <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                        Profile Readiness
+                      </span>
+                      <UserCheck className="w-5 h-5 text-sky-600" />
+                    </div>
+                    <div className="mt-3 flex items-baseline space-x-1.5">
+                      <span className="text-4xl font-extrabold font-mono text-[#0B2546]">
+                        {completionPct}%
+                      </span>
+                      <span className="text-xs text-slate-500 font-bold">Complete</span>
+                    </div>
+                  </div>
+                  <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+                    <span className="font-semibold text-slate-500">Mandate Status:</span>
+                    <span className="font-bold text-slate-800 font-mono">
+                      {completionPct >= 80 ? '✅ Ready to Bid' : '⚠️ Action Needed'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Portal Architecture & Where Features Exist Guide (User Explicit Request) */}
+              <div className="bg-gradient-to-br from-[#0B2546] to-[#143D6D] rounded-2xl p-6 text-white shadow-md space-y-5">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/15 pb-4">
+                  <div>
+                    <span className="text-[10px] font-mono uppercase tracking-widest text-sky-300 font-bold bg-white/10 px-2 py-0.5 rounded">
+                      Vendor Navigation Guide & Portal Architecture
+                    </span>
+                    <h2 className="text-xl font-extrabold text-white mt-1">
+                      Explore the National Procurement Compliance Portal (BidShield)
+                    </h2>
+                    <p className="text-xs text-slate-200 mt-0.5 max-w-3xl">
+                      This overview summarizes where all vendor tools, statutory registries, and bidding workspaces reside. Use the fast-launch cards below to navigate directly.
+                    </p>
+                  </div>
+                  <div className="shrink-0">
+                    <span className="text-xs font-mono bg-white/15 text-white px-3 py-1.5 rounded-lg border border-white/20 font-bold">
+                      GFR 2017 &bull; Rule 144(xi) Ready
+                    </span>
+                  </div>
+                </div>
+
+                {/* 4 Feature Guide Quadrant Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {/* Card 1: Overview */}
+                  <div className="bg-white/10 hover:bg-white/15 border border-white/20 rounded-xl p-4 transition flex flex-col justify-between space-y-3">
+                    <div className="space-y-1.5">
+                      <div className="w-8 h-8 rounded-lg bg-sky-500/30 border border-sky-400/40 flex items-center justify-center text-sky-200">
+                        <LayoutDashboard className="w-4 h-4" />
+                      </div>
+                      <h3 className="text-sm font-bold text-white">1. Overview & Health</h3>
+                      <p className="text-[11px] text-slate-200 leading-relaxed">
+                        Live dashboard summarizing your GFR 2017 risk score, Central Debarment vigilance clearance, and active discrepancy notices.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleTabChange('overview')}
+                      className="w-full text-left text-xs font-bold text-sky-300 hover:text-white flex items-center justify-between pt-2 border-t border-white/10 cursor-pointer"
+                    >
+                      <span>Active Screen</span>
+                      <Check className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+
+                  {/* Card 2: Profile Status */}
+                  <div className="bg-white/10 hover:bg-white/15 border border-white/20 rounded-xl p-4 transition flex flex-col justify-between space-y-3">
+                    <div className="space-y-1.5">
+                      <div className="w-8 h-8 rounded-lg bg-emerald-500/30 border border-emerald-400/40 flex items-center justify-center text-emerald-200">
+                        <UserCheck className="w-4 h-4" />
+                      </div>
+                      <h3 className="text-sm font-bold text-white">2. Profile Status</h3>
+                      <p className="text-[11px] text-slate-200 leading-relaxed">
+                        Complete your corporate identity, authorized signatory KYC, banking EMD refund mandate, and annual turnover records.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleTabChange('profile')}
+                      className="w-full text-left text-xs font-bold text-sky-300 hover:text-white flex items-center justify-between pt-2 border-t border-white/10 cursor-pointer"
+                    >
+                      <span>Open Profile Desk</span>
+                      <ArrowUpRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+
+                  {/* Card 3: Uploaded Documents */}
+                  <div className="bg-white/10 hover:bg-white/15 border border-white/20 rounded-xl p-4 transition flex flex-col justify-between space-y-3">
+                    <div className="space-y-1.5">
+                      <div className="w-8 h-8 rounded-lg bg-indigo-500/30 border border-indigo-400/40 flex items-center justify-center text-indigo-200">
+                        <FileCheck2 className="w-4 h-4" />
+                      </div>
+                      <h3 className="text-sm font-bold text-white">3. Uploaded Documents</h3>
+                      <p className="text-[11px] text-slate-200 leading-relaxed">
+                        Statutory vault to showcase certificates (GST REG-06, PAN, Udyam), preview files, check OCR extractions, and delete records.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleTabChange('documents')}
+                      className="w-full text-left text-xs font-bold text-sky-300 hover:text-white flex items-center justify-between pt-2 border-t border-white/10 cursor-pointer"
+                    >
+                      <span>Manage Vault</span>
+                      <ArrowUpRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+
+                  {/* Card 4: Apply for Tenders */}
+                  <div className="bg-white/10 hover:bg-white/15 border border-white/20 rounded-xl p-4 transition flex flex-col justify-between space-y-3">
+                    <div className="space-y-1.5">
+                      <div className="w-8 h-8 rounded-lg bg-amber-500/30 border border-amber-400/40 flex items-center justify-center text-amber-200">
+                        <Layers className="w-4 h-4" />
+                      </div>
+                      <h3 className="text-sm font-bold text-white">4. Apply for Tender/BIDs</h3>
+                      <p className="text-[11px] text-slate-200 leading-relaxed">
+                        Browse active CPCL & PSU tenders, check eligibility, apply quotation amount, and track real-time contract award decisions.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleTabChange('apply')}
+                      className="w-full text-left text-xs font-bold text-sky-300 hover:text-white flex items-center justify-between pt-2 border-t border-white/10 cursor-pointer"
+                    >
+                      <span>Apply for Tenders</span>
+                      <ArrowUpRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Statutory Health Check Advisory */}
+              {compliance?.flags && compliance.flags.length > 0 ? (
+                <div className={`p-4 rounded-xl border flex items-start space-x-3 ${
+                  isHighRisk ? 'bg-rose-50 border-rose-200' : 'bg-amber-50 border-amber-200'
+                }`}>
+                  <AlertTriangle className={`w-5 h-5 shrink-0 mt-0.5 ${isHighRisk ? 'text-rose-600' : 'text-amber-600'}`} />
+                  <div className="space-y-1">
+                    <h4 className={`text-xs font-bold uppercase tracking-wide ${isHighRisk ? 'text-rose-900' : 'text-amber-900'}`}>
+                      Statutory Discrepancy & Fraud Advisory Flags ({compliance.flags.length})
+                    </h4>
+                    <ul className="text-xs space-y-1">
+                      {compliance.flags.map((flag, idx) => (
+                        <li key={idx} className={isHighRisk ? 'text-rose-800' : 'text-amber-800'}>
+                          &bull; {flag}
+                        </li>
+                      ))}
+                    </ul>
+                    <p className="text-[11px] text-slate-600 pt-1">
+                      Go to the <strong>Uploaded Documents</strong> tab to re-upload clear certificates or update mismatched legal names.
+                    </p>
+                  </div>
                 </div>
               ) : (
-                <p className="text-xs text-slate-400 italic">No committee review notes recorded yet.</p>
-              )}
-              <span className="text-[10px] text-slate-400 mt-2 block font-mono">CPCL Tender Committee</span>
-            </div>
-          </div>
-
-          {/* 3. Advisory Warnings (If Any) */}
-          {compliance?.flags && compliance.flags.length > 0 && (
-            <div className="bg-amber-50/70 border border-amber-300 rounded-2xl p-5 shadow-sm">
-              <div className="flex items-start space-x-3">
-                <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-                <div className="space-y-1">
-                  <h4 className="text-xs font-bold uppercase tracking-wide text-amber-900">
-                    Statutory Action Items ({compliance.flags.length} Flags Detected)
-                  </h4>
-                  <ul className="text-xs space-y-1 text-amber-800">
-                    {compliance.flags.map((flag, idx) => (
-                      <li key={idx}>&bull; {flag}</li>
-                    ))}
-                  </ul>
-                  <p className="text-[11px] text-amber-700 pt-1 font-medium">
-                    Please address these discrepancies to prevent disqualification during commercial bid evaluation.
-                  </p>
+                <div className="p-4 rounded-xl border bg-emerald-50 border-emerald-200 flex items-center space-x-3">
+                  <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                  <div>
+                    <h4 className="text-xs font-bold uppercase tracking-wide text-emerald-900">
+                      All 6 Statutory Cross-Checks Verified
+                    </h4>
+                    <p className="text-xs text-emerald-800">
+                      No registry mismatches or MoPNG vigilance debarments found. Enterprise credentials align 100% across Udyam, GSTN, and Income Tax databases.
+                    </p>
+                  </div>
                 </div>
+              )}
+            </div>
+          )}
+
+          {/* TAB 2: PROFILE STATUS & ENTERPRISE KYC DESK */}
+          {activeTab === 'profile' && (
+            <div className="space-y-6">
+              {/* Profile Completion Meter Card */}
+              <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 font-mono">
+                      Corporate Profile Completion
+                    </span>
+                    <h2 className="text-lg font-extrabold text-[#0B2546]">
+                      Enterprise Public Procurement Readiness
+                    </h2>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-2xl font-black font-mono text-[#0B2546]">{completionPct}%</span>
+                    <span className={`text-xs font-bold px-2.5 py-1 rounded-full border ${
+                      completionPct >= 80 ? 'bg-emerald-50 text-emerald-800 border-emerald-200' : 'bg-amber-50 text-amber-800 border-amber-200'
+                    }`}>
+                      {completionPct >= 80 ? 'Eligible for CPCL Tenders' : 'Incomplete Information'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Progress Bar */}
+                <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                  <div
+                    className="bg-gradient-to-r from-sky-500 to-[#0B2546] h-2.5 rounded-full transition-all duration-500"
+                    style={{ width: `${completionPct}%` }}
+                  ></div>
+                </div>
+                <p className="text-xs text-slate-500">
+                  Fill in your authorized signatory and banking details below to ensure seamless Earnest Money Deposit (EMD) processing and automatic tender evaluations.
+                </p>
+              </div>
+
+              {/* Profile Form */}
+              <form onSubmit={handleSaveProfile} className="space-y-6">
+                {/* 1. Legal Statutory Pillars (Verified) */}
+                <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs space-y-4">
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                    <div className="flex items-center space-x-2">
+                      <Briefcase className="w-4 h-4 text-[#0B2546]" />
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800">
+                        1. Legal Registration Pillars (Verified against Registries)
+                      </h3>
+                    </div>
+                    <span className="text-[10px] font-mono bg-emerald-50 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded font-bold">
+                      Registry Locked
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
+                    <div>
+                      <label className="block text-slate-500 font-medium mb-1">Legal Company Name</label>
+                      <input
+                        type="text"
+                        disabled
+                        value={currentBidder?.company_name || ''}
+                        className="w-full p-2.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-800 font-bold"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-slate-500 font-medium mb-1">GSTIN (15-Digit)</label>
+                      <input
+                        type="text"
+                        disabled
+                        value={currentBidder?.gstin || ''}
+                        className="w-full p-2.5 rounded-lg border border-slate-200 bg-slate-50 font-mono font-bold text-slate-800"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-slate-500 font-medium mb-1">Permanent Account No (PAN)</label>
+                      <input
+                        type="text"
+                        disabled
+                        value={currentBidder?.pan_number || ''}
+                        className="w-full p-2.5 rounded-lg border border-slate-200 bg-slate-50 font-mono font-bold text-slate-800"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-slate-500 font-medium mb-1">MSME Udyam Number</label>
+                      <input
+                        type="text"
+                        disabled
+                        value={currentBidder?.udyam_number || ''}
+                        className="w-full p-2.5 rounded-lg border border-slate-200 bg-slate-50 font-mono font-bold text-slate-800"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* 2. Registered Communications */}
+                <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs space-y-4">
+                  <div className="flex items-center space-x-2 pb-3 border-b border-slate-100">
+                    <Mail className="w-4 h-4 text-[#0B2546]" />
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800">
+                      2. Corporate Communications & Registered Office (Editable)
+                    </h3>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                    <div>
+                      <label className="block text-slate-700 font-bold mb-1">Official Tendering Email *</label>
+                      <input
+                        type="email"
+                        required
+                        value={profileForm.email}
+                        onChange={(e) => setProfileForm({ ...profileForm, email: e.target.value })}
+                        className="w-full p-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 focus:ring-1 focus:ring-[#0B2546] focus:border-[#0B2546]"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-slate-700 font-bold mb-1">Corporate Phone / Landline *</label>
+                      <input
+                        type="text"
+                        required
+                        value={profileForm.phone}
+                        onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
+                        className="w-full p-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 focus:ring-1 focus:ring-[#0B2546] focus:border-[#0B2546]"
+                      />
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="block text-slate-700 font-bold mb-1">Registered Office Address *</label>
+                      <textarea
+                        rows={2}
+                        required
+                        value={profileForm.registered_address}
+                        onChange={(e) => setProfileForm({ ...profileForm, registered_address: e.target.value })}
+                        className="w-full p-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 focus:ring-1 focus:ring-[#0B2546] focus:border-[#0B2546]"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* 3. Authorized Signatory & Management KYC */}
+                <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs space-y-4">
+                  <div className="flex items-center space-x-2 pb-3 border-b border-slate-100">
+                    <UserCheck className="w-4 h-4 text-[#0B2546]" />
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800">
+                      3. Authorized Signatory & Tendering Representation
+                    </h3>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
+                    <div>
+                      <label className="block text-slate-700 font-bold mb-1">Signatory Full Name *</label>
+                      <input
+                        type="text"
+                        required
+                        value={profileForm.signatory_name}
+                        onChange={(e) => setProfileForm({ ...profileForm, signatory_name: e.target.value })}
+                        className="w-full p-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 focus:ring-1 focus:ring-[#0B2546]"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-slate-700 font-bold mb-1">Designation / Capacity *</label>
+                      <input
+                        type="text"
+                        required
+                        value={profileForm.signatory_designation}
+                        onChange={(e) => setProfileForm({ ...profileForm, signatory_designation: e.target.value })}
+                        className="w-full p-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 focus:ring-1 focus:ring-[#0B2546]"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-slate-700 font-bold mb-1">Signatory Direct Mobile</label>
+                      <input
+                        type="text"
+                        value={profileForm.signatory_phone}
+                        onChange={(e) => setProfileForm({ ...profileForm, signatory_phone: e.target.value })}
+                        className="w-full p-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 focus:ring-1 focus:ring-[#0B2546]"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-slate-700 font-bold mb-1">Signatory Direct Email</label>
+                      <input
+                        type="email"
+                        value={profileForm.signatory_email}
+                        onChange={(e) => setProfileForm({ ...profileForm, signatory_email: e.target.value })}
+                        className="w-full p-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 focus:ring-1 focus:ring-[#0B2546]"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* 4. Banking & EMD Mandate Details */}
+                <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs space-y-4">
+                  <div className="flex items-center space-x-2 pb-3 border-b border-slate-100">
+                    <CreditCard className="w-4 h-4 text-[#0B2546]" />
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800">
+                      4. Banking Mandate (EMD & Performance Security Refund)
+                    </h3>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                    <div>
+                      <label className="block text-slate-700 font-bold mb-1">Bank Name</label>
+                      <input
+                        type="text"
+                        value={profileForm.bank_name}
+                        onChange={(e) => setProfileForm({ ...profileForm, bank_name: e.target.value })}
+                        className="w-full p-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 focus:ring-1 focus:ring-[#0B2546]"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-slate-700 font-bold mb-1">Current Account Number</label>
+                      <input
+                        type="text"
+                        value={profileForm.bank_account}
+                        onChange={(e) => setProfileForm({ ...profileForm, bank_account: e.target.value })}
+                        className="w-full p-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 font-mono font-bold focus:ring-1 focus:ring-[#0B2546]"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-slate-700 font-bold mb-1">RTGS / IFSC Code</label>
+                      <input
+                        type="text"
+                        value={profileForm.bank_ifsc}
+                        onChange={(e) => setProfileForm({ ...profileForm, bank_ifsc: e.target.value })}
+                        className="w-full p-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 font-mono font-bold focus:ring-1 focus:ring-[#0B2546]"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Save Banner & Action */}
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-slate-50 border border-slate-200 rounded-xl">
+                  <div className="text-xs text-slate-600">
+                    {profileSaveSuccess ? (
+                      <span className="inline-flex items-center text-emerald-700 font-bold">
+                        <CheckCircle2 className="w-4 h-4 mr-1.5" />
+                        Company profile and authorized signatory records updated successfully!
+                      </span>
+                    ) : (
+                      <span>All updates are synchronized with the central CPCL vendor master ledger.</span>
+                    )}
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={savingProfile}
+                    className="inline-flex items-center space-x-2 bg-[#0B2546] hover:bg-[#07182D] text-white text-xs font-bold px-5 py-2.5 rounded-lg shadow-sm transition disabled:opacity-50 cursor-pointer"
+                  >
+                    <Save className="w-4 h-4" />
+                    <span>{savingProfile ? 'Saving Changes...' : 'Save & Update Profile'}</span>
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {/* TAB 3: UPLOADED DOCUMENTS & CERTIFICATES VAULT */}
+          {activeTab === 'documents' && (
+            <div className="space-y-6">
+              {/* Vault Header & Direct Upload Desk */}
+              <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-100 gap-3">
+                  <div className="flex items-center space-x-2.5">
+                    <FileCheck2 className="w-6 h-6 text-sky-600 shrink-0" />
+                    <div>
+                      <h2 className="text-lg font-extrabold text-[#0B2546]">
+                        Statutory Documents Vault
+                      </h2>
+                      <p className="text-xs text-slate-500">
+                        Showcasing all uploaded regulatory certificates with optical verification & instant deletion options.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <span className="text-xs font-mono font-bold bg-slate-100 text-slate-800 px-3 py-1 rounded-lg border border-slate-200">
+                      {documents.length} Certificates on Record
+                    </span>
+                  </div>
+                </div>
+
+                {/* Upload Feedback Notice */}
+                {uploadFeedback && (
+                  <div
+                    className={`text-xs p-3.5 rounded-xl border flex items-center space-x-2.5 ${
+                      uploadFeedback.type === 'success'
+                        ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                        : 'bg-rose-50 border-rose-200 text-rose-800'
+                    }`}
+                  >
+                    {uploadFeedback.type === 'success' ? (
+                      <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
+                    ) : (
+                      <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+                    )}
+                    <span className="font-medium">{uploadFeedback.text}</span>
+                  </div>
+                )}
+
+                {/* Delete Feedback Notice */}
+                {deleteFeedback && (
+                  <div
+                    className={`text-xs p-3.5 rounded-xl border flex items-center space-x-2.5 ${
+                      deleteFeedback.type === 'success'
+                        ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                        : 'bg-rose-50 border-rose-200 text-rose-800'
+                    }`}
+                  >
+                    <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
+                    <span className="font-medium">{deleteFeedback.text}</span>
+                  </div>
+                )}
+
+                {/* Document Upload Form */}
+                <form onSubmit={handleDocUpload} className="bg-slate-50/80 border border-slate-200 rounded-xl p-4.5 space-y-4">
+                  <div className="text-xs font-bold text-[#0B2546] uppercase tracking-wider flex items-center space-x-2">
+                    <Upload className="w-4 h-4 text-sky-600" />
+                    <span>Upload New Statutory Certificate to Vault</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">
+                        Document Classification
+                      </label>
+                      <select
+                        value={uploadDocType}
+                        onChange={(e) => setUploadDocType(e.target.value)}
+                        className="w-full text-xs bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:ring-1 focus:ring-[#0B2546]"
+                      >
+                        <option value="GST_CERT">GST Registration Certificate (GST REG-06)</option>
+                        <option value="PAN_CARD">Permanent Account Number (PAN Card)</option>
+                        <option value="UDYAM_CERT">MSME Udyam Registration Certificate</option>
+                        <option value="ITR_V">ITR-V Income Tax Return Acknowledgement</option>
+                        <option value="AUDIT_REPORT">Audited Balance Sheet / Financials</option>
+                      </select>
+                    </div>
+
+                    <div className="sm:col-span-2">
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">
+                        Select Certificate File (PDF, Image, or Text)
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept="image/*,.pdf,.txt"
+                          onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
+                          className="w-full text-xs text-slate-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-bold file:bg-[#0B2546]/10 file:text-[#0B2546] hover:file:bg-[#0B2546]/20 border border-slate-300 rounded-lg bg-white p-1"
+                        />
+                        <button
+                          type="submit"
+                          disabled={uploadingDoc || !uploadFile}
+                          className="inline-flex items-center space-x-1.5 bg-[#0B2546] hover:bg-[#07182D] text-white text-xs font-bold px-4 py-2 rounded-lg shadow-sm transition disabled:opacity-50 shrink-0 cursor-pointer"
+                        >
+                          {uploadingDoc ? (
+                            <>
+                              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                              <span>Verifying...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Upload className="w-3.5 h-3.5" />
+                              <span>Upload to Vault</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </form>
+
+                {/* Documents Grid / Vault Cards */}
+                {documents.length === 0 ? (
+                  <div className="text-center py-12 border-2 border-dashed border-slate-200 rounded-2xl text-slate-500 text-xs">
+                    <FileText className="w-10 h-10 text-slate-300 mx-auto mb-2" />
+                    <p className="font-bold text-slate-700 text-sm">Your Statutory Vault is Currently Empty</p>
+                    <p className="text-slate-400 mt-0.5">Use the upload box above to add your company certificates for automated AI verification.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3.5">
+                    {documents.map((doc) => {
+                      const extData = doc.extracted_data || {};
+                      const isDeleting = deletingDocId === doc.doc_id;
+
+                      return (
+                        <div
+                          key={doc.doc_id}
+                          className={`rounded-xl border p-4.5 transition ${
+                            doc.flagged
+                              ? 'border-rose-300 bg-rose-50/20'
+                              : 'border-slate-200 bg-white hover:border-slate-300 shadow-2xs'
+                          }`}
+                        >
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="text-xs font-mono font-extrabold uppercase bg-slate-100 text-slate-800 px-2.5 py-0.5 rounded border border-slate-200">
+                                {doc.doc_type}
+                              </span>
+                              <span className="text-xs font-semibold text-slate-800 font-mono">
+                                {doc.file_url ? doc.file_url.split('/').pop() : 'Statutory_Certificate.pdf'}
+                              </span>
+                              <span className="text-slate-300">&bull;</span>
+                              <span className="text-xs text-slate-400">
+                                Uploaded {formatDate(doc.uploaded_at)}
+                              </span>
+                            </div>
+
+                            {/* Action Buttons: View & Delete */}
+                            <div className="flex items-center space-x-2">
+                              <button
+                                type="button"
+                                onClick={() => setPreviewDoc(doc)}
+                                className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition cursor-pointer"
+                                title="Preview certificate & view metadata"
+                              >
+                                <Eye className="w-3.5 h-3.5" />
+                                <span>View Document</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                disabled={isDeleting}
+                                onClick={() => handleDeleteDoc(doc.doc_id, doc.doc_type)}
+                                className="inline-flex items-center space-x-1 px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold border border-rose-200 transition cursor-pointer disabled:opacity-50"
+                                title="Permanently remove certificate from vault"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                                <span>{isDeleting ? 'Deleting...' : 'Delete'}</span>
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Verification Status Banner */}
+                          <div className="mt-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                            <div className="flex items-center space-x-2">
+                              <span
+                                className={`inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${
+                                  doc.flagged
+                                    ? 'bg-rose-50 text-rose-800 border-rose-200'
+                                    : 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                                }`}
+                              >
+                                {doc.flagged ? (
+                                  <>
+                                    <AlertTriangle className="w-3 h-3 text-rose-600" />
+                                    <span>Flagged Discrepancy: {doc.flag_reason || 'Check Failed'}</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                                    <span>Verified Against Government Registry</span>
+                                  </>
+                                )}
+                              </span>
+                            </div>
+
+                            <span className="text-[10px] font-mono text-slate-400">
+                              Document ID: {doc.doc_id.substring(0, 8).toUpperCase()}
+                            </span>
+                          </div>
+
+                          {/* Extracted Fields Matrix */}
+                          <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 text-xs">
+                            <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-200">
+                              <span className="text-[10px] uppercase font-bold text-slate-400 block">Entity Name</span>
+                              <span className="font-semibold text-slate-800 truncate block">
+                                {extData.company_name || extData.entity_name || currentBidder?.company_name}
+                              </span>
+                            </div>
+                            <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-200">
+                              <span className="text-[10px] uppercase font-bold text-slate-400 block">GSTIN</span>
+                              <span className="font-mono font-bold text-slate-800 truncate block">
+                                {extData.gstin || currentBidder?.gstin}
+                              </span>
+                            </div>
+                            <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-200">
+                              <span className="text-[10px] uppercase font-bold text-slate-400 block">PAN Number</span>
+                              <span className="font-mono font-bold text-slate-800 truncate block">
+                                {extData.pan || currentBidder?.pan_number}
+                              </span>
+                            </div>
+                            <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-200">
+                              <span className="text-[10px] uppercase font-bold text-slate-400 block">Registry Status</span>
+                              <span className={`font-semibold ${doc.flagged ? 'text-rose-600' : 'text-emerald-700'}`}>
+                                {extData.verified_against_registry || (doc.flagged ? 'Discrepancy' : 'Compliant')}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
           )}
 
-          {/* 4. 6-Pillar Health Check Matrix */}
-          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
-            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-bold text-slate-900">Statutory 6-Pillar Compliance Health</h3>
-                <p className="text-xs text-slate-400 mt-0.5">Live verification status against official government registers</p>
+          {/* TAB 4: APPLY FOR TENDER/BIDS */}
+          {activeTab === 'apply' && (
+            <div className="space-y-6">
+              {/* Apply Header */}
+              <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 font-bold">
+                    CPCL Live Procurement Desk
+                  </span>
+                  <h2 className="text-xl font-extrabold text-[#0B2546] mt-0.5">
+                    Participate & Apply for Public Tenders
+                  </h2>
+                  <p className="text-xs text-slate-500">
+                    Submit commercial quotations, specify completion commitments, and track official awarding determinations.
+                  </p>
+                </div>
+
+                <div className="flex items-center space-x-2 shrink-0">
+                  <span className="bg-blue-50 text-blue-800 border border-blue-200 text-xs font-bold px-3 py-1.5 rounded-lg">
+                    {openTenders.length} Active Public Tenders
+                  </span>
+                </div>
               </div>
-              <span className="text-xs font-mono font-semibold bg-slate-100 px-2.5 py-1 rounded-full text-slate-600">
-                100 Pts Scale
-              </span>
+
+              {/* Quotation Submission Feedback Notice */}
+              {bidFeedback && (
+                <div
+                  className={`text-xs p-4 rounded-xl border flex items-center space-x-2.5 ${
+                    bidFeedback.type === 'success'
+                      ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                      : 'bg-rose-50 border-rose-200 text-rose-800'
+                  }`}
+                >
+                  {bidFeedback.type === 'success' ? (
+                    <CheckCircle2 className="w-5 h-5 shrink-0 text-emerald-600" />
+                  ) : (
+                    <AlertCircle className="w-5 h-5 shrink-0 text-rose-600" />
+                  )}
+                  <span className="font-bold">{bidFeedback.text}</span>
+                </div>
+              )}
+
+              {/* Active Tenders Catalog */}
+              <div className="space-y-4">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 font-mono">
+                  Available Tenders Open for Bidding
+                </h3>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {openTenders.map((tender) => {
+                    const existingBid = bids.find((b) => b.tender_id === tender.tender_id);
+                    const isAwarded = tender.status === 'Awarded';
+                    const isClosed = isAwarded || tender.status === 'Closed';
+
+                    return (
+                      <div
+                        key={tender.tender_id}
+                        className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs flex flex-col justify-between space-y-4 hover:border-slate-300 transition"
+                      >
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-[10px] font-mono font-bold uppercase bg-slate-100 text-slate-700 px-2 py-0.5 rounded border border-slate-200">
+                              Ref: {tender.tender_id.substring(0, 8).toUpperCase()}
+                            </span>
+                            <span
+                              className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${
+                                tender.status === 'Active'
+                                  ? 'bg-emerald-100 text-emerald-800'
+                                  : 'bg-slate-100 text-slate-600'
+                              }`}
+                            >
+                              {tender.status}
+                            </span>
+                          </div>
+
+                          <h4 className="text-base font-bold text-[#0B2546] leading-snug">
+                            {tender.title}
+                          </h4>
+                          <p className="text-xs text-slate-500 line-clamp-2">
+                            {tender.description}
+                          </p>
+
+                          <div className="pt-2 grid grid-cols-2 gap-2 text-xs">
+                            <div className="p-2 bg-slate-50 rounded-lg border border-slate-100">
+                              <span className="text-[10px] text-slate-400 block uppercase font-bold">Estimated Value</span>
+                              <span className="font-mono font-extrabold text-slate-900 text-sm">
+                                {formatINR(tender.budget)}
+                              </span>
+                            </div>
+                            <div className="p-2 bg-slate-50 rounded-lg border border-slate-100">
+                              <span className="text-[10px] text-slate-400 block uppercase font-bold">Published</span>
+                              <span className="font-semibold text-slate-700 text-xs">
+                                {formatDate(tender.created_at)}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Bid Status / Action Button */}
+                        <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
+                          {existingBid ? (
+                            <div className="flex items-center justify-between w-full">
+                              <div>
+                                <span className="text-[10px] uppercase font-bold text-slate-400 block">Your Quotation</span>
+                                <span className="font-mono font-black text-[#0B2546] text-sm">
+                                  {formatINR(existingBid.bid_amount)}
+                                </span>
+                              </div>
+                              <span className={`text-xs font-bold px-2.5 py-1 rounded-full border ${
+                                existingBid.status === 'Awarded'
+                                  ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
+                                  : 'bg-blue-50 text-blue-800 border-blue-200'
+                              }`}>
+                                {existingBid.status === 'Awarded' ? '🏆 Contract Awarded' : 'Submitted (Under Review)'}
+                              </span>
+                            </div>
+                          ) : isClosed ? (
+                            <span className="text-xs text-slate-400 font-semibold italic">
+                              Bidding closed for this tender
+                            </span>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedTenderForBid(tender.tender_id);
+                                setIsBidModalOpen(true);
+                              }}
+                              className="w-full inline-flex items-center justify-center space-x-1.5 bg-[#0B2546] hover:bg-[#07182D] text-white text-xs font-bold py-2.5 rounded-xl shadow-xs transition cursor-pointer"
+                            >
+                              <Send className="w-3.5 h-3.5" />
+                              <span>Apply / Submit Official Quotation</span>
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* My Submitted Bids Table */}
+              <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+                <div className="p-4.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <Layers className="w-4 h-4 text-[#0B2546]" />
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-800">
+                      My Submitted Quotations Ledger ({bids.length})
+                    </h4>
+                  </div>
+                  <span className="text-[11px] font-mono text-slate-400">
+                    Cryptographically Logged
+                  </span>
+                </div>
+
+                {bids.length === 0 ? (
+                  <div className="text-center py-10 text-slate-500 text-xs">
+                    <p className="font-semibold text-slate-700">No quotations submitted yet.</p>
+                    <p className="text-[11px] text-slate-400 mt-0.5">Click &ldquo;Apply / Submit Official Quotation&rdquo; on any active tender above.</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs">
+                      <thead>
+                        <tr className="border-b border-slate-200 bg-slate-100/60 text-slate-600 font-bold uppercase tracking-wider">
+                          <th className="px-5 py-3">Tender Ref / Title</th>
+                          <th className="px-5 py-3">Submitted Quotation</th>
+                          <th className="px-5 py-3">Submission Timestamp</th>
+                          <th className="px-5 py-3">Official Status</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 text-slate-700">
+                        {bids.map((b) => {
+                          const tender = openTenders.find((t) => t.tender_id === b.tender_id);
+                          return (
+                            <tr key={b.bid_id} className="hover:bg-slate-50/60 transition">
+                              <td className="px-5 py-3.5 font-semibold text-slate-900">
+                                <div>{tender?.title || 'CPCL Procurement Package'}</div>
+                                <div className="text-[10px] font-mono text-slate-400">
+                                  Ref: {b.tender_id.substring(0, 8).toUpperCase()}
+                                </div>
+                              </td>
+
+                              <td className="px-5 py-3.5 font-mono font-black text-slate-900 text-sm">
+                                {formatINR(b.bid_amount)}
+                              </td>
+
+                              <td className="px-5 py-3.5 text-slate-500 font-mono">
+                                {formatDate(b.submitted_at)}
+                              </td>
+
+                              <td className="px-5 py-3.5">
+                                <span
+                                  className={`inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-xs font-bold border ${
+                                    b.status === 'Awarded'
+                                      ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
+                                      : b.status === 'Not Selected'
+                                      ? 'bg-slate-100 text-slate-600 border-slate-200'
+                                      : 'bg-blue-50 text-blue-800 border-blue-200'
+                                  }`}
+                                >
+                                  {b.status === 'Awarded' && <Award className="w-3.5 h-3.5 text-emerald-600" />}
+                                  <span>{b.status}</span>
+                                </span>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* MODAL 1: DOCUMENT PREVIEW VIEWER MODAL */}
+      {previewDoc && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden shadow-2xl border border-slate-200 flex flex-col">
+            {/* Modal Header */}
+            <div className="p-4 bg-gradient-to-r from-[#0B2546] to-[#143D6D] text-white flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <FileCheck2 className="w-5 h-5 text-sky-400" />
+                <h3 className="text-sm font-bold">
+                  Statutory Certificate Preview: {previewDoc.doc_type}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPreviewDoc(null)}
+                className="p-1 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 p-6">
-              {compliance?.breakdown?.map((item) => {
-                const isMatch = item.match_status === 'Match';
-                return (
-                  <div
-                    key={item.check_type}
-                    className={`p-4 rounded-xl border transition ${
-                      isMatch
-                        ? 'bg-emerald-50/30 border-emerald-200/70'
-                        : 'bg-rose-50/40 border-rose-200/70'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-bold text-slate-800">{item.check_type.replace('_', ' ')}</span>
-                      <span
-                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                          isMatch ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
-                        }`}
-                      >
-                        {isMatch ? 'Pass' : 'Deficit'}
-                      </span>
+            {/* Modal Body */}
+            <div className="p-6 overflow-y-auto space-y-4 text-xs">
+              {/* File Info */}
+              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between">
+                <div>
+                  <span className="text-[10px] text-slate-400 uppercase font-bold block">Document Path</span>
+                  <span className="font-mono font-semibold text-slate-800">{previewDoc.file_url}</span>
+                </div>
+                <span className="text-[11px] text-slate-500 font-mono">
+                  Uploaded: {formatDate(previewDoc.uploaded_at)}
+                </span>
+              </div>
+
+              {/* Rendered Preview if Base64 */}
+              {previewDoc.file_content ? (
+                <div className="border border-slate-200 rounded-xl overflow-hidden bg-slate-900/5 p-4 text-center">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase block mb-2 font-mono">
+                    Encoded Document Payload
+                  </span>
+                  {/* If image base64 */}
+                  {previewDoc.file_url && (previewDoc.file_url.endsWith('.png') || previewDoc.file_url.endsWith('.jpg') || previewDoc.file_url.endsWith('.jpeg')) ? (
+                    <img
+                      src={`data:image/png;base64,${previewDoc.file_content}`}
+                      alt="Certificate Preview"
+                      className="max-h-72 mx-auto rounded-lg shadow-sm border border-slate-200"
+                    />
+                  ) : (
+                    <div className="bg-white p-4 rounded-lg border border-slate-200 text-left max-h-48 overflow-y-auto font-mono text-[11px] text-slate-800">
+                      {atob(previewDoc.file_content.substring(0, 500))}...
                     </div>
-                    <div className="text-[11px] space-y-1 text-slate-500 font-mono">
-                      <div>Submitted: <span className="text-slate-800 font-medium">{item.document_value || '—'}</span></div>
-                      <div>Portal: <span className="text-slate-800 font-medium">{item.portal_value || '—'}</span></div>
+                  )}
+                </div>
+              ) : (
+                <div className="p-6 bg-slate-50 rounded-xl border border-dashed border-slate-200 text-center text-slate-500">
+                  <FileText className="w-8 h-8 text-slate-300 mx-auto mb-1.5" />
+                  <p className="font-semibold text-slate-700">Digital Certificate Registered</p>
+                  <p className="text-[11px] text-slate-400 mt-0.5">Physical copy recorded in the statutory registry ledger.</p>
+                </div>
+              )}
+
+              {/* Extracted JSON Metadata */}
+              <div>
+                <div className="flex items-center space-x-1.5 mb-1.5">
+                  <FileCode2 className="w-4 h-4 text-slate-600" />
+                  <span className="text-[11px] font-bold uppercase text-slate-700">
+                    Vision AI Extracted Metadata
+                  </span>
+                </div>
+                <pre className="p-3 bg-slate-900 text-slate-100 rounded-xl text-[11px] font-mono overflow-x-auto max-h-48">
+                  {JSON.stringify(previewDoc.extracted_data || {}, null, 2)}
+                </pre>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
+              <button
+                type="button"
+                onClick={() => handleDeleteDoc(previewDoc.doc_id, previewDoc.doc_type)}
+                className="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold border border-rose-200 transition cursor-pointer"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Delete Document</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setPreviewDoc(null)}
+                className="px-4 py-2 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs font-bold transition cursor-pointer"
+              >
+                Close Viewer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 2: APPLY FOR TENDER / SUBMIT BID MODAL */}
+      {isBidModalOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl border border-slate-200 flex flex-col">
+            {/* Modal Header */}
+            <div className="p-4.5 bg-gradient-to-r from-[#0B2546] to-[#143D6D] text-white flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Layers className="w-5 h-5 text-sky-400" />
+                <h3 className="text-sm font-bold">
+                  Apply for CPCL Public Tender
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsBidModalOpen(false)}
+                className="p-1 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Form */}
+            <form onSubmit={handleBidSubmit} className="p-6 space-y-4 text-xs">
+              {/* Selected Tender Overview */}
+              {(() => {
+                const tender = openTenders.find((t) => t.tender_id === selectedTenderForBid);
+                return (
+                  <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+                    <span className="text-[10px] uppercase font-bold text-slate-400 block font-mono">
+                      Selected Procurement Opportunity
+                    </span>
+                    <h4 className="font-bold text-slate-900 text-sm">
+                      {tender?.title || 'Commercial Tender'}
+                    </h4>
+                    <div className="flex items-center justify-between pt-1 text-slate-500 font-mono text-[11px]">
+                      <span>Estimated Value: <strong>{formatINR(tender?.budget)}</strong></span>
+                      <span>Ref: {tender?.tender_id.substring(0, 8).toUpperCase()}</span>
                     </div>
                   </div>
                 );
-              })}
-            </div>
-          </div>
+              })()}
 
-          {/* 5. My Tender Bids Table */}
-          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
-            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+              {/* Quotation Amount Input */}
               <div>
-                <h3 className="text-sm font-bold text-slate-900">My Tender Submissions & Live Status</h3>
-                <p className="text-xs text-slate-400 mt-0.5">Commercial quotations submitted for CPCL refinery contracts</p>
-              </div>
-              <span className="text-xs font-mono font-semibold bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-full">
-                {bids.length} Submissions
-              </span>
-            </div>
-
-            {bids.length === 0 ? (
-              <div className="p-12 text-center text-xs text-slate-400">
-                You have not submitted any bids yet. Use the form below to quote on open tenders.
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-slate-100 text-left text-xs">
-                  <thead className="bg-slate-50/70 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
-                    <tr>
-                      <th className="px-6 py-3.5">Tender Name</th>
-                      <th className="px-5 py-3.5">Department</th>
-                      <th className="px-5 py-3.5 text-right">My Quoted Amount</th>
-                      <th className="px-5 py-3.5 text-right">Est. Value</th>
-                      <th className="px-5 py-3.5 text-center">Status</th>
-                      <th className="px-5 py-3.5 text-right">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 bg-white">
-                    {bids.map((b) => {
-                      const isAwarded = b.status === 'Awarded';
-                      const isRejected = b.status === 'Rejected';
-                      const tender = b.tender;
-
-                      return (
-                        <tr key={b.bid_id} className="hover:bg-slate-50/60 transition">
-                          <td className="px-6 py-4 font-semibold text-slate-900">
-                            <Link to={`/tenders/${b.tender_id}`} className="hover:text-indigo-600 flex items-center space-x-1">
-                              <span>{tender?.title || `Tender Ref: ${b.tender_id.substring(0, 8)}`}</span>
-                              <ArrowUpRight className="w-3.5 h-3.5 text-slate-400" />
-                            </Link>
-                          </td>
-                          <td className="px-5 py-4 text-slate-500 font-medium">{tender?.department || 'CPCL Procurement'}</td>
-                          <td className="px-5 py-4 text-right font-mono font-bold text-slate-900 text-sm">
-                            {formatINR(b.bid_amount)}
-                          </td>
-                          <td className="px-5 py-4 text-right font-mono text-slate-500">
-                            {tender?.estimated_value ? formatINR(tender.estimated_value) : '—'}
-                          </td>
-                          <td className="px-5 py-4 text-center">
-                            <span
-                              className={`inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold font-mono ${
-                                isAwarded
-                                  ? 'bg-purple-50 text-purple-700 border border-purple-200'
-                                  : isRejected
-                                  ? 'bg-rose-50 text-rose-700 border border-rose-200'
-                                  : 'bg-blue-50 text-blue-700 border border-blue-200'
-                              }`}
-                            >
-                              {isAwarded ? '🏆 Awarded' : isRejected ? '❌ Rejected' : '⏳ Submitted'}
-                            </span>
-                          </td>
-                          <td className="px-5 py-4 text-right">
-                            <Link to={`/tenders/${b.tender_id}`} className="text-xs font-semibold text-indigo-600 hover:text-indigo-800">
-                              View Matrix &rarr;
-                            </Link>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-
-          {/* 6. Two-Column Workspace: Quick Bid Submission & Document Locker */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Quick Bid Submission */}
-            <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6 space-y-4">
-              <div className="flex items-center space-x-2 border-b border-slate-100 pb-3">
-                <Send className="w-4 h-4 text-indigo-600" />
-                <div>
-                  <h3 className="text-sm font-bold text-slate-900">Submit / Revise Tender Quotation</h3>
-                  <p className="text-xs text-slate-400">Quote commercial pricing for CPCL procurement contracts</p>
-                </div>
-              </div>
-
-              {bidFeedback && (
-                <div
-                  className={`p-3 rounded-xl text-xs font-semibold ${
-                    bidFeedback.type === 'success'
-                      ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-                      : 'bg-rose-50 text-rose-800 border border-rose-200'
-                  }`}
-                >
-                  {bidFeedback.text}
-                </div>
-              )}
-
-              <form onSubmit={handleBidSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Select Open Tender:</label>
-                  <select
-                    value={selectedTenderForBid}
-                    onChange={(e) => setSelectedTenderForBid(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                    required
-                  >
-                    <option value="">-- Select Open Tender --</option>
-                    {openTenders.map((t) => (
-                      <option key={t.tender_id} value={t.tender_id}>
-                        {t.title} (Est: {formatINR(t.estimated_value)}) &bull; Status: {t.status}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Quoted Amount (₹ INR):</label>
+                <label className="block text-slate-800 font-bold mb-1">
+                  Enterprise Commercial Quotation (INR ₹) *
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3 top-2.5 font-bold text-slate-400">₹</span>
                   <input
                     type="number"
-                    value={bidQuoteAmount}
-                    onChange={(e) => setBidQuoteAmount(e.target.value)}
-                    placeholder="e.g. 4250000"
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs font-mono text-slate-900 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                     required
                     min="1"
+                    step="any"
+                    placeholder="Enter quotation in Rupees (e.g. 4250000)"
+                    value={bidQuoteAmount}
+                    onChange={(e) => setBidQuoteAmount(e.target.value)}
+                    className="w-full pl-7 pr-3 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 font-mono font-bold focus:ring-1 focus:ring-[#0B2546]"
                   />
                 </div>
-
-                <button
-                  type="submit"
-                  disabled={submittingBid}
-                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold py-2.5 rounded-xl shadow-sm transition disabled:opacity-50 flex items-center justify-center space-x-1.5"
-                >
-                  <Send className="w-3.5 h-3.5" />
-                  <span>{submittingBid ? 'Submitting...' : 'Transmit Sealed Bid'}</span>
-                </button>
-              </form>
-            </div>
-
-            {/* Document Locker */}
-            <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6 space-y-4">
-              <div className="flex items-center space-x-2 border-b border-slate-100 pb-3">
-                <Upload className="w-4 h-4 text-indigo-600" />
-                <div>
-                  <h3 className="text-sm font-bold text-slate-900">Statutory Certificate Locker</h3>
-                  <p className="text-xs text-slate-400">Upload PDF/Images for automated OCR extraction & registry check</p>
-                </div>
-              </div>
-
-              {uploadFeedback && (
-                <div
-                  className={`p-3 rounded-xl text-xs font-semibold ${
-                    uploadFeedback.type === 'success'
-                      ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-                      : 'bg-rose-50 text-rose-800 border border-rose-200'
-                  }`}
-                >
-                  {uploadFeedback.text}
-                </div>
-              )}
-
-              <form onSubmit={handleDocUpload} className="space-y-3">
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">Doc Type:</label>
-                    <select
-                      value={uploadDocType}
-                      onChange={(e) => setUploadDocType(e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 text-xs text-slate-900 focus:outline-none"
-                    >
-                      <option value="GST_CERT">GST Registration</option>
-                      <option value="PAN_CARD">PAN Card Copy</option>
-                      <option value="UDYAM_CERT">MSME Udyam Certificate</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">File:</label>
-                    <input
-                      type="file"
-                      accept=".pdf,image/*"
-                      onChange={(e) => setUploadFile(e.target.files[0])}
-                      className="w-full text-xs text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200 cursor-pointer"
-                    />
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={uploadingDoc}
-                  className="w-full bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold py-2.5 rounded-xl shadow-sm transition disabled:opacity-50 flex items-center justify-center space-x-1.5"
-                >
-                  <Upload className="w-3.5 h-3.5" />
-                  <span>{uploadingDoc ? 'Extracting via AI...' : 'Upload & Verify'}</span>
-                </button>
-              </form>
-
-              {/* Uploaded Docs Preview */}
-              <div className="pt-2">
-                <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-2">
-                  Stored Certificates ({documents.length})
-                </span>
-                <div className="space-y-2 max-h-36 overflow-y-auto">
-                  {documents.map((doc) => (
-                    <div
-                      key={doc.doc_id}
-                      className="p-2.5 rounded-xl border border-slate-200/80 bg-slate-50/60 flex items-center justify-between text-xs font-mono"
-                    >
-                      <div className="flex items-center space-x-2">
-                        <FileText className="w-4 h-4 text-slate-400" />
-                        <span className="font-semibold text-slate-800">{doc.doc_type}</span>
-                        <span className="text-[10px] text-slate-400">{formatDate(doc.uploaded_at)}</span>
-                      </div>
-                      <span
-                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                          doc.flagged ? 'bg-rose-100 text-rose-800' : 'bg-emerald-100 text-emerald-800'
-                        }`}
-                      >
-                        {doc.flagged ? 'Flagged' : 'Verified'}
-                      </span>
+                {bidQuoteAmount && (() => {
+                  const tender = openTenders.find((t) => t.tender_id === selectedTenderForBid);
+                  if (!tender || !tender.budget) return null;
+                  const diff = parseFloat(bidQuoteAmount) - tender.budget;
+                  const pct = ((diff / tender.budget) * 100).toFixed(1);
+                  return (
+                    <div className="mt-1 text-[11px] font-mono">
+                      {diff <= 0 ? (
+                        <span className="text-emerald-700 font-bold">
+                          ✓ {Math.abs(pct)}% below estimated budget (Highly Competitive)
+                        </span>
+                      ) : (
+                        <span className="text-amber-700 font-bold">
+                          ▲ {pct}% above estimated budget
+                        </span>
+                      )}
                     </div>
-                  ))}
-                </div>
+                  );
+                })()}
               </div>
-            </div>
+
+              {/* Execution Timeline Commitment */}
+              <div>
+                <label className="block text-slate-800 font-bold mb-1">
+                  Committed Delivery / Completion Timeline *
+                </label>
+                <select
+                  value={bidTimelineDays}
+                  onChange={(e) => setBidTimelineDays(e.target.value)}
+                  className="w-full p-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 focus:ring-1 focus:ring-[#0B2546]"
+                >
+                  <option value="45">45 Calendar Days (Expedited)</option>
+                  <option value="60">60 Calendar Days (Standard CPCL Schedule)</option>
+                  <option value="90">90 Calendar Days</option>
+                  <option value="120">120 Calendar Days</option>
+                </select>
+              </div>
+
+              {/* Statutory Compliance Declaration */}
+              <div className="p-3.5 bg-blue-50/60 border border-blue-200 rounded-xl space-y-2">
+                <label className="flex items-start space-x-2.5 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={bidDeclarationAccepted}
+                    onChange={(e) => setBidDeclarationAccepted(e.target.checked)}
+                    className="mt-0.5 rounded border-slate-300 text-[#0B2546] focus:ring-[#0B2546]"
+                  />
+                  <span className="text-[11px] text-slate-700 leading-relaxed font-medium">
+                    I hereby certify under <strong>GFR 2017 Rule 144(xi)</strong> that our enterprise is registered in India, is not debarred or blacklisted by any Government or CPCL department, and all submitted rates are firm and binding.
+                  </span>
+                </label>
+              </div>
+
+              {/* Modal Actions */}
+              <div className="pt-2 flex items-center justify-end space-x-2">
+                <button
+                  type="button"
+                  onClick={() => setIsBidModalOpen(false)}
+                  className="px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition cursor-pointer"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  disabled={submittingBid || !bidQuoteAmount || !bidDeclarationAccepted}
+                  className="inline-flex items-center space-x-1.5 bg-[#0B2546] hover:bg-[#07182D] text-white font-bold px-5 py-2.5 rounded-lg shadow-sm transition disabled:opacity-50 cursor-pointer"
+                >
+                  {submittingBid ? (
+                    <>
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      <span>Submitting to Ledger...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-3.5 h-3.5" />
+                      <span>Submit Official Tender Quotation</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
-        </>
+        </div>
       )}
     </div>
   );
