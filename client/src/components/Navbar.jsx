@@ -97,11 +97,11 @@ export default function Navbar({ onRefresh }) {
 
         {/* Right Section: Cloud Status, Profile, and Sign Out */}
         <div className="flex items-center space-x-3">
-          {/* Turso Cloud Live Badge */}
+          {/* Database Demo Status Badge */}
           <div className="hidden lg:flex items-center space-x-1.5 bg-slate-50 border border-slate-200/80 px-2.5 py-1 rounded-full text-[11px] font-mono text-slate-600">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
             <Database className="w-3 h-3 text-slate-400" />
-            <span>Turso Cloud &bull; Mumbai</span>
+            <span>Database: Connected (Demo Env)</span>
           </div>
 
           {/* User Profile Pill */}
@@ -115,7 +115,7 @@ export default function Navbar({ onRefresh }) {
                   {user.name || user.company_name}
                 </span>
                 <span className="text-[10px] text-slate-400 font-mono">
-                  {isOfficer ? 'CPCL Procurement Officer' : 'Commercial Vendor'}
+                  {isOfficer ? 'Demo Procurement Officer' : 'Commercial Vendor'}
                 </span>
               </div>
             </div>
