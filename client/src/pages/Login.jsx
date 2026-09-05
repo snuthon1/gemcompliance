@@ -190,8 +190,8 @@ export default function Login() {
         className="flex-1 relative bg-cover bg-center bg-no-repeat py-8 sm:py-12 flex items-center"
         style={{ backgroundImage: "url('/cpcl_refinery_bg.png')" }}
       >
-        {/* Deep Petroleum Overlay for optimal readability & contrast */}
-        <div className="absolute inset-0 bg-[#07182D]/75 backdrop-blur-[1px]"></div>
+        {/* Sharp, unblurred overlay with high image clarity */}
+        <div className="absolute inset-0 bg-slate-900/35"></div>
 
         <main className="relative z-10 max-w-6xl mx-auto w-full px-4 sm:px-8 my-auto">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
