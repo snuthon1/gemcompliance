@@ -446,7 +446,8 @@ export async function onRequest(context) {
         const formatted = rows.map(r => {
           let ext = r.extracted_data;
           try { ext = JSON.parse(r.extracted_data); } catch (e) {}
-          return { ...r, extracted_data: ext, flagged: Boolean(r.flagged) };
+          const isFlagged = r.flagged === 1 || r.flagged === '1' || r.flagged === true;
+          return { ...r, extracted_data: ext, flagged: isFlagged };
         });
         return jsonResponse({ success: true, count: formatted.length, documents: formatted });
       }
@@ -456,6 +457,9 @@ export async function onRequest(context) {
         let fileName = 'statutory_document.pdf';
         let base64Content = null;
         let mimeType = 'application/pdf';
+        let clientExtracted = null;
+        let clientFlagged = null;
+        let clientFlagReason = null;
 
         const contentType = request.headers.get('content-type') || '';
         if (contentType.includes('application/json')) {
@@ -463,10 +467,24 @@ export async function onRequest(context) {
           docType = body.doc_type || docType;
           fileName = body.file_name || fileName;
           base64Content = body.file_content || null;
+          if (body.extracted_data) clientExtracted = body.extracted_data;
+          if (body.flagged !== undefined) clientFlagged = body.flagged;
+          if (body.flag_reason) clientFlagReason = body.flag_reason;
         } else if (contentType.includes('multipart/form-data')) {
           const formData = await request.formData();
           docType = formData.get('doc_type') || docType;
           const file = formData.get('file');
+          if (formData.has('extracted_data')) {
+            try { clientExtracted = JSON.parse(formData.get('extracted_data')); } catch (e) {}
+          }
+          if (formData.has('flagged')) {
+            const fVal = formData.get('flagged');
+            clientFlagged = fVal === '1' || fVal === 1 || fVal === 'true';
+          }
+          if (formData.has('flag_reason')) {
+            clientFlagReason = formData.get('flag_reason');
+          }
+
           if (file && file.name) {
             fileName = file.name;
             mimeType = file.type || 'application/octet-stream';
@@ -488,42 +506,57 @@ export async function onRequest(context) {
         const bRes = await executeSql('SELECT * FROM Bidder WHERE bidder_id = ?', [bidderId]);
         const bidder = bRes.rows[0] || {};
 
-        // Perform automated cross-check against registries
         let flagged = 0;
         let flagReason = null;
+        let extracted = null;
 
-        if (docType === 'GST_CERT') {
-          const gRes = await executeSql('SELECT * FROM GstnRegistry WHERE gstin = ?', [bidder.gstin]);
-          const gst = gRes.rows[0];
-          if (!gst || gst.status !== 'Active') {
-            flagged = 1;
-            flagReason = 'GST registration is inactive or suspended on GSTN portal';
+        if (clientFlagged !== null) {
+          flagged = clientFlagged ? 1 : 0;
+          flagReason = clientFlagReason || null;
+          extracted = clientExtracted || {
+            document_type: docType,
+            file_name: fileName,
+            identified_number: null
+          };
+        } else {
+          // Automatic validation: check if file text contains required pattern
+          let rawDecoded = '';
+          if (base64Content) {
+            try { rawDecoded = atob(base64Content.substring(0, 4000)).toUpperCase(); } catch (e) {}
           }
-        } else if (docType === 'UDYAM_CERT') {
-          const uRes = await executeSql('SELECT * FROM UdyamRegistry WHERE udyam_number = ?', [bidder.udyam_number]);
-          const udyam = uRes.rows[0];
-          if (!udyam || udyam.status !== 'Active') {
-            flagged = 1;
-            flagReason = 'Udyam certificate is inactive or de-registered on MSME Databank';
-          }
-        } else if (docType === 'PAN_CARD') {
-          const pRes = await executeSql('SELECT * FROM PanRegistry WHERE pan_number = ?', [bidder.pan_number]);
-          const pan = pRes.rows[0];
-          if (!pan || !(pan.itr_filed_last_year === 1 || pan.itr_filed_last_year === '1')) {
-            flagged = 1;
-            flagReason = 'Income Tax Return (ITR) not filed for the preceding assessment year';
+
+          if (docType === 'PAN_CARD') {
+            const panMatch = rawDecoded.match(/\b([A-Z]{5}[0-9]{4}[A-Z])\b/);
+            if (!panMatch) {
+              flagged = 1;
+              flagReason = 'Unreadable or non-statutory document: No valid PAN pattern detected in uploaded file';
+              extracted = { document_type: 'Permanent Account Number Card', file_name: fileName, identified_number: null };
+            } else {
+              const panNum = panMatch[1];
+              if (bidder.pan_number && panNum !== bidder.pan_number.toUpperCase()) {
+                flagged = 1;
+                flagReason = `PAN mismatch: Extracted (${panNum}) does not match registered bidder PAN (${bidder.pan_number})`;
+              }
+              extracted = { document_type: 'Permanent Account Number Card', file_name: fileName, identified_number: panNum };
+            }
+          } else if (docType === 'GST_CERT') {
+            const gstMatch = rawDecoded.match(/\b([0-3][0-9][A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z])\b/);
+            if (!gstMatch) {
+              flagged = 1;
+              flagReason = 'Unreadable or non-statutory document: No valid GSTIN pattern detected in uploaded file';
+              extracted = { document_type: 'Form GST REG-06 Certificate', file_name: fileName, identified_number: null };
+            } else {
+              const gstNum = gstMatch[1];
+              if (bidder.gstin && gstNum !== bidder.gstin.toUpperCase()) {
+                flagged = 1;
+                flagReason = `GSTIN mismatch: Extracted (${gstNum}) does not match registered bidder GSTIN (${bidder.gstin})`;
+              }
+              extracted = { document_type: 'Form GST REG-06 Certificate', file_name: fileName, identified_number: gstNum };
+            }
+          } else {
+            extracted = { document_type: docType, file_name: fileName, identified_number: null };
           }
         }
-
-        const extracted = {
-          pan: bidder.pan_number || 'AAACA1234A',
-          gstin: bidder.gstin || '33AAACA1234A1Z5',
-          company_name: bidder.company_name || 'Verified Entity',
-          udyam: bidder.udyam_number || 'UDYAM-TN-02-0012345',
-          file_name: fileName,
-          extraction_method: 'live_ai',
-          verified_against_registry: flagged === 0 ? 'Compliant & Verified' : 'Discrepancy Detected'
-        };
 
         const docId = crypto.randomUUID();
         const now = new Date().toISOString();
@@ -542,14 +575,14 @@ export async function onRequest(context) {
 
         return jsonResponse({
           success: true,
-          message: 'Document uploaded and verified against statutory ledgers',
+          message: 'Document uploaded and analyzed successfully',
           document: {
             doc_id: docId,
             bidder_id: bidderId,
             doc_type: docType,
             file_url: fileUrl,
             extracted_data: extracted,
-            flagged: Boolean(flagged),
+            flagged: Boolean(flagged === 1),
             flag_reason: flagReason,
             uploaded_at: now
           }
