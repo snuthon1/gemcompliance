@@ -51,12 +51,13 @@ const CHECK_WEIGHTS = {
   NAME_MATCH: 15
 };
 
-function calculateScore(verificationResults) {
+function calculateScore(verificationResults, documents = []) {
   const flags = [];
   let failedWeightsSum = 0;
   let isBlacklisted = false;
   let isNameMismatch = false;
 
+  // 1. Process 6-point statutory checks from central registries
   for (const check of verificationResults) {
     if (check.match_status === 'Mismatch') {
       const weight = CHECK_WEIGHTS[check.check_type] || 0;
@@ -90,11 +91,29 @@ function calculateScore(verificationResults) {
     }
   }
 
-  if (isBlacklisted) {
-    return { score: 0, risk: 'High', recommendation: 'Non-Compliant', flags };
+  // 2. Process uploaded statutory documents discrepancies from the vault
+  const flaggedDocs = (documents || []).filter(
+    d => d && (d.flagged === 1 || d.flagged === '1' || d.flagged === true || (d.flag_reason && d.flag_reason.trim().length > 0))
+  );
+
+  for (const doc of flaggedDocs) {
+    const reason = doc.flag_reason || `Discrepancy detected in uploaded ${doc.doc_type || 'statutory'} certificate`;
+    flags.push(`Statutory Document Discrepancy (${doc.doc_type || 'Document'}): ${reason}`);
+    failedWeightsSum += 25; // Significant penalty per flagged document
   }
 
-  const score = Math.max(0, 100 - failedWeightsSum);
+  // Hard Override: If Blacklisted -> Score 0, High Risk, Non-Compliant
+  if (isBlacklisted) {
+    return { score: 0, risk: 'High', recommendation: 'Non-Compliant', flags, flaggedDocuments: flaggedDocs };
+  }
+
+  let score = Math.max(0, 100 - failedWeightsSum);
+
+  // If ANY document is flagged, score cannot exceed 75 and risk CANNOT be Low!
+  if (flaggedDocs.length > 0) {
+    score = Math.min(score, 75);
+  }
+
   let risk = 'Low';
   let recommendation = 'Compliant';
 
@@ -109,12 +128,26 @@ function calculateScore(verificationResults) {
     recommendation = 'Non-Compliant';
   }
 
+  // Rule A: If NAME_MATCH mismatch, risk must be at least Medium
   if (isNameMismatch && risk === 'Low') {
     risk = 'Medium';
     recommendation = 'Needs Clarification';
   }
 
-  return { score, risk, recommendation, flags };
+  // Rule B: If ANY document has a discrepancy, risk CANNOT be Low
+  if (flaggedDocs.length > 0 && risk === 'Low') {
+    risk = 'Medium';
+    recommendation = 'Needs Clarification';
+  }
+
+  // Rule C: If 2 or more documents are flagged, escalate to High Risk
+  if (flaggedDocs.length >= 2) {
+    risk = 'High';
+    recommendation = 'Non-Compliant';
+    score = Math.min(score, 50);
+  }
+
+  return { score, risk, recommendation, flags, flaggedDocuments: flaggedDocs };
 }
 
 function jsonResponse(data, status = 200) {
@@ -228,7 +261,10 @@ export async function onRequest(context) {
         return jsonResponse({ success: false, message: 'No verification results found' }, 404);
       }
 
-      const scoreData = calculateScore(rows);
+      // Fetch documents to factor in certificate discrepancies from the vault
+      const { rows: docRows } = await executeSql('SELECT * FROM Document WHERE bidder_id = ?', [bidderId]);
+
+      const scoreData = calculateScore(rows, docRows);
       return jsonResponse({
         success: true,
         bidder_id: bidderId,
@@ -236,7 +272,8 @@ export async function onRequest(context) {
         risk: scoreData.risk,
         recommendation: scoreData.recommendation,
         flags: scoreData.flags,
-        breakdown: rows
+        breakdown: rows,
+        flagged_documents: scoreData.flaggedDocuments || []
       });
     }
 
@@ -350,7 +387,8 @@ export async function onRequest(context) {
         );
       }
 
-      const scoreResult = calculateScore(checks);
+      const { rows: docRows } = await executeSql('SELECT * FROM Document WHERE bidder_id = ?', [bidderId]);
+      const scoreResult = calculateScore(checks, docRows);
       const logId = crypto.randomUUID();
       await executeSql(
         'INSERT INTO AuditLog (log_id, bidder_id, action, performed_by, details, timestamp) VALUES (?, ?, ?, ?, ?, ?)',
@@ -364,7 +402,8 @@ export async function onRequest(context) {
         risk: scoreResult.risk,
         recommendation: scoreResult.recommendation,
         flags: scoreResult.flags,
-        breakdown: checks
+        breakdown: checks,
+        flagged_documents: scoreResult.flaggedDocuments || []
       });
     }
 
