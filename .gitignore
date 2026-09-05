@@ -1,0 +1,31 @@
+﻿# Dependencies
+node_modules/
+**/node_modules/
+
+# Production build outputs
+dist/
+**/dist/
+
+# Environment files (keep .env.example)
+.env
+.env.local
+server/.env
+
+# Local development and tools
+tools/
+.system_generated/
+*.log
+
+# SQLite local databases
+*.db
+*.db-journal
+*.db-wal
+
+# Uploaded documents directory
+server/uploads/*
+!server/uploads/.gitkeep
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini

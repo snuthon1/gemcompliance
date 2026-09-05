@@ -1,0 +1,111 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  previewFeatures = ["driverAdapters"]
+  provider = "prisma-client-js"
+}
+
+model Bidder {
+  bidder_id           String   @id @default(uuid())
+  company_name        String
+  pan_number          String
+  gstin               String
+  udyam_number         String
+  email               String
+  phone               String
+  registered_address   String
+  created_at           DateTime @default(now())
+}
+
+model UdyamRegistry {
+  udyam_number         String   @id
+  company_name        String
+  category             String   // Micro / Small / Medium
+  registration_date     DateTime
+  status                String   // Active / Cancelled
+  nic_code             String
+}
+
+model GstnRegistry {
+  gstin                 String   @id
+  legal_name            String
+  registration_date     DateTime
+  status                String   // Active / Cancelled / Suspended
+  last_return_filed_date DateTime
+  filing_frequency      String
+  returns_pending       Int
+  taxpayer_type         String
+}
+
+model PanRegistry {
+  pan_number            String   @id
+  name                  String
+  itr_filed_last_year   Boolean
+  compliance_status      String   // Compliant / Non-Filer
+  aadhaar_linked         Boolean
+}
+
+model BlacklistRegistry {
+  id                     Int      @id @default(autoincrement())
+  entity_name            String
+  pan_or_gstin           String
+  blacklisted            Boolean
+  reason                 String?
+  debarment_start        DateTime?
+  debarment_end          DateTime?
+}
+
+model Document {
+  doc_id                 String   @id @default(uuid())
+  bidder_id              String
+  doc_type               String   // GST_CERT / PAN_CARD / UDYAM_CERT
+  file_url               String
+  extracted_data          String   // stored as JSON string
+  flagged                Boolean  @default(false)
+  flag_reason            String?
+  uploaded_at             DateTime @default(now())
+}
+
+model VerificationResult {
+  check_id                String   @id @default(uuid())
+  bidder_id                String
+  tender_id                String?
+  check_type               String
+  document_value            String?
+  portal_value              String?
+  match_status               String   // Match / Mismatch / Missing / Expired
+  severity                   String   // Critical / Major / Minor
+  checked_at                 DateTime @default(now())
+}
+
+model AuditLog {
+  log_id       String   @id @default(uuid())
+  bidder_id    String
+  action       String
+  performed_by String   // System / Officer
+  details      String
+  timestamp    DateTime @default(now())
+}
+
+model Tender {
+  tender_id           String   @id @default(uuid())
+  title               String
+  description         String
+  department          String   // e.g. "CPCL - Chennai Petroleum Corporation Limited"
+  estimated_value      Float
+  submission_deadline DateTime
+  status               String   // "Open" / "Under Evaluation" / "Awarded" / "Closed"
+  created_at           DateTime @default(now())
+}
+
+model Bid {
+  bid_id          String   @id @default(uuid())
+  tender_id       String
+  bidder_id       String
+  bid_amount       Float
+  submitted_at     DateTime @default(now())
+  status           String   // "Submitted" / "Awarded" / "Rejected"
+}
