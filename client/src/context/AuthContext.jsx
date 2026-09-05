@@ -5,11 +5,11 @@ const AuthContext = createContext(null);
 export const DEMO_PROFILES = {
   officer: {
     id: 'officer-01',
-    name: 'Demo Procurement Officer',
-    email: 'officer@cpcl.gov.in',
+    name: 'Chief Procurement Officer',
+    email: 'admin@admin.com',
     role: 'OFFICER',
     department: 'Chennai Petroleum Corporation Limited (CPCL)',
-    designation: 'Tender Committee Convener & Head of Contracts'
+    designation: 'Admin & Tender Committee Convener'
   },
   apex: {
     id: '9ea6bad0-51b7-4e11-9491-e66fa52d2cc2',
@@ -100,23 +100,25 @@ export function AuthProvider({ children }) {
 
     if (role === 'OFFICER') {
       const validOfficerEmails = [
+        'admin@admin.com',
         'officer@cpcl.gov.in',
         'officer.demo@cpcl.gov.in',
         'officer@gem.gov.in'
       ];
       const isEmailValid = validOfficerEmails.includes(trimmedId);
-      const isPasswordValid = trimmedPw === 'Officer@2026' || trimmedPw === 'admin123';
+      const isPasswordValid = trimmedPw === 'password' || trimmedPw === 'Officer@2026' || trimmedPw === 'admin123';
 
       if (!isEmailValid || !isPasswordValid) {
         return {
           success: false,
-          error: 'Invalid Officer Credentials. Official designated email and authorized password required.'
+          error: 'Invalid Officer Credentials. Use email "admin@admin.com" and password "password".'
         };
       }
 
       const officerUser = {
         ...DEMO_PROFILES.officer,
-        email: trimmedId
+        email: trimmedId,
+        name: trimmedId === 'admin@admin.com' ? 'Super Admin / Procurement Officer' : DEMO_PROFILES.officer.name
       };
       setUser(officerUser);
       return { success: true, user: officerUser };
@@ -129,17 +131,35 @@ export function AuthProvider({ children }) {
         v.gstin.toLowerCase() === trimmedId
       );
 
-      const isPasswordValid = trimmedPw === 'Vendor@2026' || trimmedPw === 'vendor123';
-
-      if (!matchedVendor || !isPasswordValid) {
+      if (!matchedVendor) {
         return {
           success: false,
-          error: 'Invalid Vendor Credentials. Enter registered GSTIN or official email with authorized enterprise password.'
+          error: 'Invalid Vendor Credentials. Enter registered GSTIN or company email.'
         };
       }
 
-      setUser(matchedVendor);
-      return { success: true, user: matchedVendor };
+      // Check if custom password exists
+      const customPwd = localStorage.getItem('bidshield_vendor_custom_pwd_' + matchedVendor.id);
+      const isDefaultValid = trimmedPw === 'password' || trimmedPw === 'Vendor@2026' || trimmedPw === 'vendor123';
+      const isCustomValid = customPwd && trimmedPw === customPwd;
+
+      if (!isDefaultValid && !isCustomValid) {
+        return {
+          success: false,
+          error: 'Invalid password. Enter your enterprise password or "password".'
+        };
+      }
+
+      // Check if company has already permanently changed their password
+      const hasChangedPassword = localStorage.getItem('bidshield_pwd_changed_' + matchedVendor.id) === 'true';
+
+      const vendorUser = {
+        ...matchedVendor,
+        must_change_password: !hasChangedPassword
+      };
+
+      setUser(vendorUser);
+      return { success: true, user: vendorUser };
     }
 
     return { success: false, error: 'Unrecognized user role' };
@@ -148,10 +168,37 @@ export function AuthProvider({ children }) {
   const quickLogin = (profileKey) => {
     const profile = DEMO_PROFILES[profileKey];
     if (profile) {
-      setUser(profile);
-      return { success: true, user: profile };
+      const hasChangedPassword = profile.role === 'VENDOR'
+        ? localStorage.getItem('bidshield_pwd_changed_' + profile.id) === 'true'
+        : true;
+
+      const enriched = {
+        ...profile,
+        must_change_password: profile.role === 'VENDOR' ? !hasChangedPassword : false
+      };
+      setUser(enriched);
+      return { success: true, user: enriched };
     }
     return { success: false, message: 'Profile not found' };
+  };
+
+  const updatePassword = (newPassword) => {
+    if (!user) return { success: false, error: 'Not authenticated' };
+    const id = user.id || user.bidder_id;
+    localStorage.setItem('bidshield_vendor_custom_pwd_' + id, newPassword);
+    localStorage.setItem('bidshield_pwd_changed_' + id, 'true');
+    const updated = { ...user, must_change_password: false };
+    setUser(updated);
+    localStorage.setItem('bidshield_auth_user', JSON.stringify(updated));
+    return { success: true };
+  };
+
+  const deferPasswordChange = () => {
+    if (!user) return;
+    // Dismisses for current session, so NEXT time they log in they will be prompted again!
+    const updated = { ...user, must_change_password: false };
+    setUser(updated);
+    localStorage.setItem('bidshield_auth_user', JSON.stringify(updated));
   };
 
   const logout = () => {
@@ -168,6 +215,8 @@ export function AuthProvider({ children }) {
         isVendor: user?.role === 'VENDOR',
         login,
         quickLogin,
+        updatePassword,
+        deferPasswordChange,
         logout
       }}
     >
