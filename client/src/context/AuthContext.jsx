@@ -5,8 +5,8 @@ const AuthContext = createContext(null);
 export const DEMO_PROFILES = {
   officer: {
     id: 'officer-01',
-    name: 'Officer R. K. Sharma',
-    email: 'officer.sharma@cpcl.gov.in',
+    name: 'Demo Procurement Officer',
+    email: 'officer.demo@cpcl.gov.in',
     role: 'OFFICER',
     department: 'Chennai Petroleum Corporation Limited (CPCL)',
     designation: 'Tender Committee Convener & Head of Contracts'
