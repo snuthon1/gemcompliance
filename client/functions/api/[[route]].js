@@ -204,6 +204,21 @@ export async function onRequest(context) {
       });
     }
 
+    // 3b. Bidder Bids (My Bids)
+    const bidderBidsMatch = path.match(/^\/api\/bidders\/([^\/]+)\/bids$/);
+    if (bidderBidsMatch && method === 'GET') {
+      const bidderId = bidderBidsMatch[1];
+      const { rows: bids } = await executeSql('SELECT * FROM Bid WHERE bidder_id = ? ORDER BY submitted_at DESC', [bidderId]);
+      const enrichedBids = await Promise.all(bids.map(async b => {
+        const { rows: tRows } = await executeSql('SELECT * FROM Tender WHERE tender_id = ?', [b.tender_id]);
+        return {
+          ...b,
+          tender: tRows[0] || null
+        };
+      }));
+      return jsonResponse({ success: true, count: enrichedBids.length, bids: enrichedBids });
+    }
+
     // 4. Bidder Compliance
     const complianceMatch = path.match(/^\/api\/bidders\/([^\/]+)\/compliance$/);
     if (complianceMatch && method === 'GET') {
@@ -528,6 +543,51 @@ export async function onRequest(context) {
       }));
 
       return jsonResponse({ success: true, count: bidsWithComp.length, bids: bidsWithComp });
+    }
+
+    // 11b. Tender Bid Submission (POST)
+    if (bidsMatch && method === 'POST') {
+      const tenderId = bidsMatch[1];
+      const body = await request.json();
+      const { bidder_id, bid_amount } = body;
+
+      if (!bidder_id || !bid_amount) {
+        return jsonResponse({ success: false, message: 'bidder_id and bid_amount are required' }, 400);
+      }
+
+      const tRes = await executeSql('SELECT * FROM Tender WHERE tender_id = ?', [tenderId]);
+      if (tRes.rows.length === 0) return jsonResponse({ success: false, message: 'Tender not found' }, 404);
+      if (tRes.rows[0].status === 'Awarded' || tRes.rows[0].status === 'Closed') {
+        return jsonResponse({ success: false, message: 'This tender is closed for bidding' }, 400);
+      }
+
+      const numericAmount = parseFloat(bid_amount);
+      if (isNaN(numericAmount) || numericAmount <= 0) {
+        return jsonResponse({ success: false, message: 'Valid positive bid_amount is required' }, 400);
+      }
+
+      const existing = await executeSql('SELECT * FROM Bid WHERE tender_id = ? AND bidder_id = ?', [tenderId, bidder_id]);
+      if (existing.rows.length > 0) {
+        const now = new Date().toISOString();
+        await executeSql('UPDATE Bid SET bid_amount = ?, submitted_at = ? WHERE bid_id = ?', [numericAmount, now, existing.rows[0].bid_id]);
+        await executeSql(
+          'INSERT INTO AuditLog (log_id, bidder_id, action, performed_by, details, timestamp) VALUES (?, ?, ?, ?, ?, ?)',
+          [crypto.randomUUID(), bidder_id, 'BID_REVISED', 'Bidder', `Revised quotation to ₹${numericAmount.toLocaleString('en-IN')} for tender "${tRes.rows[0].title}"`, now]
+        );
+        return jsonResponse({ success: true, message: 'Bid quotation updated successfully' });
+      }
+
+      const newBidId = crypto.randomUUID();
+      const now = new Date().toISOString();
+      await executeSql(
+        'INSERT INTO Bid (bid_id, tender_id, bidder_id, bid_amount, status, submitted_at) VALUES (?, ?, ?, ?, ?, ?)',
+        [newBidId, tenderId, bidder_id, numericAmount, 'Submitted', now]
+      );
+      await executeSql(
+        'INSERT INTO AuditLog (log_id, bidder_id, action, performed_by, details, timestamp) VALUES (?, ?, ?, ?, ?, ?)',
+        [crypto.randomUUID(), bidder_id, 'BID_SUBMITTED', 'Bidder', `Submitted bid of ₹${numericAmount.toLocaleString('en-IN')} for tender "${tRes.rows[0].title}"`, now]
+      );
+      return jsonResponse({ success: true, message: 'Bid submitted successfully', bid_id: newBidId });
     }
 
     // 12. Single Tender
