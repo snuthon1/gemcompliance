@@ -38,6 +38,7 @@ import {
 } from 'lucide-react';
 
 import { useAuth } from '../context/AuthContext';
+import { scanAndVerifyDocument } from '../utils/documentScanner';
 
 export default function UserDashboard() {
   const { user, isVendor, isOfficer } = useAuth();
@@ -91,6 +92,7 @@ export default function UserDashboard() {
   const [uploadDocType, setUploadDocType] = useState('GST_CERT');
   const [uploadFile, setUploadFile] = useState(null);
   const [uploadingDoc, setUploadingDoc] = useState(false);
+  const [uploadProgressMsg, setUploadProgressMsg] = useState('');
   const [uploadFeedback, setUploadFeedback] = useState(null);
   const fileInputRef = useRef(null);
 
@@ -326,11 +328,29 @@ STATUS:            ${doc.flagged ? 'FLAGGED: ' + doc.flag_reason : 'VERIFIED COM
       return;
     }
     setUploadingDoc(true);
+    setUploadProgressMsg('Scanning document text via OCR...');
     setUploadFeedback(null);
+
+    let scanResult = null;
+    try {
+      scanResult = await scanAndVerifyDocument(
+        uploadFile,
+        uploadDocType,
+        currentBidder,
+        (pct, msg) => setUploadProgressMsg(`${msg} (${pct}%)`)
+      );
+    } catch (scanErr) {
+      console.warn('OCR scan error:', scanErr);
+    }
 
     const formData = new FormData();
     formData.append('file', uploadFile);
     formData.append('doc_type', uploadDocType);
+    if (scanResult) {
+      formData.append('extracted_data', JSON.stringify(scanResult.extracted));
+      formData.append('flagged', scanResult.flagged ? '1' : '0');
+      formData.append('flag_reason', scanResult.flag_reason || '');
+    }
 
     try {
       const res = await fetch(`/api/bidders/${selectedBidderId}/documents`, {
@@ -341,7 +361,9 @@ STATUS:            ${doc.flagged ? 'FLAGGED: ' + doc.flag_reason : 'VERIFIED COM
       if (data.success) {
         setUploadFeedback({
           type: 'success',
-          text: `Document uploaded and verified via AI! ${data.document?.flagged ? '⚠️ Discrepancy flagged: ' + data.document?.flag_reason : '✅ Verified clean against government registries.'}`
+          text: data.document?.flagged
+            ? `⚠️ Document processed with notice: ${data.document?.flag_reason}`
+            : '✅ Document verified clean against statutory requirements!'
         });
         setUploadFile(null);
         if (fileInputRef.current) fileInputRef.current.value = '';
@@ -353,6 +375,7 @@ STATUS:            ${doc.flagged ? 'FLAGGED: ' + doc.flag_reason : 'VERIFIED COM
       setUploadFeedback({ type: 'error', text: 'Failed to upload document.' });
     } finally {
       setUploadingDoc(false);
+      setUploadProgressMsg('');
     }
   };
 
@@ -1244,6 +1267,12 @@ STATUS:            ${doc.flagged ? 'FLAGGED: ' + doc.flag_reason : 'VERIFIED COM
                           )}
                         </button>
                       </div>
+                      {uploadProgressMsg && (
+                        <div className="text-xs text-sky-700 font-medium flex items-center space-x-1.5 pt-1.5 animate-pulse">
+                          <RefreshCw className="w-3 h-3 animate-spin" />
+                          <span>{uploadProgressMsg}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </form>
@@ -1256,125 +1285,121 @@ STATUS:            ${doc.flagged ? 'FLAGGED: ' + doc.flag_reason : 'VERIFIED COM
                     <p className="text-slate-400 mt-0.5">Use the upload box above to add your company certificates for automated AI verification.</p>
                   </div>
                 ) : (
-                  <div className="space-y-3.5">
+                  <div className="space-y-3">
                     {documents.map((doc) => {
                       const extData = doc.extracted_data || {};
                       const isDeleting = deletingDocId === doc.doc_id;
+                      const isFlagged = doc.flagged === 1 || doc.flagged === '1' || doc.flagged === true;
 
                       return (
                         <div
                           key={doc.doc_id}
-                          className={`rounded-xl border p-4.5 transition ${
-                            doc.flagged
-                              ? 'border-rose-300 bg-rose-50/20'
+                          className={`rounded-xl border p-4 transition ${
+                            isFlagged
+                              ? 'border-rose-200 bg-rose-50/20'
                               : 'border-slate-200 bg-white hover:border-slate-300 shadow-2xs'
                           }`}
                         >
-                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <span className="text-xs font-mono font-extrabold uppercase bg-slate-100 text-slate-800 px-2.5 py-0.5 rounded border border-slate-200">
-                                {doc.doc_type}
-                              </span>
-                              <span className="text-xs font-semibold text-slate-800 font-mono">
-                                {doc.file_url ? doc.file_url.split('/').pop() : 'Statutory_Certificate.pdf'}
-                              </span>
-                              <span className="text-slate-300">&bull;</span>
-                              <span className="text-xs text-slate-400">
-                                Uploaded {formatDate(doc.uploaded_at)}
-                              </span>
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div className="flex items-center space-x-3 min-w-0">
+                              <div className={`w-9 h-9 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 ${
+                                isFlagged ? 'bg-rose-100 text-rose-700' : 'bg-blue-50 text-[#0B2546]'
+                              }`}>
+                                <FileText className="w-4.5 h-4.5" />
+                              </div>
+
+                              <div className="min-w-0">
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <span className="text-xs font-bold text-slate-800 truncate max-w-xs">
+                                    {doc.file_url ? doc.file_url.split('/').pop() : 'Statutory_Certificate.pdf'}
+                                  </span>
+                                  <span className="text-[10px] font-mono font-bold uppercase bg-slate-100 text-slate-700 px-2 py-0.5 rounded border border-slate-200 shrink-0">
+                                    {doc.doc_type}
+                                  </span>
+                                </div>
+
+                                <div className="flex items-center space-x-2 text-[11px] text-slate-400 mt-0.5">
+                                  <span>Uploaded {formatDate(doc.uploaded_at)}</span>
+                                  {extData?.identified_number && (
+                                    <>
+                                      <span>&bull;</span>
+                                      <span className="font-mono text-slate-700 font-semibold">
+                                        Identified: {extData.identified_number}
+                                      </span>
+                                    </>
+                                  )}
+                                  <span className="hidden sm:inline">&bull;</span>
+                                  <span className="font-mono text-slate-400 hidden sm:inline">
+                                    ID: {doc.doc_id.substring(0, 8).toUpperCase()}
+                                  </span>
+                                </div>
+                              </div>
                             </div>
 
-                            {/* Action Buttons: View & Delete */}
-                            <div className="flex items-center space-x-2">
-                              <button
-                                type="button"
-                                onClick={() => setPreviewDoc(doc)}
-                                className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition cursor-pointer"
-                                title="Preview certificate & view metadata"
-                              >
-                                <Eye className="w-3.5 h-3.5" />
-                                <span>View</span>
-                              </button>
-
-                              <button
-                                type="button"
-                                onClick={() => handleDownloadDoc(doc)}
-                                className="inline-flex items-center space-x-1 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition cursor-pointer"
-                                title="Download certificate file"
-                              >
-                                <Download className="w-3.5 h-3.5 text-slate-600" />
-                                <span>Download</span>
-                              </button>
-
-                              <button
-                                type="button"
-                                disabled={isDeleting}
-                                onClick={() => handleDeleteDoc(doc.doc_id, doc.doc_type)}
-                                className="inline-flex items-center space-x-1 px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold border border-rose-200 transition cursor-pointer disabled:opacity-50"
-                                title="Permanently remove certificate from vault"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                                <span>{isDeleting ? 'Deleting...' : 'Delete'}</span>
-                              </button>
-                            </div>
-                          </div>
-
-                          {/* Verification Status Banner */}
-                          <div className="mt-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
-                            <div className="flex items-center space-x-2">
+                            {/* Right: Status Pill & Action Buttons */}
+                            <div className="flex items-center space-x-2.5 shrink-0">
                               <span
-                                className={`inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${
-                                  doc.flagged
+                                className={`inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-xs font-bold border ${
+                                  isFlagged
                                     ? 'bg-rose-50 text-rose-800 border-rose-200'
                                     : 'bg-emerald-50 text-emerald-800 border-emerald-200'
                                 }`}
                               >
-                                {doc.flagged ? (
+                                {isFlagged ? (
                                   <>
-                                    <AlertTriangle className="w-3 h-3 text-rose-600" />
-                                    <span>Flagged Discrepancy: {doc.flag_reason || 'Check Failed'}</span>
+                                    <AlertTriangle className="w-3.5 h-3.5 text-rose-600" />
+                                    <span>Discrepancy</span>
                                   </>
                                 ) : (
                                   <>
-                                    <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                                    <span>Verified Against Government Registry</span>
+                                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                                    <span>Verified Clean</span>
                                   </>
                                 )}
                               </span>
-                            </div>
 
-                            <span className="text-[10px] font-mono text-slate-400">
-                              Document ID: {doc.doc_id.substring(0, 8).toUpperCase()}
-                            </span>
+                              <div className="flex items-center space-x-1 border-l border-slate-200 pl-2">
+                                <button
+                                  type="button"
+                                  onClick={() => setPreviewDoc(doc)}
+                                  className="inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition cursor-pointer"
+                                  title="Preview certificate & inspect document"
+                                >
+                                  <Eye className="w-3.5 h-3.5" />
+                                  <span>View</span>
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => handleDownloadDoc(doc)}
+                                  className="inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition cursor-pointer"
+                                  title="Download certificate file"
+                                >
+                                  <Download className="w-3.5 h-3.5 text-slate-600" />
+                                  <span>Download</span>
+                                </button>
+
+                                <button
+                                  type="button"
+                                  disabled={isDeleting}
+                                  onClick={() => handleDeleteDoc(doc.doc_id, doc.doc_type)}
+                                  className="inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold border border-rose-200 transition cursor-pointer disabled:opacity-50"
+                                  title="Permanently remove certificate from vault"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                  <span>{isDeleting ? '...' : 'Delete'}</span>
+                                </button>
+                              </div>
+                            </div>
                           </div>
 
-                          {/* Extracted Fields Matrix */}
-                          <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 text-xs">
-                            <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-200">
-                              <span className="text-[10px] uppercase font-bold text-slate-400 block">Entity Name</span>
-                              <span className="font-semibold text-slate-800 truncate block">
-                                {extData.company_name || extData.entity_name || currentBidder?.company_name}
-                              </span>
+                          {/* Inline Discrepancy Notice */}
+                          {isFlagged && doc.flag_reason && (
+                            <div className="mt-2.5 pt-2.5 border-t border-rose-100 flex items-start space-x-2 text-xs text-rose-800">
+                              <AlertTriangle className="w-3.5 h-3.5 text-rose-600 shrink-0 mt-0.5" />
+                              <span className="font-medium">{doc.flag_reason}</span>
                             </div>
-                            <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-200">
-                              <span className="text-[10px] uppercase font-bold text-slate-400 block">GSTIN</span>
-                              <span className="font-mono font-bold text-slate-800 truncate block">
-                                {extData.gstin || currentBidder?.gstin}
-                              </span>
-                            </div>
-                            <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-200">
-                              <span className="text-[10px] uppercase font-bold text-slate-400 block">PAN Number</span>
-                              <span className="font-mono font-bold text-slate-800 truncate block">
-                                {extData.pan || currentBidder?.pan_number}
-                              </span>
-                            </div>
-                            <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-200">
-                              <span className="text-[10px] uppercase font-bold text-slate-400 block">Registry Status</span>
-                              <span className={`font-semibold ${doc.flagged ? 'text-rose-600' : 'text-emerald-700'}`}>
-                                {extData.verified_against_registry || (doc.flagged ? 'Discrepancy' : 'Compliant')}
-                              </span>
-                            </div>
-                          </div>
+                          )}
                         </div>
                       );
                     })}
