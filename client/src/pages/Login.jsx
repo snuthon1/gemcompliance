@@ -5,7 +5,6 @@ import {
   User,
   Eye,
   EyeOff,
-  Shield,
   AlertCircle,
   Building2
 } from 'lucide-react';
@@ -175,25 +174,6 @@ export default function Login() {
           </div>
         </header>
 
-        {/* 4. SUB-BAR: PORTAL IDENTIFIER & SYSTEM STATUS */}
-        <div className="bg-[#0B2546] text-white px-4 sm:px-8 py-2 text-xs border-b border-[#07182D]">
-          <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 font-mono text-[11px]">
-            <div className="flex items-center space-x-2">
-              <Shield className="w-3.5 h-3.5 text-amber-400" />
-              <span className="font-semibold text-slate-100">
-                Official GeM Bidder Credential Verification &amp; Anti-Debarment Portal
-              </span>
-            </div>
-            <div className="flex items-center space-x-3 text-slate-300 text-[10px]">
-              <span>Server Time: {new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })} IST</span>
-              <span>&bull;</span>
-              <span className="text-emerald-300 font-bold flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                Portal Operational
-              </span>
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* 5. MAIN CONTENT AREA: WITH CPCL REFINERY BACKGROUND */}
