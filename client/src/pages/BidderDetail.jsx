@@ -575,7 +575,7 @@ STATUS:            ${doc.flagged ? 'DISCREPANCY: ' + doc.flag_reason : 'VERIFIED
           {/* Sub-Panels for Specialized CPCL / MoPNG Modules */}
           <div className="p-6 bg-slate-50 border-t border-slate-200 grid grid-cols-1 md:grid-cols-2 gap-5">
             {/* 1. Make in India (PPP-MII 2017) Local Content Module */}
-            <div className="bg-white rounded-xl border border-slate-200 p-4.5 shadow-2xs space-y-3">
+            <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-2xs space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <div className="w-8 h-8 rounded-lg bg-orange-100 text-orange-700 flex items-center justify-center font-bold text-xs">
@@ -627,7 +627,7 @@ STATUS:            ${doc.flagged ? 'DISCREPANCY: ' + doc.flag_reason : 'VERIFIED
             </div>
 
             {/* 2. Labour Law & Refinery Statutory Compliance (EPFO & ESIC) */}
-            <div className="bg-white rounded-xl border border-slate-200 p-4.5 shadow-2xs space-y-3">
+            <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-800 flex items-center justify-center font-bold text-xs">
@@ -688,7 +688,7 @@ STATUS:            ${doc.flagged ? 'DISCREPANCY: ' + doc.flag_reason : 'VERIFIED
                 return (
                   <div
                     key={doc.doc_id}
-                    className={`bg-white rounded-2xl border p-4.5 shadow-xs space-y-3 transition ${
+                    className={`bg-white rounded-2xl border p-5 shadow-xs space-y-3 transition ${
                       isFlagged ? 'border-rose-300 bg-rose-50/20' : 'border-slate-200 hover:border-slate-300'
                     }`}
                   >
