@@ -109,17 +109,60 @@ export default function UserDashboard() {
     else navigate(`/vendor/${tab}`);
   };
 
-  const [bidders, setBidders] = useState([]);
+  const [bidders, setBidders] = useState(() => {
+    try {
+      const cached = sessionStorage.getItem('bidshield_bidders_cache');
+      return cached ? JSON.parse(cached) : [];
+    } catch (e) { return []; }
+  });
   const [selectedBidderId, setSelectedBidderId] = useState(() => {
     return (user?.bidder_id) || localStorage.getItem('bidshield_active_vendor_id') || '';
   });
-  const [currentBidder, setCurrentBidder] = useState(null);
-  const [compliance, setCompliance] = useState(null);
-  const [bids, setBids] = useState([]);
-  const [openTenders, setOpenTenders] = useState([]);
+  const [currentBidder, setCurrentBidder] = useState(() => {
+    try {
+      const activeId = (user?.bidder_id) || localStorage.getItem('bidshield_active_vendor_id') || '';
+      if (!activeId) return null;
+      const cached = sessionStorage.getItem('bidshield_vendor_cache_' + activeId);
+      return cached ? JSON.parse(cached).bidder : null;
+    } catch (e) { return null; }
+  });
+  const [compliance, setCompliance] = useState(() => {
+    try {
+      const activeId = (user?.bidder_id) || localStorage.getItem('bidshield_active_vendor_id') || '';
+      if (!activeId) return null;
+      const cached = sessionStorage.getItem('bidshield_vendor_cache_' + activeId);
+      return cached ? JSON.parse(cached).compliance : null;
+    } catch (e) { return null; }
+  });
+  const [bids, setBids] = useState(() => {
+    try {
+      const activeId = (user?.bidder_id) || localStorage.getItem('bidshield_active_vendor_id') || '';
+      if (!activeId) return [];
+      const cached = sessionStorage.getItem('bidshield_vendor_cache_' + activeId);
+      return cached ? (JSON.parse(cached).bids || []) : [];
+    } catch (e) { return []; }
+  });
+  const [openTenders, setOpenTenders] = useState(() => {
+    try {
+      const cached = sessionStorage.getItem('bidshield_tenders_cache');
+      return cached ? JSON.parse(cached) : [];
+    } catch (e) { return []; }
+  });
   const [auditLogs, setAuditLogs] = useState([]);
-  const [documents, setDocuments] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [documents, setDocuments] = useState(() => {
+    try {
+      const activeId = (user?.bidder_id) || localStorage.getItem('bidshield_active_vendor_id') || '';
+      if (!activeId) return [];
+      const cached = sessionStorage.getItem('bidshield_vendor_cache_' + activeId);
+      return cached ? (JSON.parse(cached).documents || []) : [];
+    } catch (e) { return []; }
+  });
+  const [loading, setLoading] = useState(() => {
+    try {
+      const activeId = (user?.bidder_id) || localStorage.getItem('bidshield_active_vendor_id') || '';
+      return activeId ? !sessionStorage.getItem('bidshield_vendor_cache_' + activeId) : true;
+    } catch (e) { return true; }
+  });
   const [reverifying, setReverifying] = useState(false);
 
   // New Bid Application Form / Modal State
@@ -232,9 +275,11 @@ STATUS:            ${doc.flagged ? 'FLAGGED: ' + doc.flag_reason : 'VERIFIED COM
   }, [isVendor, user]);
 
   // 2. Fetch vendor data
-  const loadVendorData = async (bidderId) => {
+  const loadVendorData = async (bidderId, isSilent = false) => {
     if (!bidderId) return;
-    setLoading(true);
+    if (!currentBidder && !isSilent) {
+      setLoading(true);
+    }
     setBidFeedback(null);
     setUploadFeedback(null);
     setDeleteFeedback(null);
@@ -288,6 +333,16 @@ STATUS:            ${doc.flagged ? 'FLAGGED: ' + doc.flag_reason : 'VERIFIED COM
       if (tData.success) setOpenTenders(tData.tenders);
       if (aData.success) setAuditLogs(aData.auditLogs);
       if (dData.success) setDocuments(dData.documents);
+
+      // Cache vendor state for instant load on revisit
+      try {
+        sessionStorage.setItem('bidshield_vendor_cache_' + bidderId, JSON.stringify({
+          bidder: bData.bidder,
+          compliance: cData,
+          bids: bidsData.bids,
+          documents: dData.documents
+        }));
+      } catch (e) {}
     } catch (err) {
       console.error('Failed loading vendor data:', err);
     } finally {
@@ -314,7 +369,7 @@ STATUS:            ${doc.flagged ? 'FLAGGED: ' + doc.flag_reason : 'VERIFIED COM
       const data = await res.json();
       if (data.success) {
         setCompliance(data);
-        await loadVendorData(selectedBidderId);
+        await loadVendorData(selectedBidderId, true);
       }
     } catch (err) {
       console.error('Re-verification failed:', err);
@@ -352,7 +407,7 @@ STATUS:            ${doc.flagged ? 'FLAGGED: ' + doc.flag_reason : 'VERIFIED COM
         setBidQuoteAmount('');
         setSelectedTenderForBid('');
         setIsBidModalOpen(false);
-        await loadVendorData(selectedBidderId);
+        await loadVendorData(selectedBidderId, true);
       } else {
         setBidFeedback({ type: 'error', text: data.message || 'Failed to submit quotation.' });
       }
@@ -411,7 +466,7 @@ STATUS:            ${doc.flagged ? 'FLAGGED: ' + doc.flag_reason : 'VERIFIED COM
         });
         setUploadFile(null);
         if (fileInputRef.current) fileInputRef.current.value = '';
-        await loadVendorData(selectedBidderId);
+        await loadVendorData(selectedBidderId, true);
       } else {
         setUploadFeedback({ type: 'error', text: data.message || 'Upload failed.' });
       }
@@ -443,7 +498,7 @@ STATUS:            ${doc.flagged ? 'FLAGGED: ' + doc.flag_reason : 'VERIFIED COM
         if (previewDoc && previewDoc.doc_id === docId) {
           setPreviewDoc(null);
         }
-        await loadVendorData(selectedBidderId);
+        await loadVendorData(selectedBidderId, true);
       } else {
         setDeleteFeedback({ type: 'error', text: data.message || 'Failed to delete document.' });
       }
