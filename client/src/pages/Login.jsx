@@ -128,59 +128,62 @@ export default function Login() {
         </div>
 
         {/* 3. OFFICIAL GOVERNMENT MASTHEAD */}
-        <header className="bg-white border-b border-slate-200 py-3 sm:py-4 px-4 sm:px-8 shadow-xs">
+        <header className="bg-white border-b border-slate-200 py-2.5 sm:py-3 px-4 sm:px-8 shadow-xs">
           <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-            {/* Left: State Emblem + Department Titles */}
-            <div className="flex items-center space-x-4">
-              <NationalEmblem className="w-11 h-14 shrink-0" color="#0B2546" />
-              <div className="flex flex-col">
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider font-mono">
-                  भारत सरकार &bull; Government of India
-                </span>
-                <h1 className="text-lg sm:text-xl font-black text-[#0B2546] tracking-tight leading-tight">
-                  चेन्नई पेट्रोलियम कॉर्पोरेशन लिमिटेड (CPCL)
-                </h1>
-                <span className="text-xs font-bold text-slate-700">
-                  Chennai Petroleum Corporation Limited &bull; (A Group Company of IndianOil)
-                </span>
-                <span className="text-[11px] text-slate-500 font-medium">
-                  GeM-CPCL Bidder Credential Verification &amp; Statutory Compliance Portal
-                </span>
+            {/* Left & Center: MoPNG + Vertical Divider + CPCL Trilingual Brand */}
+            <div className="flex flex-col sm:flex-row items-center gap-3.5 sm:gap-5">
+              {/* Ministry of Petroleum & Natural Gas */}
+              <div className="flex items-center space-x-3 shrink-0">
+                <NationalEmblem className="w-8 h-10 shrink-0" color="#1E293B" />
+                <div className="flex flex-col text-left">
+                  <span className="text-[11px] text-slate-500 font-medium leading-none">
+                    Ministry of
+                  </span>
+                  <h2 className="text-sm sm:text-[15px] font-bold text-[#0B2546] tracking-tight leading-tight mt-0.5">
+                    Petroleum &amp; Natural Gas
+                  </h2>
+                  <span className="text-[10px] text-slate-500 font-medium leading-none mt-0.5">
+                    Government of India
+                  </span>
+                </div>
+              </div>
+
+              {/* Vertical Divider */}
+              <div className="hidden sm:block h-9 w-[1px] bg-slate-300 shrink-0"></div>
+
+              {/* CPCL: Official Circular Logo + Trilingual Names */}
+              <div className="flex items-center space-x-3">
+                <img
+                  src="/cpcl_logo.png"
+                  alt="CPCL Logo"
+                  className="w-10 h-10 object-contain shrink-0"
+                />
+                <div className="flex flex-col text-left">
+                  <h1 className="text-xs sm:text-sm font-bold text-[#0B2546] tracking-tight leading-tight">
+                    चेन्नई पेट्रोलियम कॉर्पोरेशन लिमिटेड (CPCL)
+                  </h1>
+                  <span className="text-[11px] sm:text-xs font-semibold text-slate-800 leading-snug">
+                    Chennai Petroleum Corporation Limited - (A Group Company of IndianOil)
+                  </span>
+                  <span className="text-[10px] sm:text-[11px] text-slate-500 font-medium leading-tight">
+                    சென்னை பெட்ரோலியம் கார்ப்பரேஷன் லிமிடெட் (CPCL)
+                  </span>
+                </div>
               </div>
             </div>
 
             {/* Right: Hackathon & Problem Statement Pill */}
-            <div className="flex flex-col sm:items-end space-y-1 text-right">
-              <div className="inline-flex items-center space-x-2 bg-slate-100 border border-slate-300 px-3 py-1 rounded-md text-xs font-mono text-slate-700 font-bold">
+            <div className="flex flex-col sm:items-end space-y-1 text-right shrink-0">
+              <div className="inline-flex items-center space-x-2 bg-emerald-50 border border-emerald-200/90 px-3 py-0.5 rounded-full text-xs font-mono text-emerald-950 font-bold shadow-2xs">
                 <span className="w-2 h-2 rounded-full bg-emerald-600"></span>
                 <span>SIH26100 Mandate</span>
               </div>
               <span className="text-[10px] text-slate-500 font-mono">
-                General Financial Rules (GFR) 2017 &bull; CVC Guidelines
+                General Financial Rules (GFR) 2017 &mdash; CVC Guidelines
               </span>
             </div>
           </div>
         </header>
-
-        {/* 4. SUB-BAR: PORTAL IDENTIFIER & SYSTEM STATUS */}
-        <div className="bg-[#0B2546] text-white px-4 sm:px-8 py-2 text-xs border-b border-[#07182D]">
-          <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 font-mono text-[11px]">
-            <div className="flex items-center space-x-2">
-              <Shield className="w-3.5 h-3.5 text-amber-400" />
-              <span className="font-semibold text-slate-100">
-                Official GeM Bidder Credential Verification &amp; Anti-Debarment Portal
-              </span>
-            </div>
-            <div className="flex items-center space-x-3 text-slate-300 text-[10px]">
-              <span>Server Time: {new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })} IST</span>
-              <span>&bull;</span>
-              <span className="text-emerald-300 font-bold flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                Portal Operational
-              </span>
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* 5. MAIN CONTENT AREA: DUAL-COLUMN GOVERNMENT LAYOUT */}
