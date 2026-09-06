@@ -17,19 +17,31 @@ import {
 } from 'lucide-react';
 
 export default function BlacklistDirectory() {
-  const [blacklist, setBlacklist] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [blacklist, setBlacklist] = useState(() => {
+    try {
+      const cached = sessionStorage.getItem('bidshield_blacklist_cache');
+      return cached ? JSON.parse(cached) : [];
+    } catch (e) { return []; }
+  });
+  const [loading, setLoading] = useState(() => {
+    try {
+      return !sessionStorage.getItem('bidshield_blacklist_cache');
+    } catch (e) { return true; }
+  });
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const fetchBlacklist = async () => {
-    setLoading(true);
+  const fetchBlacklist = async (forceRefresh = false) => {
+    if (!blacklist.length || forceRefresh) {
+      if (!blacklist.length) setLoading(true);
+    }
     setError(null);
     try {
       const res = await fetch('/api/blacklist');
       const data = await res.json();
       if (data.success) {
         setBlacklist(data.blacklist || []);
+        try { sessionStorage.setItem('bidshield_blacklist_cache', JSON.stringify(data.blacklist || [])); } catch (e) {}
       } else {
         throw new Error(data.message || 'Failed to load blacklisted records');
       }
@@ -123,7 +135,7 @@ export default function BlacklistDirectory() {
 
           <button
             type="button"
-            onClick={fetchBlacklist}
+            onClick={() => fetchBlacklist(true)}
             disabled={loading}
             className="p-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-xl shadow-2xs transition disabled:opacity-50 cursor-pointer"
             title="Refresh Debarment Ledger"
