@@ -237,11 +237,11 @@ export default function Sidebar() {
                 className="w-9 h-9 object-contain shrink-0"
               />
               <div className="flex flex-col min-w-0">
-                <span className="text-sm font-bold text-[#0B2546] tracking-tight leading-tight">
-                  BidPramaan
+                <span className="text-xs font-extrabold text-[#0B2546] tracking-tight leading-tight">
+                  GeM-CPCL Bid Compliance
                 </span>
                 <span className="text-[10px] text-slate-500 font-medium leading-tight mt-0.5">
-                  CPCL &bull; Ministry of Petroleum
+                  BidShield &bull; Ministry of Petroleum
                 </span>
               </div>
             </Link>
