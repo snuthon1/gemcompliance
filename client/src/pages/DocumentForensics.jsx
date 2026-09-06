@@ -88,7 +88,7 @@ export default function DocumentForensics() {
     setCustomFile(null);
     setTimeout(() => {
       setAnalyzing(false);
-    }, 400);
+    }, 120);
   };
 
   const handleFileUpload = (e) => {
@@ -99,7 +99,7 @@ export default function DocumentForensics() {
     setTimeout(() => {
       setAnalyzing(false);
       setSelectedPreset('AUTHENTIC');
-    }, 600);
+    }, 180);
   };
 
   return (
