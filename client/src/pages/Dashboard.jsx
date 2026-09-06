@@ -139,89 +139,102 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-7 font-sans">
-      {/* 1. Header & Live Metrics Strip */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-        <div>
-          <div className="flex items-center space-x-2 mb-1.5">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-[#0B2546] bg-slate-100 border border-slate-300 px-2.5 py-0.5 rounded-full flex items-center gap-1 font-mono">
-              <Users className="w-3.5 h-3.5 text-sky-600" />
-              <span>Participating Bidders Directory</span>
-            </span>
-            <span className="text-slate-300">&bull;</span>
-            <span className="text-xs text-slate-500 font-mono font-semibold">
-              GFR 2017 &bull; Real-Time Statutory Dossiers
-            </span>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-5 font-sans">
+      {/* 1. Official CPCL Directorate Masthead Banner */}
+      <div className="bg-white rounded-lg border border-slate-300 shadow-xs overflow-hidden">
+        <div className="bg-[#07182D] text-white px-5 py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b-2 border-amber-500">
+          <div className="space-y-0.5">
+            <div className="flex items-center space-x-2 text-[10px] font-mono text-amber-300 font-bold uppercase tracking-wider">
+              <span>चेन्नई पेट्रोलियम कॉर्पोरेशन लिमिटेड (CPCL)</span>
+              <span>&bull;</span>
+              <span>सतर्कता एवं अनुबंध विभाग (Contracts &amp; Materials)</span>
+            </div>
+            <h1 className="text-base sm:text-lg font-black tracking-tight text-white flex items-center gap-2">
+              <Users className="w-5 h-5 text-amber-400" />
+              <span>पंजीकृत निविदाकार वैधानिक अनुपालन निर्देशिका</span>
+              <span className="text-xs font-normal text-slate-300 font-sans hidden md:inline">
+                (Registered Bidders Statutory Compliance Directory)
+              </span>
+            </h1>
           </div>
-          <h1 className="text-2xl font-black tracking-tight text-slate-900">
-            Registered Vendor Compliance Directory
-          </h1>
-          <p className="text-xs text-slate-500 mt-1 max-w-2xl">
-            Autonomous multi-portal credential auditing across Udyam (MSME), GSTN (Taxes), Income Tax (CBDT), and Central Debarment databases.
-          </p>
+
+          <div className="flex items-center space-x-2 shrink-0">
+            <button
+              type="button"
+              onClick={handleExportCSV}
+              disabled={bidders.length === 0}
+              className="inline-flex items-center space-x-1.5 bg-white/10 hover:bg-white/20 text-white text-xs font-semibold px-3 py-1.5 rounded border border-white/20 transition cursor-pointer disabled:opacity-50"
+            >
+              <Download className="w-3.5 h-3.5 text-amber-300" />
+              <span>Export Dossier (CSV)</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={fetchBiddersAndScores}
+              disabled={loading}
+              className="p-1.5 bg-white/10 hover:bg-white/20 text-white rounded border border-white/20 transition disabled:opacity-50 cursor-pointer"
+              title="Refresh Registry Data"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+            </button>
+          </div>
         </div>
 
-        <div className="flex items-center space-x-2 shrink-0">
-          <button
-            type="button"
-            onClick={handleExportCSV}
-            disabled={bidders.length === 0}
-            className="inline-flex items-center space-x-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold px-3.5 py-2 rounded-xl shadow-2xs transition cursor-pointer disabled:opacity-50"
-            title="Download CSV report of participating bidders"
-          >
-            <Download className="w-3.5 h-3.5 text-slate-500" />
-            <span>Export Directory (CSV)</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={fetchBiddersAndScores}
-            disabled={loading}
-            className="p-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-xl shadow-2xs transition disabled:opacity-50 cursor-pointer"
-            title="Refresh Scores"
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-          </button>
+        <div className="bg-slate-50 px-5 py-2 text-[11px] text-slate-600 flex flex-wrap items-center justify-between gap-2 border-b border-slate-200">
+          <div className="flex items-center space-x-2 font-mono">
+            <span className="font-bold text-[#0B2546]">वैधानिक ढांचा:</span>
+            <span>GFR 2017 Rule 144(xi) Land Border Security</span>
+            <span className="text-slate-300">|</span>
+            <span>CVC Vigilance Directives</span>
+            <span className="text-slate-300">|</span>
+            <span>Udyam MSME Exemption Status</span>
+          </div>
+          <div className="text-[10px] font-mono text-emerald-800 bg-emerald-100/70 border border-emerald-300 px-2 py-0.5 rounded font-bold">
+            Real-time CBDT / GSTN / Debarment Cross-Verification
+          </div>
         </div>
       </div>
 
-
-
-      {/* 3. Search & Filter Bar */}
-      <div className="bg-white p-3 rounded-2xl border border-slate-200 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3">
+      {/* 2. Search & Filter Bar */}
+      <div className="bg-white p-3 rounded-lg border border-slate-300 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3">
         {/* Search */}
         <div className="relative w-full sm:w-80">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-2.5" />
+          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search company, GSTIN, PAN, Udyam..."
-            className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-[#0B2546]"
+            placeholder="Search vendor legal name, GSTIN, PAN, Udyam..."
+            className="w-full bg-slate-50 border border-slate-300 rounded pl-9 pr-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-[#0B2546]"
           />
         </div>
 
         {/* Risk Filter Tabs */}
         <div className="flex items-center space-x-1.5 w-full sm:w-auto overflow-x-auto">
           {[
-            { label: 'All Bidders', value: 'All', count: counts.total },
+            { label: 'All Registered Bidders', value: 'All', count: counts.total },
             { label: 'Pre-Qualified', value: 'Low', count: counts.low },
-            { label: 'Clarification', value: 'Medium', count: counts.med },
+            { label: 'Clarification Required', value: 'Medium', count: counts.med },
             { label: 'Disqualified', value: 'High', count: counts.high }
           ].map((tab) => (
             <button
               key={tab.value}
               onClick={() => setSelectedRisk(tab.value)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer ${
+              className={`px-3 py-1.5 rounded text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer border ${
                 selectedRisk === tab.value
-                  ? 'bg-[#0B2546] text-white shadow-sm'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900'
+                  ? 'bg-[#0B2546] text-white border-[#0B2546] shadow-xs'
+                  : 'bg-slate-50 text-slate-700 hover:bg-slate-100 border-slate-300'
               }`}
             >
               <span>{tab.label}</span>
-              <span className={`text-[10px] font-mono px-1.5 py-0.2 rounded-full font-bold ${
-                selectedRisk === tab.value ? 'bg-white/20 text-white' : 'bg-white text-slate-600 border border-slate-200'
-              }`}>
+              <span
+                className={`text-[10px] font-mono px-1.5 py-0.2 rounded font-bold ${
+                  selectedRisk === tab.value
+                    ? 'bg-white/20 text-white'
+                    : 'bg-white text-slate-700 border border-slate-300'
+                }`}
+              >
                 {tab.count}
               </span>
             </button>
@@ -229,43 +242,44 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* 4. Main Bidders Directory Table */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+      {/* 3. Main Bidders Directory Table */}
+      <div className="bg-white rounded-lg border border-slate-300 shadow-xs overflow-hidden">
         {loading ? (
           <div className="p-16 text-center text-slate-500">
             <div className="w-8 h-8 border-4 border-[#0B2546] border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
-            <p className="text-xs font-medium">Verifying real-time credentials across government registries...</p>
+            <p className="text-xs font-semibold">Verifying real-time credentials across government registries...</p>
           </div>
         ) : error ? (
           <div className="p-8 text-center text-rose-600 bg-rose-50/50">
             <p className="text-xs font-semibold">{error}</p>
             <button
               onClick={fetchBiddersAndScores}
-              className="mt-3 text-xs bg-rose-600 text-white px-3.5 py-1.5 rounded-lg hover:bg-rose-700"
+              className="mt-3 text-xs bg-rose-600 text-white px-3.5 py-1.5 rounded hover:bg-rose-700"
             >
               Retry
             </button>
           </div>
         ) : filteredBidders.length === 0 ? (
           <div className="p-12 text-center text-slate-400 text-xs">
-            No bidders found matching your filter criteria.
+            No registered vendors found matching your filter criteria.
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-slate-100 text-left">
-              <thead className="bg-slate-50/80 text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+            <table className="min-w-full divide-y divide-slate-200 text-left">
+              <thead className="bg-[#0B2546] text-white text-[11px] font-bold uppercase tracking-wider border-b-2 border-amber-500">
                 <tr>
-                  <th className="px-6 py-3.5">Company Legal Name</th>
-                  <th className="px-5 py-3.5">GSTIN</th>
-                  <th className="px-5 py-3.5">PAN Number</th>
-                  <th className="px-5 py-3.5">Udyam Registration</th>
-                  <th className="px-5 py-3.5 text-center">Vault Docs</th>
-                  <th className="px-6 py-3.5 text-center">Statutory Score & Risk</th>
-                  <th className="px-5 py-3.5 text-right">Action</th>
+                  <th className="px-4 py-3 text-center w-12">Sl. No.</th>
+                  <th className="px-5 py-3">Vendor / Company Legal Entity</th>
+                  <th className="px-4 py-3">GSTIN (GSTN)</th>
+                  <th className="px-4 py-3">PAN (CBDT)</th>
+                  <th className="px-4 py-3">Udyam Registration</th>
+                  <th className="px-4 py-3 text-center">Docs Vault</th>
+                  <th className="px-6 py-3 text-center">Statutory Compliance Status</th>
+                  <th className="px-4 py-3 text-right">Official Dossier</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 text-xs">
-                {filteredBidders.map((b) => {
+              <tbody className="divide-y divide-slate-200 text-xs bg-white">
+                {filteredBidders.map((b, idx) => {
                   const comp = complianceMap[b.bidder_id];
                   const docs = documentsMap[b.bidder_id] || [];
                   const flaggedDocs = docs.filter((d) => d.flagged);
@@ -277,80 +291,87 @@ export default function Dashboard() {
                     <tr
                       key={b.bidder_id}
                       onClick={() => navigate(`/bidder/${b.bidder_id}`)}
-                      className="hover:bg-slate-50/80 cursor-pointer transition group"
+                      className="even:bg-slate-50/60 hover:bg-amber-50/40 cursor-pointer transition group"
                     >
-                      {/* Company Name & Avatar */}
-                      <td className="px-6 py-4">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-8 h-8 rounded-xl bg-slate-100 text-[#0B2546] group-hover:bg-[#0B2546] group-hover:text-white flex items-center justify-center font-bold text-xs shrink-0 transition border border-slate-200">
+                      {/* Sl. No. */}
+                      <td className="px-4 py-3.5 text-center font-mono font-bold text-slate-500">
+                        {String(idx + 1).padStart(2, '0')}
+                      </td>
+
+                      {/* Company Name & Details */}
+                      <td className="px-5 py-3.5">
+                        <div className="flex items-center space-x-2.5">
+                          <div className="w-7 h-7 rounded bg-[#0B2546] text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs">
                             {b.company_name.substring(0, 2).toUpperCase()}
                           </div>
                           <div>
-                            <div className="font-bold text-slate-900 group-hover:text-sky-700 transition">
+                            <div className="font-bold text-slate-900 group-hover:text-[#0B2546] transition">
                               {b.company_name}
                             </div>
-                            <div className="text-[11px] text-slate-400 flex items-center space-x-2 mt-0.5">
+                            <div className="text-[10px] text-slate-500 flex items-center space-x-2 mt-0.5">
                               <span>{b.email}</span>
                               <span>&bull;</span>
-                              <span className="font-mono text-[10px]">ID: {b.bidder_id.substring(0, 8)}</span>
+                              <span className="font-mono">ID: {b.bidder_id.substring(0, 8)}</span>
                             </div>
                           </div>
                         </div>
                       </td>
 
                       {/* GSTIN */}
-                      <td className="px-5 py-4 font-mono text-[11px] text-slate-700">
-                        <span className="bg-slate-100 px-2 py-0.5 rounded border border-slate-200 font-semibold">
+                      <td className="px-4 py-3.5 font-mono text-[11px] text-slate-800">
+                        <span className="bg-slate-100 px-2 py-0.5 rounded border border-slate-300 font-semibold inline-block">
                           {b.gstin}
                         </span>
                       </td>
 
                       {/* PAN */}
-                      <td className="px-5 py-4 font-mono text-[11px] text-slate-700">
-                        <span className="bg-slate-100 px-2 py-0.5 rounded border border-slate-200 font-semibold">
+                      <td className="px-4 py-3.5 font-mono text-[11px] text-slate-800">
+                        <span className="bg-slate-100 px-2 py-0.5 rounded border border-slate-300 font-semibold inline-block">
                           {b.pan_number}
                         </span>
                       </td>
 
                       {/* Udyam */}
-                      <td className="px-5 py-4 font-mono text-[11px] text-slate-700">
-                        <span className="bg-slate-100 px-2 py-0.5 rounded border border-slate-200 font-semibold">
+                      <td className="px-4 py-3.5 font-mono text-[11px] text-slate-800">
+                        <span className="bg-slate-100 px-2 py-0.5 rounded border border-slate-300 font-semibold inline-block">
                           {b.udyam_number}
                         </span>
                       </td>
 
                       {/* Vault Docs Count */}
-                      <td className="px-5 py-4 text-center">
-                        <span className={`inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold font-mono border ${
-                          flaggedDocs.length > 0
-                            ? 'bg-rose-50 text-rose-700 border-rose-200'
-                            : docs.length > 0
-                            ? 'bg-slate-100 text-slate-700 border-slate-200'
-                            : 'bg-slate-50 text-slate-400 border-slate-200'
-                        }`}>
+                      <td className="px-4 py-3.5 text-center">
+                        <span
+                          className={`inline-flex items-center space-x-1 px-2 py-0.5 rounded text-[11px] font-bold font-mono border ${
+                            flaggedDocs.length > 0
+                              ? 'bg-rose-50 text-rose-800 border-rose-300'
+                              : docs.length > 0
+                              ? 'bg-slate-100 text-slate-700 border-slate-300'
+                              : 'bg-slate-50 text-slate-400 border-slate-200'
+                          }`}
+                        >
                           <FileCheck2 className="w-3 h-3" />
-                          <span>{docs.length}</span>
-                          {flaggedDocs.length > 0 && <span className="text-rose-600">(!{flaggedDocs.length})</span>}
+                          <span>{docs.length} Docs</span>
+                          {flaggedDocs.length > 0 && <span className="text-rose-600 font-black">(!{flaggedDocs.length})</span>}
                         </span>
                       </td>
 
                       {/* Score & Risk */}
-                      <td className="px-6 py-4 text-center">
+                      <td className="px-6 py-3.5 text-center">
                         {comp ? (
                           <div className="inline-flex flex-col items-center">
                             <span
-                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-mono font-bold border ${
+                              className={`inline-flex items-center px-2.5 py-1 rounded text-xs font-mono font-bold border ${
                                 isLow
-                                  ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                                  ? 'bg-emerald-50 text-emerald-950 border-emerald-300'
                                   : isMed
-                                  ? 'bg-amber-50 text-amber-800 border-amber-300'
-                                  : 'bg-rose-50 text-rose-800 border-rose-300'
+                                  ? 'bg-amber-50 text-amber-950 border-amber-300'
+                                  : 'bg-rose-50 text-rose-950 border-rose-300'
                               }`}
                             >
                               <span className="mr-1">{comp.score}/100</span>
-                              <span className="opacity-75 font-sans font-semibold">({comp.risk})</span>
+                              <span className="opacity-90 font-sans font-semibold">({comp.risk})</span>
                             </span>
-                            <span className="text-[10px] text-slate-500 font-medium mt-1">
+                            <span className="text-[10px] text-slate-600 font-medium mt-1 font-mono">
                               {comp.recommendation}
                             </span>
                           </div>
@@ -360,10 +381,10 @@ export default function Dashboard() {
                       </td>
 
                       {/* Action */}
-                      <td className="px-5 py-4 text-right whitespace-nowrap">
-                        <span className="inline-flex items-center space-x-1 text-xs font-bold text-[#0B2546] bg-slate-100 group-hover:bg-[#0B2546] group-hover:text-white px-3 py-1.5 rounded-lg transition">
+                      <td className="px-4 py-3.5 text-right whitespace-nowrap">
+                        <span className="inline-flex items-center space-x-1 text-xs font-bold text-white bg-[#0B2546] hover:bg-[#07182D] px-2.5 py-1 rounded transition shadow-2xs">
                           <span>Inspect</span>
-                          <ArrowUpRight className="w-3.5 h-3.5" />
+                          <ChevronRight className="w-3.5 h-3.5" />
                         </span>
                       </td>
                     </tr>
