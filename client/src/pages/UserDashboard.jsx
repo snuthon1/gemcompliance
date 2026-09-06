@@ -109,60 +109,17 @@ export default function UserDashboard() {
     else navigate(`/vendor/${tab}`);
   };
 
-  const [bidders, setBidders] = useState(() => {
-    try {
-      const cached = sessionStorage.getItem('bidshield_bidders_cache');
-      return cached ? JSON.parse(cached) : [];
-    } catch (e) { return []; }
-  });
+  const [bidders, setBidders] = useState([]);
   const [selectedBidderId, setSelectedBidderId] = useState(() => {
     return (user?.bidder_id) || localStorage.getItem('bidshield_active_vendor_id') || '';
   });
-  const [currentBidder, setCurrentBidder] = useState(() => {
-    try {
-      const activeId = (user?.bidder_id) || localStorage.getItem('bidshield_active_vendor_id') || '';
-      if (!activeId) return null;
-      const cached = sessionStorage.getItem('bidshield_vendor_cache_' + activeId);
-      return cached ? JSON.parse(cached).bidder : null;
-    } catch (e) { return null; }
-  });
-  const [compliance, setCompliance] = useState(() => {
-    try {
-      const activeId = (user?.bidder_id) || localStorage.getItem('bidshield_active_vendor_id') || '';
-      if (!activeId) return null;
-      const cached = sessionStorage.getItem('bidshield_vendor_cache_' + activeId);
-      return cached ? JSON.parse(cached).compliance : null;
-    } catch (e) { return null; }
-  });
-  const [bids, setBids] = useState(() => {
-    try {
-      const activeId = (user?.bidder_id) || localStorage.getItem('bidshield_active_vendor_id') || '';
-      if (!activeId) return [];
-      const cached = sessionStorage.getItem('bidshield_vendor_cache_' + activeId);
-      return cached ? (JSON.parse(cached).bids || []) : [];
-    } catch (e) { return []; }
-  });
-  const [openTenders, setOpenTenders] = useState(() => {
-    try {
-      const cached = sessionStorage.getItem('bidshield_tenders_cache');
-      return cached ? JSON.parse(cached) : [];
-    } catch (e) { return []; }
-  });
+  const [currentBidder, setCurrentBidder] = useState(null);
+  const [compliance, setCompliance] = useState(null);
+  const [bids, setBids] = useState([]);
+  const [openTenders, setOpenTenders] = useState([]);
   const [auditLogs, setAuditLogs] = useState([]);
-  const [documents, setDocuments] = useState(() => {
-    try {
-      const activeId = (user?.bidder_id) || localStorage.getItem('bidshield_active_vendor_id') || '';
-      if (!activeId) return [];
-      const cached = sessionStorage.getItem('bidshield_vendor_cache_' + activeId);
-      return cached ? (JSON.parse(cached).documents || []) : [];
-    } catch (e) { return []; }
-  });
-  const [loading, setLoading] = useState(() => {
-    try {
-      const activeId = (user?.bidder_id) || localStorage.getItem('bidshield_active_vendor_id') || '';
-      return activeId ? !sessionStorage.getItem('bidshield_vendor_cache_' + activeId) : true;
-    } catch (e) { return true; }
-  });
+  const [documents, setDocuments] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [reverifying, setReverifying] = useState(false);
 
   // New Bid Application Form / Modal State
@@ -275,11 +232,9 @@ STATUS:            ${doc.flagged ? 'FLAGGED: ' + doc.flag_reason : 'VERIFIED COM
   }, [isVendor, user]);
 
   // 2. Fetch vendor data
-  const loadVendorData = async (bidderId, isSilent = false) => {
+  const loadVendorData = async (bidderId) => {
     if (!bidderId) return;
-    if (!currentBidder && !isSilent) {
-      setLoading(true);
-    }
+    setLoading(true);
     setBidFeedback(null);
     setUploadFeedback(null);
     setDeleteFeedback(null);
@@ -333,16 +288,6 @@ STATUS:            ${doc.flagged ? 'FLAGGED: ' + doc.flag_reason : 'VERIFIED COM
       if (tData.success) setOpenTenders(tData.tenders);
       if (aData.success) setAuditLogs(aData.auditLogs);
       if (dData.success) setDocuments(dData.documents);
-
-      // Cache vendor state for instant load on revisit
-      try {
-        sessionStorage.setItem('bidshield_vendor_cache_' + bidderId, JSON.stringify({
-          bidder: bData.bidder,
-          compliance: cData,
-          bids: bidsData.bids,
-          documents: dData.documents
-        }));
-      } catch (e) {}
     } catch (err) {
       console.error('Failed loading vendor data:', err);
     } finally {
@@ -369,7 +314,7 @@ STATUS:            ${doc.flagged ? 'FLAGGED: ' + doc.flag_reason : 'VERIFIED COM
       const data = await res.json();
       if (data.success) {
         setCompliance(data);
-        await loadVendorData(selectedBidderId, true);
+        await loadVendorData(selectedBidderId);
       }
     } catch (err) {
       console.error('Re-verification failed:', err);
@@ -407,7 +352,7 @@ STATUS:            ${doc.flagged ? 'FLAGGED: ' + doc.flag_reason : 'VERIFIED COM
         setBidQuoteAmount('');
         setSelectedTenderForBid('');
         setIsBidModalOpen(false);
-        await loadVendorData(selectedBidderId, true);
+        await loadVendorData(selectedBidderId);
       } else {
         setBidFeedback({ type: 'error', text: data.message || 'Failed to submit quotation.' });
       }
@@ -466,7 +411,7 @@ STATUS:            ${doc.flagged ? 'FLAGGED: ' + doc.flag_reason : 'VERIFIED COM
         });
         setUploadFile(null);
         if (fileInputRef.current) fileInputRef.current.value = '';
-        await loadVendorData(selectedBidderId, true);
+        await loadVendorData(selectedBidderId);
       } else {
         setUploadFeedback({ type: 'error', text: data.message || 'Upload failed.' });
       }
@@ -498,7 +443,7 @@ STATUS:            ${doc.flagged ? 'FLAGGED: ' + doc.flag_reason : 'VERIFIED COM
         if (previewDoc && previewDoc.doc_id === docId) {
           setPreviewDoc(null);
         }
-        await loadVendorData(selectedBidderId, true);
+        await loadVendorData(selectedBidderId);
       } else {
         setDeleteFeedback({ type: 'error', text: data.message || 'Failed to delete document.' });
       }
@@ -619,58 +564,52 @@ STATUS:            ${doc.flagged ? 'FLAGGED: ' + doc.flag_reason : 'VERIFIED COM
   const completionPct = calculateProfileCompletion();
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-7 space-y-6 font-sans">
-      {/* 1. Executive Government Vendor Masthead Banner (Concept 1) */}
-      <div className="bg-[#0B2546] text-white rounded-xl p-5 sm:p-6 border border-[#163761] shadow-md flex flex-col md:flex-row md:items-center justify-between gap-5 relative overflow-hidden">
-        {/* Amber Sovereign Accent Glow */}
-        <div className="absolute -right-20 -top-20 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-amber-400" />
-
-        <div className="space-y-2 min-w-0 relative z-10">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+      {/* 1. Header & Identity Strip */}
+      <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="space-y-1.5 min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-[10px] font-mono uppercase tracking-wider bg-white/10 text-amber-300 font-bold px-2.5 py-0.5 rounded border border-white/15">
-              GSTIN: {currentBidder?.gstin || '33AAACA1234A1Z5'}
+            <span className="text-[10px] font-mono uppercase tracking-wider bg-slate-100 text-slate-700 font-bold px-2 py-0.5 rounded border border-slate-200">
+              Vendor GSTIN: {currentBidder?.gstin || '33AAACA1234A1Z5'}
             </span>
-            <span className="text-[10px] font-mono uppercase tracking-wider bg-white/10 text-slate-200 font-bold px-2.5 py-0.5 rounded border border-white/15">
+            <span className="text-[10px] font-mono uppercase tracking-wider bg-blue-50 text-blue-700 font-bold px-2 py-0.5 rounded border border-blue-200">
               MSME UDYAM: {currentBidder?.udyam_number || 'UDYAM-TN-02-0012345'}
             </span>
-            <span className="text-[11px] text-slate-300 font-mono">
+            <span className="text-[11px] text-slate-500">
               Enrolled: {formatDate(currentBidder?.created_at)}
             </span>
           </div>
-
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-lg bg-white text-[#0B2546] flex items-center justify-center font-black text-sm shrink-0 shadow-sm border border-white/20">
-              {currentBidder?.company_name ? currentBidder.company_name.substring(0, 2).toUpperCase() : 'AP'}
-            </div>
-            <div className="min-w-0">
-              <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white truncate flex items-center gap-2">
-                <span>{currentBidder ? currentBidder.company_name : 'Apex Petrochem Engineering Pvt Ltd'}</span>
-              </h1>
-              <p className="text-xs text-slate-300 truncate mt-0.5">
-                {currentBidder?.registered_address || 'Plot 42, SIDCO Industrial Estate, Guindy, Chennai'} &bull; {currentBidder?.email} &bull; {currentBidder?.phone}
-              </p>
-            </div>
-          </div>
+          <h1 className="text-2xl font-black tracking-tight text-[#0B2546] flex items-center gap-2.5">
+            <Building2 className="w-6 h-6 text-sky-600 shrink-0" />
+            <span className="truncate">{currentBidder ? currentBidder.company_name : 'Loading Profile...'}</span>
+          </h1>
+          <p className="text-xs text-slate-500 max-w-3xl truncate">
+            {currentBidder?.registered_address} &bull; {currentBidder?.email} &bull; {currentBidder?.phone}
+          </p>
         </div>
 
         {/* Action Controls & Identity Lock */}
-        <div className="flex flex-wrap items-center gap-2.5 shrink-0 relative z-10">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 shrink-0">
           {isVendor ? (
-            <div className="bg-emerald-950/70 border border-emerald-500/40 rounded-lg px-3 py-1.5 flex items-center space-x-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              <span className="text-xs font-bold text-emerald-200">
-                Verified Signatory
-              </span>
+            <div className="bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 flex items-center space-x-2.5">
+              <Building2 className="w-4 h-4 text-[#0B2546] shrink-0" />
+              <div className="flex items-center space-x-2">
+                <span className="text-xs font-bold text-slate-800">
+                  {user?.company_name || currentBidder?.company_name}
+                </span>
+                <span className="text-[10px] font-mono bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.5 rounded border border-emerald-200">
+                  Verified Signatory
+                </span>
+              </div>
             </div>
           ) : (
-            <div className="bg-white/10 border border-white/20 rounded-lg px-3 py-1.5 flex items-center space-x-2">
-              <Building2 className="w-4 h-4 text-amber-400 shrink-0" />
-              <span className="text-xs text-slate-300 font-medium whitespace-nowrap">Inspecting:</span>
+            <div className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 flex items-center space-x-2">
+              <Building2 className="w-4 h-4 text-slate-400 shrink-0" />
+              <span className="text-xs text-slate-500 font-medium whitespace-nowrap">Officer Inspecting:</span>
               <select
                 value={selectedBidderId}
                 onChange={(e) => handleVendorSwitch(e.target.value)}
-                className="bg-transparent text-xs font-bold text-white focus:outline-none cursor-pointer [&>option]:text-slate-900"
+                className="bg-transparent text-xs font-semibold text-slate-900 focus:outline-none cursor-pointer"
               >
                 {bidders.map((b) => (
                   <option key={b.bidder_id} value={b.bidder_id}>
@@ -684,29 +623,29 @@ STATUS:            ${doc.flagged ? 'FLAGGED: ' + doc.flag_reason : 'VERIFIED COM
           <button
             onClick={handleReverify}
             disabled={reverifying}
-            className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-lg text-xs font-black shadow-sm transition flex items-center justify-center space-x-1.5 disabled:opacity-50 cursor-pointer"
+            className="px-3.5 py-2 bg-[#0B2546] hover:bg-[#07182D] text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center justify-center space-x-1.5 disabled:opacity-50 cursor-pointer"
             title="Trigger automated statutory re-check across government registries"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${reverifying ? 'animate-spin' : ''}`} />
-            <span>{reverifying ? 'Auditing...' : 'Re-verify Health'}</span>
+            <span>{reverifying ? 'Auditing Registries...' : 'Re-verify Health'}</span>
           </button>
         </div>
       </div>
 
-      {/* 2. Four Prominent Navigation Tabs (Matches Concept 1) */}
-      <div className="bg-white rounded-xl border border-slate-200 p-1.5 shadow-2xs">
+      {/* 2. Four Prominent Navigation Tabs (Matches Left Navbar Options) */}
+      <div className="bg-white rounded-xl border border-slate-200 p-1.5 shadow-xs">
         <nav className="grid grid-cols-2 md:grid-cols-4 gap-1.5">
           <button
             type="button"
             onClick={() => handleTabChange('overview')}
             className={`flex items-center justify-center space-x-2 py-2.5 px-4 rounded-lg text-xs font-bold transition cursor-pointer ${
               activeTab === 'overview'
-                ? 'bg-[#0B2546] text-white shadow-xs border-b-2 border-amber-400'
-                : 'text-slate-600 hover:bg-slate-50 hover:text-[#0B2546]'
+                ? 'bg-[#0B2546] text-white shadow-sm'
+                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
             }`}
           >
-            <LayoutDashboard className="w-4 h-4 text-amber-400" />
-            <span>1. Overview &amp; Guide</span>
+            <LayoutDashboard className="w-4 h-4" />
+            <span>1. Overview & Guide</span>
           </button>
 
           <button
@@ -714,8 +653,8 @@ STATUS:            ${doc.flagged ? 'FLAGGED: ' + doc.flag_reason : 'VERIFIED COM
             onClick={() => handleTabChange('profile')}
             className={`flex items-center justify-center space-x-2 py-2.5 px-4 rounded-lg text-xs font-bold transition cursor-pointer ${
               activeTab === 'profile'
-                ? 'bg-[#0B2546] text-white shadow-xs border-b-2 border-amber-400'
-                : 'text-slate-600 hover:bg-slate-50 hover:text-[#0B2546]'
+                ? 'bg-[#0B2546] text-white shadow-sm'
+                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
             }`}
           >
             <UserCheck className="w-4 h-4" />
@@ -734,8 +673,8 @@ STATUS:            ${doc.flagged ? 'FLAGGED: ' + doc.flag_reason : 'VERIFIED COM
             onClick={() => handleTabChange('documents')}
             className={`flex items-center justify-center space-x-2 py-2.5 px-4 rounded-lg text-xs font-bold transition cursor-pointer ${
               activeTab === 'documents'
-                ? 'bg-[#0B2546] text-white shadow-xs border-b-2 border-amber-400'
-                : 'text-slate-600 hover:bg-slate-50 hover:text-[#0B2546]'
+                ? 'bg-[#0B2546] text-white shadow-sm'
+                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
             }`}
           >
             <FileCheck2 className="w-4 h-4" />
@@ -754,8 +693,8 @@ STATUS:            ${doc.flagged ? 'FLAGGED: ' + doc.flag_reason : 'VERIFIED COM
             onClick={() => handleTabChange('apply')}
             className={`flex items-center justify-center space-x-2 py-2.5 px-4 rounded-lg text-xs font-bold transition cursor-pointer ${
               activeTab === 'apply'
-                ? 'bg-[#0B2546] text-white shadow-xs border-b-2 border-amber-400'
-                : 'text-slate-600 hover:bg-slate-50 hover:text-[#0B2546]'
+                ? 'bg-[#0B2546] text-white shadow-sm'
+                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
             }`}
           >
             <Layers className="w-4 h-4" />
@@ -782,12 +721,12 @@ STATUS:            ${doc.flagged ? 'FLAGGED: ' + doc.flag_reason : 'VERIFIED COM
           {/* TAB 1: OVERVIEW & ACTIONABLE WORKSPACE */}
           {activeTab === 'overview' && (
             <div className="space-y-5">
-              {/* Top Compact KPI Metric Ribbon (Concept 1) */}
+              {/* Top Compact KPI Metric Ribbon */}
               <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
                 <div className="grid grid-cols-2 lg:grid-cols-4 divide-y lg:divide-y-0 lg:divide-x divide-slate-100">
                   {/* Segment 1: Health Score */}
-                  <div className="p-4 text-left flex flex-col justify-between">
-                    <div className="flex items-center justify-between">
+                  <div className="p-3 sm:px-5 sm:py-3 text-left flex items-center justify-between">
+                    <div className="space-y-0.5">
                       <div className="flex items-center space-x-1.5">
                         <span
                           className={`w-2 h-2 rounded-full ${
@@ -804,98 +743,62 @@ STATUS:            ${doc.flagged ? 'FLAGGED: ' + doc.flag_reason : 'VERIFIED COM
                           Statutory Health
                         </span>
                       </div>
-                      <span
-                        className={`text-[10px] font-mono font-semibold px-2 py-0.5 rounded-md ${
-                          !hasAllMandatoryDocs
-                            ? 'bg-amber-50 text-amber-800 border border-amber-200'
-                            : isLowRisk
-                            ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-                            : isMediumRisk
-                            ? 'bg-amber-50 text-amber-800 border border-amber-200'
-                            : 'bg-rose-50 text-rose-800 border border-rose-200'
-                        }`}
-                      >
-                        {!hasAllMandatoryDocs
-                          ? 'Pending'
+                      <div className="flex items-baseline space-x-1.5">
+                        {!hasAllMandatoryDocs ? (
+                          <>
+                            <span className="text-2xl font-black font-mono tracking-tight text-amber-700">
+                              Pending
+                            </span>
+                            <span className="text-[11px] text-amber-600 font-medium">
+                              ({mandatoryUploadedCount}/3 docs)
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <span
+                              className={`text-2xl font-black font-mono tracking-tight ${
+                                isLowRisk
+                                  ? 'text-emerald-600'
+                                  : isMediumRisk
+                                  ? 'text-amber-600'
+                                  : 'text-rose-600'
+                              }`}
+                            >
+                              {compliance?.score ?? 100}
+                            </span>
+                            <span className="text-[11px] text-slate-400 font-medium">/ 100</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                    <span
+                      className={`text-[10px] font-mono font-semibold px-2 py-0.5 rounded-md hidden sm:inline-block ${
+                        !hasAllMandatoryDocs
+                          ? 'bg-amber-50 text-amber-800 border border-amber-200'
                           : isLowRisk
-                          ? 'Low Risk'
-                          : compliance?.risk || 'Flagged'}
-                      </span>
-                    </div>
-
-                    <div className="my-2">
-                      {!hasAllMandatoryDocs ? (
-                        <div className="flex items-baseline space-x-1.5">
-                          <span className="text-2xl font-black font-mono tracking-tight text-amber-700">
-                            Pending
-                          </span>
-                          <span className="text-[11px] text-amber-600 font-medium">
-                            ({mandatoryUploadedCount}/3 docs)
-                          </span>
-                        </div>
-                      ) : (
-                        <div className="flex items-baseline space-x-1.5">
-                          <span
-                            className={`text-2xl font-black font-mono tracking-tight ${
-                              isLowRisk
-                                ? 'text-emerald-600'
-                                : isMediumRisk
-                                ? 'text-amber-600'
-                                : 'text-rose-600'
-                            }`}
-                          >
-                            {compliance?.score ?? 100}
-                          </span>
-                          <span className="text-[11px] text-slate-400 font-medium">/ 100</span>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
-                      <div
-                        className={`h-full rounded-full transition-all duration-500 ${
-                          !hasAllMandatoryDocs
-                            ? 'bg-amber-500'
-                            : isLowRisk
-                            ? 'bg-emerald-500'
-                            : isMediumRisk
-                            ? 'bg-amber-500'
-                            : 'bg-rose-500'
-                        }`}
-                        style={{
-                          width: `${!hasAllMandatoryDocs ? (mandatoryUploadedCount / 3) * 100 : compliance?.score ?? 100}%`
-                        }}
-                      />
-                    </div>
+                          ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                          : isMediumRisk
+                          ? 'bg-amber-50 text-amber-800 border border-amber-200'
+                          : 'bg-rose-50 text-rose-800 border border-rose-200'
+                      }`}
+                    >
+                      {!hasAllMandatoryDocs
+                        ? 'Pending'
+                        : isLowRisk
+                        ? 'Low Risk'
+                        : compliance?.risk || 'Flagged'}
+                    </span>
                   </div>
 
                   {/* Segment 2: Mandatory Certificates */}
-                  <div className="p-4 text-left flex flex-col justify-between">
-                    <div className="flex items-center justify-between">
+                  <div className="p-3 sm:px-5 sm:py-3 text-left flex items-center justify-between">
+                    <div className="space-y-0.5">
                       <div className="flex items-center space-x-1.5">
                         <span className="w-2 h-2 rounded-full bg-[#0B2546]"></span>
                         <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
                           Certificates
                         </span>
                       </div>
-                      <span
-                        className={`text-[10px] font-mono font-semibold px-2 py-0.5 rounded-md ${
-                          flaggedMandatoryCount > 0
-                            ? 'bg-rose-50 text-rose-800 border border-rose-200'
-                            : hasAllMandatoryDocs
-                            ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-                            : 'bg-amber-50 text-amber-800 border border-amber-200'
-                        }`}
-                      >
-                        {flaggedMandatoryCount > 0
-                          ? `${flaggedMandatoryCount} Flagged`
-                          : hasAllMandatoryDocs
-                          ? '3/3 Verified'
-                          : `${missingMandatoryDocs.length} Missing`}
-                      </span>
-                    </div>
-
-                    <div className="my-2">
                       <div className="flex items-baseline space-x-1.5">
                         <span
                           className={`text-2xl font-black font-mono ${
@@ -907,32 +810,32 @@ STATUS:            ${doc.flagged ? 'FLAGGED: ' + doc.flag_reason : 'VERIFIED COM
                         <span className="text-[11px] text-slate-400 font-medium">Clean</span>
                       </div>
                     </div>
-
-                    <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
-                      <div
-                        className={`h-full rounded-full transition-all duration-500 ${
-                          flaggedMandatoryCount > 0 ? 'bg-rose-500' : 'bg-emerald-500'
-                        }`}
-                        style={{ width: `${(mandatoryCleanCount / MANDATORY_DOCS.length) * 100}%` }}
-                      />
-                    </div>
+                    <span
+                      className={`text-[10px] font-mono font-semibold px-2 py-0.5 rounded-md hidden sm:inline-block ${
+                        flaggedMandatoryCount > 0
+                          ? 'bg-rose-50 text-rose-800 border border-rose-200'
+                          : hasAllMandatoryDocs
+                          ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                          : 'bg-amber-50 text-amber-800 border border-amber-200'
+                      }`}
+                    >
+                      {flaggedMandatoryCount > 0
+                        ? `${flaggedMandatoryCount} Flagged`
+                        : hasAllMandatoryDocs
+                        ? '3/3 Verified'
+                        : `${missingMandatoryDocs.length} Missing`}
+                    </span>
                   </div>
 
                   {/* Segment 3: Submitted Bids */}
-                  <div className="p-4 text-left flex flex-col justify-between">
-                    <div className="flex items-center justify-between">
+                  <div className="p-3 sm:px-5 sm:py-3 text-left flex items-center justify-between">
+                    <div className="space-y-0.5">
                       <div className="flex items-center space-x-1.5">
                         <span className="w-2 h-2 rounded-full bg-blue-600"></span>
                         <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
                           Submitted Bids
                         </span>
                       </div>
-                      <span className="text-[10px] font-mono font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md">
-                        {bids.filter((b) => b.status === 'Awarded').length} Awarded
-                      </span>
-                    </div>
-
-                    <div className="my-2">
                       <div className="flex items-baseline space-x-1.5">
                         <span className="text-2xl font-black font-mono text-[#0B2546]">
                           {bids.length}
@@ -940,18 +843,14 @@ STATUS:            ${doc.flagged ? 'FLAGGED: ' + doc.flag_reason : 'VERIFIED COM
                         <span className="text-[11px] text-slate-400 font-medium">Quotations</span>
                       </div>
                     </div>
-
-                    <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
-                      <div
-                        className="h-full rounded-full transition-all duration-500 bg-amber-500"
-                        style={{ width: `${Math.min(bids.length * 25, 100)}%` }}
-                      />
-                    </div>
+                    <span className="text-[10px] font-mono font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md hidden sm:inline-block">
+                      {bids.filter((b) => b.status === 'Awarded').length} Awarded
+                    </span>
                   </div>
 
                   {/* Segment 4: Bidding Clearance */}
-                  <div className="p-4 text-left flex flex-col justify-between">
-                    <div className="flex items-center justify-between">
+                  <div className="p-3 sm:px-5 sm:py-3 text-left flex items-center justify-between">
+                    <div className="space-y-0.5">
                       <div className="flex items-center space-x-1.5">
                         <span
                           className={`w-2 h-2 rounded-full ${
@@ -966,24 +865,6 @@ STATUS:            ${doc.flagged ? 'FLAGGED: ' + doc.flag_reason : 'VERIFIED COM
                           Clearance
                         </span>
                       </div>
-                      <span
-                        className={`text-[10px] font-mono font-semibold px-2 py-0.5 rounded-md ${
-                          isClearedToBid
-                            ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-                            : flaggedMandatoryCount > 0
-                            ? 'bg-rose-50 text-rose-800 border border-rose-200'
-                            : 'bg-amber-50 text-amber-800 border border-amber-200'
-                        }`}
-                      >
-                        {isClearedToBid
-                          ? 'Cleared'
-                          : flaggedMandatoryCount > 0
-                          ? 'Blocked'
-                          : 'Action Req.'}
-                      </span>
-                    </div>
-
-                    <div className="my-2">
                       <div className="flex items-baseline space-x-1.5">
                         <span
                           className={`text-2xl font-black font-mono ${
@@ -995,15 +876,21 @@ STATUS:            ${doc.flagged ? 'FLAGGED: ' + doc.flag_reason : 'VERIFIED COM
                         <span className="text-[11px] text-slate-400 font-medium">Readiness</span>
                       </div>
                     </div>
-
-                    <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
-                      <div
-                        className={`h-full rounded-full transition-all duration-500 ${
-                          isClearedToBid ? 'bg-emerald-500' : 'bg-amber-500'
-                        }`}
-                        style={{ width: `${completionPct}%` }}
-                      />
-                    </div>
+                    <span
+                      className={`text-[10px] font-mono font-semibold px-2 py-0.5 rounded-md hidden sm:inline-block ${
+                        isClearedToBid
+                          ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                          : flaggedMandatoryCount > 0
+                          ? 'bg-rose-50 text-rose-800 border border-rose-200'
+                          : 'bg-amber-50 text-amber-800 border border-amber-200'
+                      }`}
+                    >
+                      {isClearedToBid
+                        ? 'Cleared'
+                        : flaggedMandatoryCount > 0
+                        ? 'Blocked'
+                        : 'Action Req.'}
+                    </span>
                   </div>
                 </div>
               </div>
