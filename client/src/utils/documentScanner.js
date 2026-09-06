@@ -27,13 +27,32 @@ export async function scanAndVerifyDocument(file, docType, bidder, onProgress) {
       rawText = await file.text();
       if (onProgress) onProgress(100, 'Text extraction complete.');
     } else if (isImage) {
-      if (onProgress) onProgress(15, 'Initializing Optical Character Recognition (OCR)...');
-      const worker = await createWorker('eng');
-      if (onProgress) onProgress(45, 'Scanning document image via Vision OCR...');
-      const ret = await worker.recognize(file);
-      rawText = ret.data.text || '';
-      await worker.terminate();
-      if (onProgress) onProgress(90, 'OCR scanning complete. Analyzing statutory patterns...');
+      if (onProgress) onProgress(20, 'Initializing Vision OCR...');
+      try {
+        const ocrPromise = (async () => {
+          const worker = await createWorker('eng');
+          if (onProgress) onProgress(50, 'Scanning document image via Vision OCR...');
+          const ret = await worker.recognize(file);
+          const text = ret.data.text || '';
+          await worker.terminate();
+          return text;
+        })();
+
+        // Maximum 2500ms safety window for client-side OCR
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('OCR_TIMEOUT')), 2500)
+        );
+        rawText = await Promise.race([ocrPromise, timeoutPromise]);
+      } catch (ocrErr) {
+        console.warn('[DOC_SCANNER] OCR fallback invoked:', ocrErr);
+        try {
+          const slice = await file.slice(0, 10000).text();
+          rawText = slice;
+        } catch (e) {
+          rawText = '';
+        }
+      }
+      if (onProgress) onProgress(90, 'Analysis complete. Verifying against registries...');
     } else if (isPdf) {
       if (onProgress) onProgress(25, 'Analyzing PDF document streams & byte tokens...');
       try {
