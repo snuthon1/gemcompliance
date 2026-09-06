@@ -224,34 +224,40 @@ export default function Sidebar() {
 
       {/* Executive Government Navy Sidebar Container */}
       <aside
-        className={`fixed top-0 bottom-0 left-0 z-50 w-64 bg-[#07182D] text-slate-100 border-r border-slate-800 flex flex-col justify-between transition-transform duration-200 ease-in-out md:translate-x-0 shadow-xl ${
+        className={`fixed top-0 bottom-0 left-0 z-50 w-64 bg-[#0B132B] text-slate-100 border-r border-slate-800/80 flex flex-col justify-between transition-transform duration-200 ease-in-out md:translate-x-0 shadow-xl ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         }`}
       >
         {/* Top Header & Brand */}
         <div className="shrink-0">
           {/* National Tricolor Line */}
-          <div className="h-1.5 w-full flex">
+          <div className="h-1 w-full flex">
             <div className="h-full w-1/3 bg-[#FF671F]"></div>
             <div className="h-full w-1/3 bg-white"></div>
             <div className="h-full w-1/3 bg-[#046A38]"></div>
           </div>
 
-          <div className="p-3.5 border-b border-slate-800/80 bg-[#0B2546]/80 flex items-center justify-between">
+          <div className="p-3.5 border-b border-slate-800 bg-[#070D1F] flex items-center justify-between">
             <Link
               to={isOfficer ? '/tenders' : '/vendor'}
               onClick={() => setMobileOpen(false)}
               className="flex items-center space-x-2.5 group"
             >
-              <NationalEmblem className="w-9 h-11 shrink-0" color="#FCD34D" />
+              <img
+                src="/cpcl_logo.png"
+                alt="CPCL Logo"
+                className="w-8 h-8 object-contain shrink-0"
+              />
               <div className="flex flex-col min-w-0">
-                <span className="text-[9px] font-bold text-amber-400 tracking-wider uppercase font-mono">
-                  भारत सरकार
-                </span>
-                <span className="text-xs font-extrabold text-white tracking-tight leading-tight">
-                  GeM-CPCL Bid Compliance
-                </span>
-                <span className="text-[9px] text-slate-300 font-medium mt-0.5">
+                <div className="flex items-center space-x-1.5">
+                  <span className="text-xs font-bold text-white tracking-tight leading-tight">
+                    BidPramaan
+                  </span>
+                  <span className="text-[9px] font-mono text-emerald-400 bg-emerald-950/80 border border-emerald-700/60 px-1 py-0.2 rounded font-bold">
+                    CPCL
+                  </span>
+                </div>
+                <span className="text-[9px] text-slate-400 font-medium leading-tight mt-0.5">
                   Ministry of Petroleum &amp; Natural Gas
                 </span>
               </div>
@@ -259,29 +265,29 @@ export default function Sidebar() {
 
             <button
               onClick={() => setMobileOpen(false)}
-              className="md:hidden text-slate-400 hover:text-white p-1"
+              className="md:hidden text-slate-400 hover:text-white p-1 cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
 
-          {/* Subheader Role Pillar Badge */}
-          <div className="px-3.5 py-1.5 bg-[#051324] border-b border-slate-800 text-[10px] text-slate-300 font-medium flex items-center justify-between">
-            <span className="font-bold text-emerald-400 flex items-center gap-1.5 text-[10px]">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              {isOfficer ? 'OFFICER COMMITTEE' : 'VENDOR DESK'}
+          {/* Subheader Role Badge */}
+          <div className="px-3.5 py-1.5 bg-[#050A16] border-b border-slate-800/80 text-[10px] text-slate-400 flex items-center justify-between">
+            <span className="font-semibold text-slate-300 flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              {isOfficer ? 'Procurement Officer Desk' : 'Vendor Workspace'}
             </span>
-            <span className="font-mono text-amber-300 text-[9px] bg-amber-500/10 border border-amber-500/30 px-1.5 py-0.5 rounded font-bold">
-              {isOfficer ? 'GFR 2017 • CVC' : 'GeM Registered'}
+            <span className="font-mono text-[9px] text-slate-400 bg-slate-800/80 border border-slate-700/60 px-1.5 py-0.5 rounded font-medium">
+              {isOfficer ? 'GFR 2017' : 'GeM Synced'}
             </span>
           </div>
         </div>
 
         {/* Middle Scrollable Navigation Section */}
-        <div className="flex-1 overflow-y-auto px-3 py-3 space-y-4">
+        <div className="flex-1 overflow-y-auto px-3 py-2.5 space-y-3.5">
           {activeSections.map((section, sIdx) => (
             <div key={sIdx} className="space-y-1">
-              <div className="px-2 text-[9px] font-bold uppercase tracking-wider text-slate-400 font-mono">
+              <div className="px-2 pt-1 text-[9px] font-bold uppercase tracking-wider text-slate-400 font-mono">
                 {section.heading}
               </div>
               <nav className="space-y-0.5">
@@ -292,14 +298,27 @@ export default function Sidebar() {
                       key={item.path}
                       to={item.path}
                       onClick={() => setMobileOpen(false)}
-                      className={`flex items-center space-x-2.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                      className={`group flex items-center justify-between px-2.5 py-2 rounded-lg text-xs transition-all ${
                         item.active
-                          ? 'bg-blue-600/30 text-white font-bold border-l-4 border-amber-400 shadow-xs'
-                          : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
+                          ? 'bg-blue-600 text-white font-semibold shadow-xs shadow-blue-900/40'
+                          : 'text-slate-300 hover:text-white hover:bg-slate-800/60 font-medium'
                       }`}
                     >
-                      <Icon className={`w-4 h-4 shrink-0 ${item.active ? 'text-amber-400' : 'text-slate-400'}`} />
-                      <span className="truncate text-xs">{item.name}</span>
+                      <div className="flex items-center space-x-2.5 min-w-0">
+                        <Icon className={`w-4 h-4 shrink-0 ${item.active ? 'text-white' : 'text-slate-400 group-hover:text-slate-200'}`} />
+                        <span className="truncate">{item.name}</span>
+                      </div>
+                      {item.badge && (
+                        <span
+                          className={`text-[9px] font-mono px-1.5 py-0.5 rounded shrink-0 ${
+                            item.active
+                              ? 'bg-blue-700 text-blue-100 font-medium'
+                              : 'bg-slate-800/80 text-slate-400 border border-slate-700/50'
+                          }`}
+                        >
+                          {item.badge}
+                        </span>
+                      )}
                     </Link>
                   );
                 })}
@@ -309,26 +328,26 @@ export default function Sidebar() {
         </div>
 
         {/* Bottom Section: User Profile & Logout */}
-        <div className="shrink-0 p-2.5 border-t border-slate-800 bg-[#051324]">
+        <div className="shrink-0 p-3 border-t border-slate-800 bg-[#050A16]">
           {user && (
-            <div className="p-2 rounded-lg bg-[#0B2546]/80 border border-slate-700/80 flex items-center justify-between gap-2 shadow-sm">
-              <div className="flex items-center space-x-2 min-w-0">
-                <div className="w-7 h-7 rounded-md bg-amber-400 text-[#07182D] flex items-center justify-center font-black text-xs shrink-0 shadow-2xs">
+            <div className="p-2 rounded-lg bg-slate-800/60 border border-slate-700/60 flex items-center justify-between gap-2 shadow-xs">
+              <div className="flex items-center space-x-2.5 min-w-0">
+                <div className="w-7 h-7 rounded-md bg-blue-600 text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-xs">
                   {getInitials(user.name || user.company_name)}
                 </div>
                 <div className="min-w-0 flex flex-col">
-                  <span className="text-xs font-bold text-white truncate">
+                  <span className="text-xs font-semibold text-white truncate">
                     {user.name || user.company_name}
                   </span>
-                  <span className="text-[9px] text-amber-300/90 font-medium truncate font-mono">
-                    {isOfficer ? 'Procurement Officer (Admin)' : `GST: ${user.gstin || 'Enrolled'}`}
+                  <span className="text-[9px] text-slate-400 truncate font-mono">
+                    {isOfficer ? 'Procurement Officer' : (user.gstin || 'Registered Vendor')}
                   </span>
                 </div>
               </div>
 
               <button
                 onClick={handleLogout}
-                className="p-1 text-slate-400 hover:text-rose-400 hover:bg-slate-800 rounded transition shrink-0 cursor-pointer"
+                className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-slate-700/60 rounded-md transition shrink-0 cursor-pointer"
                 title="Sign Out"
               >
                 <LogOut className="w-3.5 h-3.5" />
