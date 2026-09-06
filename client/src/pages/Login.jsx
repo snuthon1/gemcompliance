@@ -188,87 +188,32 @@ export default function Login() {
           </div>
         </header>
 
-        {/* 4. OFFICIAL GOVERNMENT TOP NAVBAR */}
-        <nav className="bg-[#07182D] text-white border-t border-slate-700/60 shadow-md">
-          <div className="max-w-6xl mx-auto px-4 sm:px-8 flex items-center justify-between">
-            {/* Left Nav Menu Items */}
-            <div className="flex items-center space-x-1 sm:space-x-2 text-xs font-medium overflow-x-auto py-0">
-              <button
-                type="button"
-                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                className="flex items-center space-x-1.5 px-3 py-2.5 bg-white/10 text-white font-semibold border-b-2 border-amber-400 hover:bg-white/15 transition cursor-pointer"
-              >
-                <Home className="w-3.5 h-3.5 text-amber-400" />
-                <span>Home</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  const el = document.getElementById('statutory-rules');
-                  if (el) el.scrollIntoView({ behavior: 'smooth' });
-                }}
-                className="flex items-center space-x-1.5 px-3 py-2.5 text-slate-200 hover:text-white hover:bg-white/5 transition cursor-pointer"
-              >
-                <FileText className="w-3.5 h-3.5 text-slate-400" />
-                <span>GFR Guidelines</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleQuickFill('VENDOR')}
-                className={`flex items-center space-x-1.5 px-3 py-2.5 transition cursor-pointer ${
-                  activeTab === 'VENDOR'
-                    ? 'text-amber-300 font-semibold bg-white/10 border-b-2 border-amber-400'
-                    : 'text-slate-200 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                <Building2 className="w-3.5 h-3.5 text-slate-400" />
-                <span>Vendor Portal</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleQuickFill('OFFICER')}
-                className={`flex items-center space-x-1.5 px-3 py-2.5 transition cursor-pointer ${
-                  activeTab === 'OFFICER'
-                    ? 'text-amber-300 font-semibold bg-white/10 border-b-2 border-amber-400'
-                    : 'text-slate-200 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                <ShieldCheck className="w-3.5 h-3.5 text-slate-400" />
-                <span>Officer Desk</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => alert('CPCL Active e-Tenders:\n• CPCL/MECH/2026/041: Crude Distillation Column Revamp (Est: ₹4.80 Cr)\n• CPCL/INST/2026/089: SCADA & Distributed Control System (Est: ₹2.40 Cr)\n• CPCL/PIPE/2026/102: Cross-Country Pipeline Integrity Audit (Est: ₹1.25 Cr)\n\nPlease log in to access full tender documents and bid submissions.')}
-                className="hidden sm:flex items-center space-x-1.5 px-3 py-2.5 text-slate-200 hover:text-white hover:bg-white/5 transition cursor-pointer"
-              >
-                <Layers className="w-3.5 h-3.5 text-slate-400" />
-                <span>Active Tenders</span>
-              </button>
-
-              <a
-                href="https://cpcl.co.in"
-                target="_blank"
-                rel="noreferrer"
-                className="hidden md:flex items-center space-x-1.5 px-3 py-2.5 text-slate-300 hover:text-white hover:bg-white/5 transition"
-              >
-                <ExternalLink className="w-3 h-3 text-slate-400" />
-                <span>About CPCL</span>
-              </a>
-            </div>
-
-            {/* Right Status Badge */}
-            <div className="hidden lg:flex items-center space-x-3 text-[11px] font-mono text-slate-300 shrink-0">
-              <span className="inline-flex items-center space-x-1.5 bg-emerald-500/15 border border-emerald-500/30 px-2.5 py-1 rounded text-emerald-300">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span>e-Procurement 24x7</span>
+        {/* 4. OFFICIAL GOVERNMENT AUTHORITY & STATUTORY NOTIFICATION STRIP (BUTTON-FREE) */}
+        <div className="bg-[#07182D] text-white border-t border-slate-700/60 shadow-md py-2 px-4 sm:px-8">
+          <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-xs">
+            {/* Left: Statutory Directorate Directive Text */}
+            <div className="flex items-center space-x-2.5 text-slate-300 font-medium">
+              <span className="w-2 h-2 rounded-full bg-amber-400 shrink-0"></span>
+              <span className="font-bold text-white tracking-wide">
+                ई-निविदा एवं वैधानिक अनुपालन निगरानी प्रकोष्ठ
+              </span>
+              <span className="text-slate-500 hidden md:inline">|</span>
+              <span className="text-slate-300 hidden md:inline">
+                Central Public Procurement Portal &bull; GFR 2017 Rule 144(xi) &amp; CVC Directives Compliant
               </span>
             </div>
+
+            {/* Right: Security & Operational Standing (Pure Informational Text, No Buttons) */}
+            <div className="flex items-center space-x-3 text-[11px] font-mono text-slate-300 shrink-0">
+              <span className="text-emerald-400 flex items-center gap-1.5 font-semibold">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span>NIC Certified 24x7 Gateway</span>
+              </span>
+              <span className="text-slate-600 hidden sm:inline">|</span>
+              <span className="text-slate-300 hidden sm:inline">ISO 27001 Security Standard</span>
+            </div>
           </div>
-        </nav>
+        </div>
       </div>
 
       {/* 5. MAIN CONTENT AREA: DUAL-COLUMN GOVERNMENT LAYOUT */}
