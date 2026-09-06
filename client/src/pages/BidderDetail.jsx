@@ -45,10 +45,26 @@ const HUMAN_CHECK_NAMES = {
 export default function BidderDetail() {
   const { bidder_id } = useParams();
   const { user } = useAuth();
-  const [bidder, setBidder] = useState(null);
-  const [compliance, setCompliance] = useState(null);
+  const [bidder, setBidder] = useState(() => {
+    try {
+      const cached = sessionStorage.getItem('bidshield_bidder_detail_' + bidder_id);
+      return cached ? JSON.parse(cached).bidder : null;
+    } catch (e) { return null; }
+  });
+  const [compliance, setCompliance] = useState(() => {
+    try {
+      const cached = sessionStorage.getItem('bidshield_compliance_cache');
+      const map = cached ? JSON.parse(cached) : {};
+      return map[bidder_id] || null;
+    } catch (e) { return null; }
+  });
   const [auditLogs, setAuditLogs] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => {
+    try {
+      const cached = sessionStorage.getItem('bidshield_bidder_detail_' + bidder_id);
+      return !cached;
+    } catch (e) { return true; }
+  });
   const [verifying, setVerifying] = useState(false);
   const [error, setError] = useState(null);
 
@@ -66,7 +82,12 @@ export default function BidderDetail() {
   const [decisionSuccessMsg, setDecisionSuccessMsg] = useState(null);
 
   // Documents State
-  const [documents, setDocuments] = useState([]);
+  const [documents, setDocuments] = useState(() => {
+    try {
+      const cached = sessionStorage.getItem('bidshield_bidder_detail_' + bidder_id);
+      return cached ? (JSON.parse(cached).documents || []) : [];
+    } catch (e) { return []; }
+  });
   const [uploadDocType, setUploadDocType] = useState('GST_CERT');
   const [uploadFile, setUploadFile] = useState(null);
   const [uploading, setUploading] = useState(false);
@@ -75,39 +96,69 @@ export default function BidderDetail() {
   const [showRawJsonDocId, setShowRawJsonDocId] = useState(null);
   const fileInputRef = useRef(null);
 
-  // Load Bidder Data
-  const loadBidderData = async () => {
-    setLoading(true);
+  // Load Bidder Data in Parallel
+  const loadBidderData = async (forceRefresh = false) => {
+    if (!bidder || forceRefresh) {
+      if (!bidder) setLoading(true);
+    }
     setError(null);
     try {
-      const bRes = await fetch('/api/bidders');
-      const bData = await bRes.json();
-      if (!bData.success) throw new Error('Failed to load bidders');
-      const found = bData.bidders.find((b) => b.bidder_id === bidder_id);
-      if (!found) throw new Error('Bidder not found');
-      setBidder(found);
+      // 1. Fetch bidder, compliance, documents, and audit logs IN PARALLEL!
+      const [bRes, cRes, dRes, aRes] = await Promise.all([
+        fetch(`/api/bidders/${bidder_id}`).then(r => r.json()).catch(() => null),
+        fetch(`/api/bidders/${bidder_id}/compliance`).catch(() => null),
+        fetch(`/api/bidders/${bidder_id}/documents`).then(r => r.json()).catch(() => null),
+        fetch(`/api/bidders/${bidder_id}/audit-log`).then(r => r.json()).catch(() => null)
+      ]);
+
+      let currentB = null;
+      if (bRes && bRes.success && bRes.bidder) {
+        currentB = bRes.bidder;
+        setBidder(currentB);
+      } else {
+        // Fallback to searching /api/bidders
+        const allB = await fetch('/api/bidders').then(r => r.json()).catch(() => null);
+        const found = allB?.bidders?.find((b) => b.bidder_id === bidder_id);
+        if (found) {
+          currentB = found;
+          setBidder(found);
+        }
+      }
+
+      // Unblock screen immediately!
+      setLoading(false);
 
       // Compliance
-      let cRes = await fetch(`/api/bidders/${bidder_id}/compliance`);
-      if (cRes.status === 404) {
-        cRes = await fetch(`/api/bidders/${bidder_id}/verify`, { method: 'POST' });
+      if (cRes) {
+        if (cRes.ok) {
+          const cData = await cRes.json();
+          if (cData.success) setCompliance(cData);
+        } else if (cRes.status === 404) {
+          const vRes = await fetch(`/api/bidders/${bidder_id}/verify`, { method: 'POST' });
+          const vData = await vRes.json();
+          if (vData.success) setCompliance(vData);
+        }
       }
-      const cData = await cRes.json();
-      if (cData.success) setCompliance(cData);
 
       // Documents
-      const dRes = await fetch(`/api/bidders/${bidder_id}/documents`);
-      const dData = await dRes.json();
-      if (dData.success) setDocuments(dData.documents || []);
+      if (dRes && dRes.success) {
+        setDocuments(dRes.documents || []);
+      }
 
       // Audit Logs
-      const aRes = await fetch(`/api/bidders/${bidder_id}/audit-log`);
-      const aData = await aRes.json();
-      if (aData.success) {
-        setAuditLogs(aData.auditLogs || []);
-        const lastDec = (aData.auditLogs || []).find((l) => l.action === 'OFFICER_DECISION');
+      if (aRes && aRes.success) {
+        setAuditLogs(aRes.auditLogs || []);
+        const lastDec = (aRes.auditLogs || []).find((l) => l.action === 'OFFICER_DECISION');
         if (lastDec) setLatestDecision(lastDec);
       }
+
+      // Cache
+      try {
+        sessionStorage.setItem('bidshield_bidder_detail_' + bidder_id, JSON.stringify({
+          bidder: currentB,
+          documents: dRes?.documents || []
+        }));
+      } catch (e) {}
     } catch (err) {
       console.error(err);
       setError(err.message || 'Error loading bidder dossier');
