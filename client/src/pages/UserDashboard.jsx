@@ -619,10 +619,24 @@ STATUS:            ${doc.flagged ? 'FLAGGED: ' + doc.flag_reason : 'VERIFIED COM
   const completionPct = calculateProfileCompletion();
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-      {/* 1. Header & Identity Strip */}
-      <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="space-y-1.5 min-w-0">
+    <div className="relative min-h-[calc(100vh-120px)] -mt-4 -mb-12 py-8 px-4 sm:px-6 lg:px-8 font-sans overflow-x-hidden">
+      {/* 1. E-Procurement Commerce Background (Cart with Packaged Boxes on Laptop) */}
+      <div
+        className="fixed inset-0 pointer-events-none z-0 bg-cover bg-center bg-no-repeat opacity-40 mix-blend-luminosity filter brightness-90"
+        style={{ backgroundImage: `url('/vendor_dashboard_bg.png')` }}
+      />
+      {/* 2. Deep Government Navy & Slate Ambient Wash */}
+      <div className="fixed inset-0 pointer-events-none z-0 bg-gradient-to-b from-[#07182D]/85 via-[#0B2546]/80 to-[#07182D]/90" />
+
+      {/* 3. Dashboard Foreground Elements */}
+      <div className="relative z-10 max-w-7xl mx-auto space-y-6">
+        {/* 1. Header & Identity Strip */}
+        <div className="relative overflow-hidden bg-white/95 backdrop-blur-md rounded-2xl p-6 border border-slate-200/90 shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div 
+            className="absolute -right-6 -bottom-6 w-96 h-64 pointer-events-none bg-cover bg-center opacity-15 rounded-2xl mix-blend-luminosity"
+            style={{ backgroundImage: `url('/vendor_dashboard_bg.png')` }}
+          />
+          <div className="space-y-1.5 min-w-0 relative z-10">
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-[10px] font-mono uppercase tracking-wider bg-slate-100 text-slate-700 font-bold px-2 py-0.5 rounded border border-slate-200">
               Vendor GSTIN: {currentBidder?.gstin || '33AAACA1234A1Z5'}
@@ -2581,6 +2595,7 @@ STATUS:            ${doc.flagged ? 'FLAGGED: ' + doc.flag_reason : 'VERIFIED COM
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }
