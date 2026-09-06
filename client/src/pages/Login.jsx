@@ -188,13 +188,13 @@ export default function Login() {
 
       {/* 5. MAIN CONTENT AREA: DUAL-COLUMN GOVERNMENT LAYOUT */}
       <div
-        className="relative flex-1 py-8 sm:py-10 bg-slate-900 bg-cover bg-center bg-no-repeat"
+        className="relative flex-1 min-h-[calc(100vh-140px)] flex items-center justify-center py-12 sm:py-16 bg-slate-900 bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: "url('/cpcl_refinery_bg.png')" }}
       >
         {/* Semi-Transparent Overlay for contrast and readability */}
         <div className="absolute inset-0 bg-slate-950/40 pointer-events-none" />
 
-        <main className="relative z-10 max-w-6xl mx-auto w-full px-4 sm:px-8 my-auto">
+        <main className="relative z-10 max-w-6xl mx-auto w-full px-4 sm:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           {/* LEFT COLUMN (7 cols): Official Departmental Notices & Statutory Rules */}
           <div className="lg:col-span-7 space-y-4">
