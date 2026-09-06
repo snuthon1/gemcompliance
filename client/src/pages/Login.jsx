@@ -184,6 +184,23 @@ export default function Login() {
             </div>
           </div>
         </header>
+
+        {/* 4. SMALL NAVY STRIP UNDER TOP NAVBAR */}
+        <div className="bg-[#07182D] text-slate-300 py-1.5 px-4 sm:px-8 border-t border-slate-700/60 shadow-xs">
+          <div className="max-w-6xl mx-auto flex items-center justify-between text-[11px]">
+            <div className="flex items-center space-x-2.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+              <span className="font-semibold text-white tracking-wide">
+                BidPramaan &bull; CPCL e-Procurement &amp; Statutory Compliance Portal
+              </span>
+            </div>
+            <div className="hidden sm:flex items-center space-x-3 text-[10px] font-mono text-slate-400">
+              <span>GFR 2017 Compliant</span>
+              <span className="text-slate-600">|</span>
+              <span className="text-amber-300">Central Public Procurement</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* 5. MAIN CONTENT AREA: DUAL-COLUMN GOVERNMENT LAYOUT */}
