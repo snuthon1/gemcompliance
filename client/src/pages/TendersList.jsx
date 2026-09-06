@@ -22,21 +22,33 @@ import {
 } from 'lucide-react';
 
 export default function TendersList() {
-  const [tenders, setTenders] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [tenders, setTenders] = useState(() => {
+    try {
+      const cached = sessionStorage.getItem('bidshield_tenders_cache');
+      return cached ? JSON.parse(cached) : [];
+    } catch (e) { return []; }
+  });
+  const [loading, setLoading] = useState(() => {
+    try {
+      return !sessionStorage.getItem('bidshield_tenders_cache');
+    } catch (e) { return true; }
+  });
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const navigate = useNavigate();
 
-  const fetchTenders = async () => {
-    setLoading(true);
+  const fetchTenders = async (forceRefresh = false) => {
+    if (!tenders.length || forceRefresh) {
+      if (!tenders.length) setLoading(true);
+    }
     setError(null);
     try {
       const res = await fetch('/api/tenders');
       const data = await res.json();
       if (data.success) {
-        setTenders(data.tenders);
+        setTenders(data.tenders || []);
+        try { sessionStorage.setItem('bidshield_tenders_cache', JSON.stringify(data.tenders || [])); } catch (e) {}
       } else {
         setError(data.message || 'Failed to load tenders');
       }
@@ -173,7 +185,7 @@ export default function TendersList() {
             </div>
 
             <button
-              onClick={fetchTenders}
+              onClick={() => fetchTenders(true)}
               disabled={loading}
               className="p-1.5 bg-white/10 hover:bg-white/20 text-white rounded border border-white/20 transition disabled:opacity-50 cursor-pointer"
               title="Refresh Live Tenders"
