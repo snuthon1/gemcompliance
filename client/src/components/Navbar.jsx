@@ -1,135 +1,215 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
-  ShieldCheck,
   Layers,
   Users,
-  Building2,
-  Database,
+  Network,
+  FileSearch,
+  ShieldAlert,
+  Scale,
+  BarChart3,
+  Fingerprint,
+  FileText,
+  LayoutDashboard,
   LogOut,
-  ChevronDown
+  ShieldCheck,
+  Building2,
+  ExternalLink
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import NationalEmblem from './NationalEmblem';
 
-export default function Navbar({ onRefresh }) {
+export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout, isOfficer, isVendor } = useAuth();
-
-  const isBiddersActive = location.pathname === '/' || location.pathname.startsWith('/bidder');
-  const isTendersActive = location.pathname.startsWith('/tenders');
-  const isVendorActive =
-    location.pathname.startsWith('/vendor') ||
-    location.pathname.startsWith('/portal') ||
-    location.pathname.startsWith('/user-dashboard');
 
   const handleLogout = () => {
     logout();
     navigate('/login');
   };
 
-  const getInitials = (name) => {
-    if (!name) return 'U';
-    const parts = name.split(' ');
-    if (parts.length >= 2) {
-      return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+  const officerNavItems = [
+    {
+      name: 'Tenders & Bids',
+      path: '/tenders',
+      icon: Layers,
+      active: location.pathname.startsWith('/tenders') || location.pathname === '/'
+    },
+    {
+      name: 'Bidders Directory',
+      path: '/bidders',
+      icon: Users,
+      active: location.pathname === '/bidders' || location.pathname.startsWith('/bidder/')
+    },
+    {
+      name: 'Cartel Watch',
+      path: '/cartel-watch',
+      icon: Network,
+      active: location.pathname === '/cartel-watch'
+    },
+    {
+      name: 'Doc Forensics',
+      path: '/document-forensics',
+      icon: FileSearch,
+      active: location.pathname === '/document-forensics'
+    },
+    {
+      name: 'Debarred Registry',
+      path: '/blacklist',
+      icon: ShieldAlert,
+      active: location.pathname === '/blacklist'
+    },
+    {
+      name: 'GFR 2017 Rules',
+      path: '/gfr-rules',
+      icon: Scale,
+      active: location.pathname === '/gfr-rules'
+    },
+    {
+      name: 'Risk Analytics',
+      path: '/analytics',
+      icon: BarChart3,
+      active: location.pathname === '/analytics'
+    },
+    {
+      name: 'Audit Ledger',
+      path: '/audit-trail',
+      icon: Fingerprint,
+      active: location.pathname === '/audit-trail'
+    },
+    {
+      name: 'Disputes & Redressal',
+      path: '/representations',
+      icon: FileText,
+      active: location.pathname === '/representations'
     }
-    return name.slice(0, 2).toUpperCase();
-  };
+  ];
+
+  const vendorNavItems = [
+    {
+      name: 'Vendor Workspace',
+      path: '/vendor',
+      icon: LayoutDashboard,
+      active:
+        location.pathname === '/vendor' ||
+        location.pathname.startsWith('/vendor/') ||
+        location.pathname === '/portal' ||
+        location.pathname === '/user-dashboard'
+    },
+    {
+      name: 'Active CPCL Tenders',
+      path: '/tenders',
+      icon: Layers,
+      active: location.pathname.startsWith('/tenders')
+    },
+    {
+      name: 'GFR Compliance Matrix',
+      path: '/gfr-rules',
+      icon: Scale,
+      active: location.pathname === '/gfr-rules'
+    },
+    {
+      name: 'File Representation',
+      path: '/representations',
+      icon: FileText,
+      active: location.pathname === '/representations'
+    }
+  ];
+
+  const navItems = isOfficer ? officerNavItems : vendorNavItems;
 
   return (
-    <header className="sticky top-0 z-40 bg-white/85 backdrop-blur-md border-b border-slate-200/80 transition-all">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
-        {/* Brand */}
-        <Link to={isVendor ? '/vendor' : '/'} className="flex items-center space-x-3 group">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-600 to-violet-600 flex items-center justify-center shadow-md shadow-indigo-500/20 group-hover:scale-105 transition">
-            <ShieldCheck className="w-5 h-5 text-white" />
-          </div>
+    <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
+      {/* 1. National Tricolor Accent Line */}
+      <div className="h-1 w-full flex">
+        <div className="h-full w-1/3 bg-[#FF671F]"></div>
+        <div className="h-full w-1/3 bg-white"></div>
+        <div className="h-full w-1/3 bg-[#046A38]"></div>
+      </div>
+
+      {/* 2. Top Header Masthead Row */}
+      <div className="px-4 sm:px-6 lg:px-8 py-2.5 flex items-center justify-between gap-4 border-b border-slate-100">
+        {/* Left: Ministry & Portal Title */}
+        <div className="flex items-center space-x-3 min-w-0">
+          <NationalEmblem className="w-6 h-8 shrink-0 hidden sm:block" color="#0B2546" />
           <div className="flex flex-col">
             <div className="flex items-center space-x-2">
-              <span className="text-base font-bold text-slate-900 tracking-tight">BidShield</span>
-              <span className="bg-indigo-50 text-indigo-700 font-mono text-[10px] font-semibold px-2 py-0.5 rounded-md border border-indigo-200/60">
-                GeM Edition
+              <span className="font-extrabold text-[#0B2546] tracking-tight text-sm flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-[#0B2546]"></span>
+                BidPramaan
+              </span>
+              <span className="text-[10px] font-mono font-bold bg-amber-50 text-amber-900 border border-amber-300/80 px-2 py-0.5 rounded-full">
+                CPCL &bull; MoPNG
               </span>
             </div>
-            <span className="text-[11px] text-slate-400 font-medium">CPCL &bull; Statutory Pre-Qualification</span>
+            <span className="text-[11px] text-slate-500 font-medium truncate hidden md:inline">
+              Automated Statutory Credential Verification &amp; Anti-Cartel System
+            </span>
           </div>
-        </Link>
+        </div>
 
-        {/* Center Modern Segmented Navigation Tabs */}
-        <nav className="hidden md:flex items-center space-x-1 bg-slate-100/90 p-1 rounded-full border border-slate-200/80">
-          <Link
-            to="/"
-            className={`flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium transition-all ${
-              isBiddersActive
-                ? 'bg-white text-slate-900 shadow-sm font-semibold'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
-            }`}
-          >
-            <Users className="w-3.5 h-3.5 text-indigo-600" />
-            <span>Bidders Directory</span>
-          </Link>
-
-          <Link
-            to="/tenders"
-            className={`flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium transition-all ${
-              isTendersActive
-                ? 'bg-white text-slate-900 shadow-sm font-semibold'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
-            }`}
-          >
-            <Layers className="w-3.5 h-3.5 text-indigo-600" />
-            <span>Tenders & Bids</span>
-          </Link>
-
-          <Link
-            to="/vendor"
-            className={`flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium transition-all ${
-              isVendorActive
-                ? 'bg-white text-slate-900 shadow-sm font-semibold'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
-            }`}
-          >
-            <Building2 className="w-3.5 h-3.5 text-indigo-600" />
-            <span>Vendor Workspace</span>
-          </Link>
-        </nav>
-
-        {/* Right Section: Cloud Status, Profile, and Sign Out */}
-        <div className="flex items-center space-x-3">
-          {/* Database Demo Status Badge */}
-          <div className="hidden lg:flex items-center space-x-1.5 bg-slate-50 border border-slate-200/80 px-2.5 py-1 rounded-full text-[11px] font-mono text-slate-600">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            <Database className="w-3 h-3 text-slate-400" />
-            <span>Database: Connected (Demo Env)</span>
+        {/* Right: User Profile, Role Badge & Actions */}
+        <div className="flex items-center space-x-2 sm:space-x-3 shrink-0">
+          <div className="hidden lg:flex items-center space-x-1.5 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-md text-[11px] font-mono text-emerald-900 font-medium">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse"></span>
+            <span>CVC &bull; GeM Sync Active</span>
           </div>
 
-          {/* User Profile Pill */}
           {user && (
-            <div className="flex items-center space-x-2.5 pl-2 border-l border-slate-200">
-              <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-xs border border-indigo-200 shadow-sm">
-                {getInitials(user.name || user.company_name)}
+            <div className="flex items-center space-x-2 bg-slate-50 border border-slate-200 px-2.5 py-1 rounded-lg">
+              <div className="w-6 h-6 rounded-md bg-[#0B2546] text-white flex items-center justify-center font-bold text-[11px]">
+                {user.name ? user.name.slice(0, 2).toUpperCase() : (isOfficer ? 'OF' : 'VN')}
               </div>
-              <div className="hidden sm:flex flex-col">
-                <span className="text-xs font-semibold text-slate-800 leading-tight max-w-[150px] truncate">
-                  {user.name || user.company_name}
+              <div className="hidden sm:flex flex-col text-left leading-none">
+                <span className="text-xs font-bold text-slate-800 max-w-[130px] truncate">
+                  {user.name || user.company_name || 'Authorized User'}
                 </span>
-                <span className="text-[10px] text-slate-400 font-mono">
-                  {isOfficer ? 'Demo Procurement Officer' : 'Commercial Vendor'}
+                <span className="text-[10px] text-slate-500 font-mono mt-0.5">
+                  {isOfficer ? 'Procurement Officer' : 'Registered Vendor'}
                 </span>
               </div>
             </div>
           )}
 
-          {/* Sign Out Button */}
           <button
             onClick={handleLogout}
-            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-rose-600 hover:bg-rose-50 border border-slate-200 transition"
-            title="Sign Out"
+            title="Sign out of portal session"
+            className="flex items-center space-x-1 px-2.5 py-1 text-xs font-medium text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-lg transition cursor-pointer"
           >
             <LogOut className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Sign Out</span>
+            <span className="hidden sm:inline">Logout</span>
           </button>
+        </div>
+      </div>
+
+      {/* 3. Dedicated Top Navigation Bar (Navbar) Row */}
+      <div className="bg-[#07182D] text-white px-3 sm:px-6 lg:px-8 py-1 flex items-center justify-between overflow-hidden shadow-inner">
+        <nav className="flex items-center space-x-1 overflow-x-auto scrollbar-none py-0.5 max-w-full">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition cursor-pointer ${
+                  item.active
+                    ? 'bg-[#123663] text-white font-bold shadow-xs border-b-2 border-amber-400'
+                    : 'text-slate-300 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                <Icon className={`w-3.5 h-3.5 ${item.active ? 'text-amber-400' : 'text-slate-400'}`} />
+                <span>{item.name}</span>
+              </Link>
+            );
+          })}
+        </nav>
+
+        {/* Status Tag */}
+        <div className="hidden xl:flex items-center space-x-2 text-[10px] font-mono text-slate-400 shrink-0 pl-3 border-l border-slate-700">
+          <span className="text-amber-300 font-semibold">SIH26100</span>
+          <span>&bull;</span>
+          <span>GFR 2017</span>
         </div>
       </div>
     </header>
