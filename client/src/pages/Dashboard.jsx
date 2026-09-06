@@ -20,17 +20,46 @@ import {
 } from 'lucide-react';
 
 export default function Dashboard() {
-  const [bidders, setBidders] = useState([]);
-  const [complianceMap, setComplianceMap] = useState({});
-  const [documentsMap, setDocumentsMap] = useState({});
-  const [loading, setLoading] = useState(true);
+  const [bidders, setBidders] = useState(() => {
+    try {
+      const cached = sessionStorage.getItem('bidshield_bidders_cache');
+      return cached ? JSON.parse(cached) : [];
+    } catch (e) {
+      return [];
+    }
+  });
+  const [complianceMap, setComplianceMap] = useState(() => {
+    try {
+      const cached = sessionStorage.getItem('bidshield_compliance_cache');
+      return cached ? JSON.parse(cached) : {};
+    } catch (e) {
+      return {};
+    }
+  });
+  const [documentsMap, setDocumentsMap] = useState(() => {
+    try {
+      const cached = sessionStorage.getItem('bidshield_docs_cache');
+      return cached ? JSON.parse(cached) : {};
+    } catch (e) {
+      return {};
+    }
+  });
+  const [loading, setLoading] = useState(() => {
+    try {
+      return !sessionStorage.getItem('bidshield_bidders_cache');
+    } catch (e) {
+      return true;
+    }
+  });
   const [error, setError] = useState(null);
   const [selectedRisk, setSelectedRisk] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
 
-  const fetchBiddersAndScores = async () => {
-    setLoading(true);
+  const fetchBiddersAndScores = async (forceRefresh = false) => {
+    if (!bidders.length || forceRefresh) {
+      if (!bidders.length) setLoading(true);
+    }
     setError(null);
     try {
       const response = await fetch('/api/bidders');
@@ -39,28 +68,43 @@ export default function Dashboard() {
         throw new Error(data.error || 'Failed to load bidders');
       }
 
-      const biddersList = data.bidders;
+      const biddersList = data.bidders || [];
       setBidders(biddersList);
+      try { sessionStorage.setItem('bidshield_bidders_cache', JSON.stringify(biddersList)); } catch (e) {}
 
-      const scoreResults = {};
-      const docResults = {};
+      // Unblock table immediately - officer can see all registered enterprises and records right away!
+      setLoading(false);
+
+      const scoreResults = { ...complianceMap };
+      const docResults = { ...documentsMap };
 
       await Promise.all(
         biddersList.map(async (b) => {
           try {
-            let compRes = await fetch(`/api/bidders/${b.bidder_id}/compliance`);
-            if (compRes.status === 404) {
-              compRes = await fetch(`/api/bidders/${b.bidder_id}/verify`, { method: 'POST' });
-            }
-            const compData = await compRes.json();
-            if (compData.success) {
-              scoreResults[b.bidder_id] = compData;
+            const [compRes, docRes] = await Promise.all([
+              fetch(`/api/bidders/${b.bidder_id}/compliance`),
+              fetch(`/api/bidders/${b.bidder_id}/documents`)
+            ]);
+
+            let compData = null;
+            if (compRes.ok) {
+              compData = await compRes.json();
+            } else if (compRes.status === 404) {
+              const vRes = await fetch(`/api/bidders/${b.bidder_id}/verify`, { method: 'POST' });
+              compData = await vRes.json();
             }
 
-            const docRes = await fetch(`/api/bidders/${b.bidder_id}/documents`);
-            const docData = await docRes.json();
-            if (docData.success) {
-              docResults[b.bidder_id] = docData.documents || [];
+            if (compData && compData.success) {
+              scoreResults[b.bidder_id] = compData;
+              setComplianceMap({ ...scoreResults });
+            }
+
+            if (docRes.ok) {
+              const docData = await docRes.json();
+              if (docData.success) {
+                docResults[b.bidder_id] = docData.documents || [];
+                setDocumentsMap({ ...docResults });
+              }
             }
           } catch (e) {
             console.error(`Failed to fetch data for ${b.bidder_id}`, e);
@@ -68,8 +112,10 @@ export default function Dashboard() {
         })
       );
 
-      setComplianceMap(scoreResults);
-      setDocumentsMap(docResults);
+      try {
+        sessionStorage.setItem('bidshield_compliance_cache', JSON.stringify(scoreResults));
+        sessionStorage.setItem('bidshield_docs_cache', JSON.stringify(docResults));
+      } catch (e) {}
     } catch (err) {
       setError('Unable to connect to verification backend');
     } finally {
@@ -171,7 +217,7 @@ export default function Dashboard() {
 
             <button
               type="button"
-              onClick={fetchBiddersAndScores}
+              onClick={() => fetchBiddersAndScores(true)}
               disabled={loading}
               className="p-1.5 bg-white/10 hover:bg-white/20 text-white rounded border border-white/20 transition disabled:opacity-50 cursor-pointer"
               title="Refresh Registry Data"
