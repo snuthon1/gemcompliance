@@ -1,4 +1,4 @@
-﻿# 🛡️ BidShield: GeM Bid Statutory Compliance Verification Platform
+﻿# 🛡️ BidPramaan: GeM Bid Statutory Compliance Verification Platform
 
 > **Smart India Hackathon (SIH26100)**  
 > **Target PSU / Ministry:** Chennai Petroleum Corporation Limited (CPCL) • Ministry of Petroleum & Natural Gas (MoPNG)  
