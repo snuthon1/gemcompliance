@@ -137,7 +137,7 @@ export default function Navbar() {
             <div className="flex items-center space-x-2">
               <span className="font-extrabold text-[#0B2546] tracking-tight text-sm flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-[#0B2546]"></span>
-                BidPramaan
+                GeM-CPCL Bid Compliance
               </span>
               <span className="text-[10px] font-mono font-bold bg-amber-50 text-amber-900 border border-amber-300/80 px-2 py-0.5 rounded-full">
                 CPCL &bull; MoPNG
