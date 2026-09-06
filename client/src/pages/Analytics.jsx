@@ -22,49 +22,91 @@ import {
 } from 'lucide-react';
 
 export default function Analytics() {
-  const [bidders, setBidders] = useState([]);
-  const [complianceMap, setComplianceMap] = useState({});
-  const [documentsMap, setDocumentsMap] = useState({});
-  const [loading, setLoading] = useState(true);
+  const [bidders, setBidders] = useState(() => {
+    try {
+      const cached = sessionStorage.getItem('bidshield_bidders_cache');
+      return cached ? JSON.parse(cached) : [];
+    } catch (e) { return []; }
+  });
+  const [complianceMap, setComplianceMap] = useState(() => {
+    try {
+      const cached = sessionStorage.getItem('bidshield_compliance_cache');
+      return cached ? JSON.parse(cached) : {};
+    } catch (e) { return {}; }
+  });
+  const [documentsMap, setDocumentsMap] = useState(() => {
+    try {
+      const cached = sessionStorage.getItem('bidshield_docs_cache');
+      return cached ? JSON.parse(cached) : {};
+    } catch (e) { return {}; }
+  });
+  const [loading, setLoading] = useState(() => {
+    try {
+      return !sessionStorage.getItem('bidshield_bidders_cache');
+    } catch (e) { return true; }
+  });
   const [reverifyingAll, setReverifyingAll] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRiskFilter, setSelectedRiskFilter] = useState('All');
   const navigate = useNavigate();
 
-  const loadData = async () => {
-    setLoading(true);
+  const loadData = async (forceRefresh = false) => {
+    if (!bidders.length || forceRefresh) {
+      if (!bidders.length) setLoading(true);
+    }
     try {
       const bRes = await fetch('/api/bidders');
       const bData = await bRes.json();
       if (!bData.success) throw new Error('Failed to load bidders');
 
-      const biddersList = bData.bidders;
+      const biddersList = bData.bidders || [];
       setBidders(biddersList);
+      try { sessionStorage.setItem('bidshield_bidders_cache', JSON.stringify(biddersList)); } catch (e) {}
 
-      const compResults = {};
-      const docResults = {};
+      // Unblock metrics immediately!
+      setLoading(false);
+
+      const compResults = { ...complianceMap };
+      const docResults = { ...documentsMap };
 
       await Promise.all(
         biddersList.map(async (b) => {
           try {
-            let cRes = await fetch(`/api/bidders/${b.bidder_id}/compliance`);
-            if (cRes.status === 404) {
-              cRes = await fetch(`/api/bidders/${b.bidder_id}/verify`, { method: 'POST' });
-            }
-            const cData = await cRes.json();
-            if (cData.success) compResults[b.bidder_id] = cData;
+            const [cRes, dRes] = await Promise.all([
+              fetch(`/api/bidders/${b.bidder_id}/compliance`),
+              fetch(`/api/bidders/${b.bidder_id}/documents`)
+            ]);
 
-            const dRes = await fetch(`/api/bidders/${b.bidder_id}/documents`);
-            const dData = await dRes.json();
-            if (dData.success) docResults[b.bidder_id] = dData.documents || [];
+            let cData = null;
+            if (cRes.ok) {
+              cData = await cRes.json();
+            } else if (cRes.status === 404) {
+              const vRes = await fetch(`/api/bidders/${b.bidder_id}/verify`, { method: 'POST' });
+              cData = await vRes.json();
+            }
+
+            if (cData && cData.success) {
+              compResults[b.bidder_id] = cData;
+              setComplianceMap({ ...compResults });
+            }
+
+            if (dRes.ok) {
+              const dData = await dRes.json();
+              if (dData.success) {
+                docResults[b.bidder_id] = dData.documents || [];
+                setDocumentsMap({ ...docResults });
+              }
+            }
           } catch (e) {
             console.error(e);
           }
         })
       );
 
-      setComplianceMap(compResults);
-      setDocumentsMap(docResults);
+      try {
+        sessionStorage.setItem('bidshield_compliance_cache', JSON.stringify(compResults));
+        sessionStorage.setItem('bidshield_docs_cache', JSON.stringify(docResults));
+      } catch (e) {}
     } catch (err) {
       console.error('Failed to load analytics:', err);
     } finally {
