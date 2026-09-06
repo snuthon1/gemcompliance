@@ -8,9 +8,9 @@
 
 ## 📌 Executive Summary
 
-**BidShield** is an automated, explainable, and fraud-resilient statutory compliance verification platform built for Government e-Marketplace (GeM) public procurement tenders. In high-value PSU procurement (e.g. CPCL refinery piping, valves, and instrumentation), bid evaluation officers historically face manual document inspection backlogs and registry mismatch fraud.
+**BidPramaan** is an automated, explainable, and fraud-resilient statutory compliance verification platform built for Government e-Marketplace (GeM) public procurement tenders. In high-value PSU procurement (e.g. CPCL refinery piping, valves, and instrumentation), bid evaluation officers historically face manual document inspection backlogs and registry mismatch fraud.
 
-**BidShield** solves this by performing autonomous, multi-point cross-registry checks, extracting OCR data directly from uploaded documents, applying transparent scoring algorithms with fraud override rules, and persisting every action into an immutable audit trail.
+**BidPramaan** solves this by performing autonomous, multi-point cross-registry checks, extracting OCR data directly from uploaded documents, applying transparent scoring algorithms with fraud override rules, and persisting every action into an immutable audit trail.
 
 ---
 
