@@ -147,81 +147,91 @@ export default function TendersList() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6 font-sans">
-      {/* 1. Official Header & Telemetry Status */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center space-x-2 mb-1.5">
-            <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#0B2546] bg-slate-100 border border-slate-200 px-2.5 py-0.5 rounded-md font-mono">
-              e-Procurement Portal
-            </span>
-            <span className="text-slate-400 text-xs">•</span>
-            <span className="text-xs text-slate-500 font-mono font-medium">CPCL Manali Refinery Contracts</span>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-5 font-sans">
+      {/* 1. Official CPCL Directorate NIT Masthead Banner */}
+      <div className="bg-white rounded-lg border border-slate-300 shadow-xs overflow-hidden">
+        <div className="bg-[#07182D] text-white px-5 py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b-2 border-amber-500">
+          <div className="space-y-0.5">
+            <div className="flex items-center space-x-2 text-[10px] font-mono text-amber-300 font-bold uppercase tracking-wider">
+              <span>चेन्नई पेट्रोलियम कॉर्पोरेशन लिमिटेड (CPCL)</span>
+              <span>&bull;</span>
+              <span>सामग्री एवं अनुबंध प्रभाग (Materials &amp; Contracts Division, Manali Refinery)</span>
+            </div>
+            <h1 className="text-base sm:text-lg font-black tracking-tight text-white flex items-center gap-2">
+              <Layers className="w-5 h-5 text-amber-400" />
+              <span>सक्रिय सार्वजनिक ई-निविदाएं एवं वाणिज्यिक बोलियां</span>
+              <span className="text-xs font-normal text-slate-300 font-sans hidden md:inline">
+                (Notice Inviting Tenders - NIT &amp; Bid Submissions)
+              </span>
+            </h1>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">
-            Active Procurement Tenders
-          </h1>
-          <p className="text-xs text-slate-500 mt-1 max-w-2xl leading-relaxed">
-            Integrated commercial bid evaluation matrix comparing L1 lowest quotations against automated GFR 2017, CVC Debarment, and GSTN compliance.
-          </p>
+
+          <div className="flex items-center space-x-2 shrink-0">
+            <div className="inline-flex items-center space-x-1.5 bg-emerald-500/15 border border-emerald-500/30 px-2.5 py-1 rounded text-emerald-300 text-xs font-mono">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span>GeM Sync Active</span>
+            </div>
+
+            <button
+              onClick={fetchTenders}
+              disabled={loading}
+              className="p-1.5 bg-white/10 hover:bg-white/20 text-white rounded border border-white/20 transition disabled:opacity-50 cursor-pointer"
+              title="Refresh Live Tenders"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+            </button>
+          </div>
         </div>
 
-        <div className="flex items-center space-x-3 shrink-0">
-          <div className="hidden md:flex items-center space-x-2 px-3 py-1.5 bg-emerald-50 border border-emerald-200 rounded-xl text-xs font-semibold text-emerald-800">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-            </span>
-            <span className="font-mono text-[11px]">GeM Portal Live</span>
+        <div className="bg-slate-50 px-5 py-2 text-[11px] text-slate-600 flex flex-wrap items-center justify-between gap-2 border-b border-slate-200">
+          <div className="flex items-center space-x-2 font-mono">
+            <span className="font-bold text-[#0B2546]">वैधानिक ढांचा:</span>
+            <span>GFR 2017 Rule 144(xi) Land Border Security</span>
+            <span className="text-slate-300">|</span>
+            <span>PPP-MII 50% Local Content Preference</span>
+            <span className="text-slate-300">|</span>
+            <span>CVC Directives 2026</span>
           </div>
-
-          <button
-            onClick={fetchTenders}
-            disabled={loading}
-            className="p-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 hover:text-slate-900 rounded-xl shadow-2xs transition disabled:opacity-50 cursor-pointer"
-            title="Refresh Tenders"
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-          </button>
+          <div className="text-[10px] font-mono text-slate-500">
+            CPCL Refinery Procurement Cell &bull; Ref: SIH26100
+          </div>
         </div>
       </div>
 
-
-
-      {/* 3. Search & Filter Bar */}
-      <div className="bg-white p-3 rounded-2xl border border-slate-200 shadow-2xs flex flex-col sm:flex-row items-center justify-between gap-3">
+      {/* 2. Search & Filter Bar */}
+      <div className="bg-white p-3 rounded-lg border border-slate-300 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3">
         <div className="relative w-full sm:w-96">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-2.5" />
+          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search by tender title, ID, equipment..."
-            className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-[#0B2546]"
+            placeholder="Search tender title, NIT reference ID, equipment..."
+            className="w-full bg-slate-50 border border-slate-300 rounded pl-9 pr-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-[#0B2546]"
           />
         </div>
 
-        <div className="flex items-center space-x-2 w-full sm:w-auto overflow-x-auto">
+        <div className="flex items-center space-x-1.5 w-full sm:w-auto overflow-x-auto">
           {[
-            { label: 'All Tenders', value: 'All', count: tenders.length },
+            { label: 'All Active NITs', value: 'All', count: tenders.length },
             { label: 'Live Bidding', value: 'Open', count: openCount },
-            { label: 'Awarded', value: 'Awarded', count: awardedCount }
+            { label: 'Awarded Contracts', value: 'Awarded', count: awardedCount }
           ].map((tab) => (
             <button
               key={tab.value}
               onClick={() => setStatusFilter(tab.value)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer shrink-0 ${
+              className={`px-3 py-1.5 rounded text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer border shrink-0 ${
                 statusFilter === tab.value
-                  ? 'bg-[#0B2546] text-white shadow-xs'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900'
+                  ? 'bg-[#0B2546] text-white border-[#0B2546] shadow-xs'
+                  : 'bg-slate-50 text-slate-700 hover:bg-slate-100 border-slate-300'
               }`}
             >
               <span>{tab.label}</span>
               <span
-                className={`text-[10px] font-mono px-1.5 py-0.2 rounded-full font-bold ${
+                className={`text-[10px] font-mono px-1.5 py-0.2 rounded font-bold ${
                   statusFilter === tab.value
                     ? 'bg-white/20 text-white'
-                    : 'bg-white text-slate-600 border border-slate-200'
+                    : 'bg-white text-slate-700 border border-slate-300'
                 }`}
               >
                 {tab.count}
