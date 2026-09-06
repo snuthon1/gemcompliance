@@ -24,9 +24,23 @@ import {
 } from 'lucide-react';
 
 export default function CartelDetection() {
-  const [bidders, setBidders] = useState([]);
-  const [tenders, setTenders] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [bidders, setBidders] = useState(() => {
+    try {
+      const cached = sessionStorage.getItem('bidshield_bidders_cache');
+      return cached ? JSON.parse(cached) : [];
+    } catch (e) { return []; }
+  });
+  const [tenders, setTenders] = useState(() => {
+    try {
+      const cached = sessionStorage.getItem('bidshield_tenders_cache');
+      return cached ? JSON.parse(cached) : [];
+    } catch (e) { return []; }
+  });
+  const [loading, setLoading] = useState(() => {
+    try {
+      return !sessionStorage.getItem('bidshield_bidders_cache');
+    } catch (e) { return true; }
+  });
   const [scanning, setScanning] = useState(false);
   const [scanProgress, setScanProgress] = useState(100);
   const [selectedTender, setSelectedTender] = useState('ALL');
@@ -36,7 +50,7 @@ export default function CartelDetection() {
   // Load live bidders and tenders
   useEffect(() => {
     const fetchData = async () => {
-      setLoading(true);
+      if (!bidders.length) setLoading(true);
       try {
         const [bRes, tRes] = await Promise.all([
           fetch('/api/bidders'),
@@ -44,8 +58,14 @@ export default function CartelDetection() {
         ]);
         const bData = await bRes.json();
         const tData = await tRes.json();
-        if (bData.success) setBidders(bData.bidders || []);
-        if (tData.success) setTenders(tData.tenders || []);
+        if (bData.success) {
+          setBidders(bData.bidders || []);
+          try { sessionStorage.setItem('bidshield_bidders_cache', JSON.stringify(bData.bidders || [])); } catch (e) {}
+        }
+        if (tData.success) {
+          setTenders(tData.tenders || []);
+          try { sessionStorage.setItem('bidshield_tenders_cache', JSON.stringify(tData.tenders || [])); } catch (e) {}
+        }
       } catch (err) {
         console.error('Failed to load cartel detection data:', err);
       } finally {
@@ -57,7 +77,7 @@ export default function CartelDetection() {
 
   const handleRunDeepScan = () => {
     setScanning(true);
-    setScanProgress(10);
+    setScanProgress(20);
     const interval = setInterval(() => {
       setScanProgress((prev) => {
         if (prev >= 100) {
@@ -65,9 +85,9 @@ export default function CartelDetection() {
           setScanning(false);
           return 100;
         }
-        return prev + 25;
+        return prev + 35;
       });
-    }, 250);
+    }, 75);
   };
 
   // Structured Anti-Cartelization Findings based on real CPCL procurement benchmarks
