@@ -50,15 +50,15 @@ export default function Login() {
     setVendorPassword('');
   };
 
-  const handleQuickFill = (role) => {
+  const handleQuickFill = (role, customId) => {
     if (role === 'OFFICER') {
       setActiveTab('OFFICER');
-      setOfficerEmail('admin@admin.com');
+      setOfficerEmail(customId || 'admin@admin.com');
       setOfficerPassword('password');
       setError(null);
     } else {
       setActiveTab('VENDOR');
-      setVendorIdentifier('33AABCA1234F1Z5');
+      setVendorIdentifier(customId || '33AAACA1234A1Z5');
       setVendorPassword('password');
       setError(null);
     }
@@ -373,20 +373,64 @@ export default function Login() {
                 </div>
 
                 {/* Demo Credentials Quick-Fill Pill */}
-                <div className="bg-amber-50 border border-amber-200 rounded p-2.5 text-[11px] flex items-center justify-between">
-                  <div className="text-amber-900">
-                    <span className="font-bold">Evaluation Demo Login:</span>{' '}
-                    <span className="font-mono text-slate-700">
-                      {activeTab === 'OFFICER' ? 'admin@admin.com / password' : '33AABCA1234F1Z5 / password'}
-                    </span>
+                <div className="bg-amber-50 border border-amber-200 rounded p-2.5 text-[11px] space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="text-amber-900">
+                      <span className="font-bold">Evaluation Demo Login:</span>{' '}
+                      <span className="font-mono text-slate-700">
+                        {activeTab === 'OFFICER' ? 'admin@admin.com / password' : '33AAACA1234A1Z5 / password'}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleQuickFill(activeTab)}
+                      className="ml-2 text-[10px] font-bold text-amber-900 bg-amber-200/80 hover:bg-amber-300 px-2 py-0.5 rounded transition cursor-pointer"
+                    >
+                      Auto-Fill
+                    </button>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => handleQuickFill(activeTab)}
-                    className="ml-2 text-[10px] font-bold text-amber-900 bg-amber-200/80 hover:bg-amber-300 px-2 py-0.5 rounded transition cursor-pointer"
-                  >
-                    Auto-Fill
-                  </button>
+
+                  {activeTab === 'VENDOR' && (
+                    <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t border-amber-200/60 text-[10px]">
+                      <span className="text-amber-800 font-semibold">Test Vendors:</span>
+                      <button
+                        type="button"
+                        onClick={() => handleQuickFill('VENDOR', '33AAACA1234A1Z5')}
+                        className={`px-1.5 py-0.5 rounded border transition cursor-pointer font-mono ${
+                          vendorIdentifier === '33AAACA1234A1Z5'
+                            ? 'bg-amber-700 text-white border-amber-800 font-bold'
+                            : 'bg-white text-amber-900 border-amber-200 hover:bg-amber-100'
+                        }`}
+                        title="Apex Petrochem (100/100 Compliant)"
+                      >
+                        Apex (Compliant)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleQuickFill('VENDOR', '33EEECE9876E1Z3')}
+                        className={`px-1.5 py-0.5 rounded border transition cursor-pointer font-mono ${
+                          vendorIdentifier === '33EEECE9876E1Z3'
+                            ? 'bg-amber-700 text-white border-amber-800 font-bold'
+                            : 'bg-white text-amber-900 border-amber-200 hover:bg-amber-100'
+                        }`}
+                        title="Bharat Seamless Pipes (85/100 Advisory)"
+                      >
+                        Bharat (Advisory)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleQuickFill('VENDOR', '33BBBCB5678B1Z2')}
+                        className={`px-1.5 py-0.5 rounded border transition cursor-pointer font-mono ${
+                          vendorIdentifier === '33BBBCB5678B1Z2'
+                            ? 'bg-amber-700 text-white border-amber-800 font-bold'
+                            : 'bg-white text-amber-900 border-amber-200 hover:bg-amber-100'
+                        }`}
+                        title="Coromandel Heavy Valves (Debarred / High Risk)"
+                      >
+                        Coromandel (Debarred)
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 {/* Error Banner */}
@@ -414,11 +458,9 @@ export default function Login() {
                             type="text"
                             inputMode="email"
                             required
-                            name={`gov_usr_${seed}`}
-                            id={`gov_usr_${seed}`}
-                            autoComplete="off"
-                            autoCorrect="off"
-                            spellCheck="false"
+                            name="officerEmail"
+                            id="officerEmail"
+                            autoComplete="username"
                             value={officerEmail}
                             onChange={(e) => setOfficerEmail(e.target.value)}
                             placeholder="e.g. admin@admin.com"
@@ -434,14 +476,11 @@ export default function Login() {
                         <div className="relative">
                           <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
                           <input
-                            type="text"
-                            style={{ WebkitTextSecurity: showPassword ? 'none' : 'disc' }}
+                            type={showPassword ? 'text' : 'password'}
                             required
-                            name={`gov_pwd_${seed}`}
-                            id={`gov_pwd_${seed}`}
-                            autoComplete="off"
-                            autoCorrect="off"
-                            spellCheck="false"
+                            name="officerPassword"
+                            id="officerPassword"
+                            autoComplete="current-password"
                             value={officerPassword}
                             onChange={(e) => setOfficerPassword(e.target.value)}
                             placeholder="Enter password"
@@ -468,14 +507,12 @@ export default function Login() {
                           <input
                             type="text"
                             required
-                            name={`vnd_usr_${seed}`}
-                            id={`vnd_usr_${seed}`}
-                            autoComplete="off"
-                            autoCorrect="off"
-                            spellCheck="false"
+                            name="vendorIdentifier"
+                            id="vendorIdentifier"
+                            autoComplete="username"
                             value={vendorIdentifier}
                             onChange={(e) => setVendorIdentifier(e.target.value)}
-                            placeholder="e.g. 33AABCA1234F1Z5 or vendor@domain.com"
+                            placeholder="e.g. 33AAACA1234A1Z5 or tenders@apexpetrochem.in"
                             className="w-full bg-white border border-slate-300 rounded pl-9 pr-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-[#0B2546] focus:border-[#0B2546]"
                           />
                         </div>
@@ -488,14 +525,11 @@ export default function Login() {
                         <div className="relative">
                           <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
                           <input
-                            type="text"
-                            style={{ WebkitTextSecurity: showPassword ? 'none' : 'disc' }}
+                            type={showPassword ? 'text' : 'password'}
                             required
-                            name={`vnd_pwd_${seed}`}
-                            id={`vnd_pwd_${seed}`}
-                            autoComplete="off"
-                            autoCorrect="off"
-                            spellCheck="false"
+                            name="vendorPassword"
+                            id="vendorPassword"
+                            autoComplete="current-password"
                             value={vendorPassword}
                             onChange={(e) => setVendorPassword(e.target.value)}
                             placeholder="Enter password"
@@ -521,7 +555,7 @@ export default function Login() {
                     </span>
                     <button
                       type="button"
-                      onClick={() => alert('Official Login Assistance:\n- Officer Admin: admin@admin.com / password\n- Vendor: 33AABCA1234F1Z5 / password\n- Helpdesk: 044-2594 4000 (support@cpcl.co.in)')}
+                      onClick={() => alert('Official Login Assistance:\n- Officer Admin: admin@admin.com / password\n- Vendor: 33AAACA1234A1Z5 / password (or tenders@apexpetrochem.in)\n- Helpdesk: 044-2594 4000 (support@cpcl.co.in)')}
                       className="text-[#0B2546] font-semibold hover:underline cursor-pointer"
                     >
                       Login Assistance
