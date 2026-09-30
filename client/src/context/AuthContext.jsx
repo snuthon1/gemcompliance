@@ -136,7 +136,8 @@ export function AuthProvider({ children }) {
       const vendorProfiles = Object.values(DEMO_PROFILES).filter(p => p.role === 'VENDOR');
       const matchedVendor = vendorProfiles.find(v => 
         v.email.toLowerCase() === trimmedId || 
-        v.gstin.toLowerCase() === trimmedId
+        v.gstin.toLowerCase() === trimmedId ||
+        (v.id === DEMO_PROFILES.apex.id && trimmedId === '33aabca1234f1z5')
       );
 
       if (!matchedVendor) {
